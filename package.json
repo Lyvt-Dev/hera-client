@@ -1,0 +1,23 @@
+{
+  "name": "hera-client",
+  "version": "0.1.1",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @hera/launcher",
+    "desktop": "npm run desktop -w @hera/launcher",
+    "build": "npm run build -w @hera/shared-types && npm run build -w @hera/launcher && npm run build -w @hera/backend",
+    "check": "tsc -p apps/launcher/tsconfig.json && tsc -p apps/backend/tsconfig.json --noEmit",
+    "test": "npm run build -w @hera/shared-types && vitest run",
+    "backend": "npm run build -w @hera/shared-types && npm run dev -w @hera/backend",
+    "catalog": "npm run build -w @hera/shared-types && tsx apps/backend/src/catalog-server.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,1 @@
+{"identifier":"main","description":"Only application commands; no generic filesystem, shell or network plugin.","windows":["main"],"permissions":["core:default"]}

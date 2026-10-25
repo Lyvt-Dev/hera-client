@@ -1,0 +1,1 @@
+{"name":"@hera/shared-types","version":"0.1.0","private":true,"type":"module","exports":{".":{"types":"./src/index.ts","import":"./dist/index.js"}},"scripts":{"build":"tsc -p tsconfig.json"},"dependencies":{"zod":"^4.1.0"}}

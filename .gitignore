@@ -1,0 +1,15 @@
+node_modules/
+dist/
+target/
+.gradle/
+build/
+.env
+.env.*
+!.env.example
+*.log
+*.db
+*.db-shm
+*.db-wal
+.local/
+releases/
+apps/launcher/src-tauri/gen/

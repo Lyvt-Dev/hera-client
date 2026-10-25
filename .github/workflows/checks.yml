@@ -1,0 +1,44 @@
+name: Checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 24, cache: npm}
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+  native:
+    strategy:
+      fail-fast: false
+      matrix: {os: [windows-latest, ubuntu-24.04, macos-15-intel]}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 24, cache: npm}
+      - uses: dtolnay/rust-toolchain@stable
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libdbus-1-dev
+      - run: npm ci
+      - run: npm run build -w @hera/shared-types
+      - run: npm run build -w @hera/launcher
+      - run: cargo check --locked --manifest-path apps/launcher/src-tauri/Cargo.toml
+      - run: cargo test --locked --manifest-path apps/launcher/src-tauri/Cargo.toml
+  minecraft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 21}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: 8.14.3}
+      - run: gradle -p minecraft build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with: {name: hera-fabric-experimental, path: minecraft/fabric-modern/build/libs/*.jar}

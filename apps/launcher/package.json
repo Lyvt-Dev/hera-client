@@ -1,0 +1,6 @@
+{
+ "name":"@hera/launcher","version": "0.1.1","private":true,"type":"module",
+ "scripts":{"dev":"npm run build -w @hera/shared-types && vite --host 127.0.0.1","build":"tsc && vite build","desktop":"tauri dev","bundle":"tauri build"},
+ "dependencies":{"@tauri-apps/api":"^2.8.0","@tanstack/react-query":"^5.90.0","react":"^19.2.0","react-dom":"^19.2.0","zustand":"^5.0.8","motion":"^12.23.0","zod":"^4.1.0","lucide-react":"^0.468.0"},
+ "devDependencies":{"@tauri-apps/cli":"^2.8.0","@types/react":"^19.2.0","@types/react-dom":"^19.2.0","@vitejs/plugin-react":"^5.0.0","vite":"^7.1.0","tailwindcss":"^4.1.0","@tailwindcss/vite":"^4.1.0"}
+}

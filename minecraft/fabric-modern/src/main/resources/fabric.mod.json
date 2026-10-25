@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"hera","version":"${version}","name":"Hera Client","description":"Independent client HUD with persistent local layouts.","authors":["Hera contributors"],"environment":"client","entrypoints":{"client":["gg.hera.HeraClient"]},"depends":{"fabricloader":">=0.16.14","minecraft":"~1.21.1","java":">=21","fabric-api":"*"}}

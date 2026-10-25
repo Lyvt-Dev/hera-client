@@ -1,0 +1,1 @@
+{"name":"@hera/backend","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"tsx src/index.ts","build":"tsc"},"dependencies":{"@hera/shared-types":"0.1.0","fastify":"^5.6.0","@fastify/rate-limit":"^10.3.0","@fastify/helmet":"^13.0.0","pg":"^8.16.0","ioredis":"^5.8.0","zod":"^4.1.0"},"devDependencies":{"tsx":"^4.20.0","@types/pg":"^8.15.0"}}
