@@ -24,9 +24,10 @@ $config = Get-Content 'apps/launcher/src-tauri/tauri.conf.json' -Raw | ConvertFr
 $installer = Get-ChildItem 'apps/launcher/src-tauri/target/release/bundle/nsis' -Filter "*_$($config.version)_x64-setup.exe" | Select-Object -First 1
 if (!$installer) { throw 'Installer nicht gefunden' }
 New-Item -ItemType Directory -Force 'releases' | Out-Null
-Copy-Item -LiteralPath $installer.FullName -Destination 'releases'
-Copy-Item -LiteralPath ($installer.FullName + '.sig') -Destination 'releases'
-Get-FileHash -Algorithm SHA256 -LiteralPath $installer.FullName | ForEach-Object { "$($_.Hash)  $($installer.Name)" } | Set-Content 'releases/SHA256SUMS.txt'
+$assetName = $installer.Name.Replace(' ', '.')
+Copy-Item -LiteralPath $installer.FullName -Destination (Join-Path 'releases' $assetName)
+Copy-Item -LiteralPath ($installer.FullName + '.sig') -Destination (Join-Path 'releases' ($assetName + '.sig'))
+Get-FileHash -Algorithm SHA256 -LiteralPath $installer.FullName | ForEach-Object { "$($_.Hash)  $assetName" } | Set-Content 'releases/SHA256SUMS.txt'
 if ($Repository) {
     $tag = 'v' + $config.version
     $manifest = @{
@@ -35,7 +36,7 @@ if ($Repository) {
         pub_date = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
         platforms = @{'windows-x86_64' = @{
             signature = (Get-Content -LiteralPath ($installer.FullName + '.sig') -Raw).Trim()
-            url = "https://github.com/$Repository/releases/download/$tag/$([Uri]::EscapeDataString($installer.Name))"
+            url = "https://github.com/$Repository/releases/download/$tag/$assetName"
         }}
     }
     $manifest | ConvertTo-Json -Depth 8 | Set-Content 'releases/latest.json' -Encoding utf8NoBOM

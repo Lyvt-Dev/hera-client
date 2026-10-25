@@ -6,7 +6,7 @@ $config = Get-Content 'apps/launcher/src-tauri/tauri.conf.json' -Raw | ConvertFr
 $manifest = Get-Content 'releases/latest.json' -Raw | ConvertFrom-Json
 if ($manifest.version -ne $config.version) { throw 'Installer/Manifest zuerst für die aktuelle Version bauen.' }
 $tag = 'v' + $config.version
-$setup = "Hera Client_$($config.version)_x64-setup.exe"
+$setup = "Hera.Client_$($config.version)_x64-setup.exe"
 $files = @($setup, "$setup.sig", 'SHA256SUMS.txt', 'latest.json')
 foreach ($name in $files) { if (!(Test-Path -LiteralPath (Join-Path 'releases' $name))) { throw "Release-Datei fehlt: $name" } }
 $hash = (Get-FileHash -LiteralPath (Join-Path 'releases' $setup) -Algorithm SHA256).Hash

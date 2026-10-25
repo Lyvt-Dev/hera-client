@@ -58,3 +58,11 @@ Authenticate an owned Java account with our app registration, install from empty
 - Reviewed NoRisk launcher v3 source/license as a behavioral reference; no NoRisk implementation, branding, service credentials or application identity was copied. This remains Hera's own implementation, not a claim of full NoRisk/LiquidBounce feature parity.
 - Real Microsoft authorization initially rejected the unregistered redirect URI. After the owner saved the native-client URI, Microsoft displayed the normal account picker. No password was entered by the agent and no ownership-authenticated gameplay is claimed.
 - Checks: 38 TypeScript tests and 17 Rust unit tests pass (3 opt-in network tests skipped). Callback tests include forged state, duplicate codes and lookalike hosts; PKCE matches the RFC example.
+
+## Published release verification
+
+- Source commit f290350 was pushed to Lyvt-Dev/hera-client. Signed Windows setup 0.1.1 was published with updater manifest and checksum.
+- GitHub normalizes spaces in asset names to dots. Packaging now uses stable ASCII asset names and the published manifest was corrected to the actual asset URL.
+- scripts/verify-release.py downloaded all 4,454,298 published installer bytes via the real update channel, verified both Minisign Ed25519 signatures against the embedded public key, and confirmed that a changed byte is rejected. This is a real transport/signature check; installation/upgrade on a separate Windows machine remains untested.
+- GitHub browser authentication succeeded via Git Credential Manager. Only source and public release artifacts were pushed; no local key, token or game data was committed.
+- Automated approval review blocked sending the private signing key to GitHub Actions pending explicit owner consent. Local signing and the published update are unaffected.

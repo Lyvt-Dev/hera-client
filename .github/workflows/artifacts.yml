@@ -40,11 +40,16 @@ jobs:
             const fs = require('fs');
             const manifest = JSON.parse(fs.readFileSync('releases/latest.json', 'utf8'));
             const tag = `v${manifest.version}`;
+            try {
+              const {data: existing} = await github.rest.repos.getReleaseByTag({...context.repo, tag});
+              if (!existing.draft) { core.info('Version was already published from a validated local build.'); return; }
+              throw new Error('A draft already exists; inspect it before publishing again.');
+            } catch (error) { if (error.status !== 404) throw error; }
             const {data: release} = await github.rest.repos.createRelease({
               ...context.repo, tag_name: tag, name: `Hera ${manifest.version}`,
               body: manifest.notes, draft: true, prerelease: false
             });
-            const setup = `Hera Client_${manifest.version}_x64-setup.exe`;
+            const setup = `Hera.Client_${manifest.version}_x64-setup.exe`;
             for (const name of [setup, `${setup}.sig`, 'latest.json', 'SHA256SUMS.txt']) {
               await github.rest.repos.uploadReleaseAsset({
                 ...context.repo, release_id: release.id, name,

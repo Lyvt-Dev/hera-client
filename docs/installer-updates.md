@@ -23,3 +23,5 @@ Compile/unit checks and installer generation are recorded in `status.md`. An act
 References: [Tauri updater](https://v2.tauri.app/plugin/updater/), [Windows installer](https://v2.tauri.app/distribute/windows-installer/).
 
 The Windows workflow also publishes tagged releases after tests/build. GitHub Actions requires the original signing key in its encrypted signing secrets; locally signed releases use the key on this machine. Never commit the private key. Source changes are pushed after validation according to the owner preference recorded in AGENTS.md.
+
+Release QA: install PyNaCl 1.6.2 into ignored .local/release-tools, then run `python scripts/verify-release.py`. It downloads the public Windows asset and verifies the trusted-comment and binary signatures, including a tamper rejection check, without installing anything. GitHub-normalized asset names use `Hera.Client_VERSION_x64-setup.exe`.
