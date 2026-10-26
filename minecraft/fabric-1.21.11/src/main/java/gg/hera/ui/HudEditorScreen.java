@@ -35,12 +35,12 @@ public final class HudEditorScreen extends Screen {
     private void resize(float amount){if(selected!=null){selected.scale=Math.clamp(selected.scale+amount,.5f,3);rebuild();}}
     private void color(){if(selected==null)return;int next=0;for(int i=0;i<COLORS.length;i++)if(selected.color==COLORS[i])next=(i+1)%COLORS.length;selected.color=COLORS[next];}
     private int px(HudModule m){return Math.min(Math.round(m.x*width),Math.max(0,width-Math.round(renderer.width(m,client)*m.scale)));}
-    private int py(HudModule m){return Math.min(Math.round(m.y*height),Math.max(0,height-Math.round(24*m.scale)));}
+    private int py(HudModule m){return Math.min(Math.round(m.y*height),Math.max(0,height-Math.round(20*m.scale)));}
     @Override public void render(DrawContext c,int mx,int my,float delta){
         c.fill(0,0,width,height,0x550A0D13);
         if(grid){for(int x=0;x<width;x+=8)c.fill(x,0,x+1,height,0x08FFFFFF);for(int y=0;y<height;y+=8)c.fill(0,y,width,y+1,0x08FFFFFF);}
         renderer.render(c,true);
-        if(selected!=null){int x=px(selected),y=py(selected),w=Math.round(renderer.width(selected,client)*selected.scale),h=Math.round(24*selected.scale);
+        if(selected!=null){int x=px(selected),y=py(selected),w=Math.round(renderer.width(selected,client)*selected.scale),h=Math.round(20*selected.scale);
             c.fill(x-2,y-2,x+w+2,y-1,HeraTheme.ACCENT);c.fill(x-2,y+h+1,x+w+2,y+h+2,HeraTheme.ACCENT);c.fill(x-2,y-2,x-1,y+h+2,HeraTheme.ACCENT);c.fill(x+w+1,y-2,x+w+2,y+h+2,HeraTheme.ACCENT);
             if(dragging){c.fill(width/2,48,width/2+1,height-85,0x44F0A46E);c.fill(0,height/2,width,height/2+1,0x44F0A46E);}
         }
@@ -58,7 +58,7 @@ public final class HudEditorScreen extends Screen {
         double x=click.x(),y=click.y();int tw=Math.min(390,width-20),iw=Math.min(370,width-20);
         if((y>=10&&y<=50&&x>=(width-tw)/2&&x<=(width+tw)/2)||(y>=height-76&&x>=(width-iw)/2&&x<=(width+iw)/2))return true;
         for(int i=config.modules.size()-1;i>=0;i--){HudModule m=config.modules.get(i);double px=px(m),py=py(m);
-            if(x>=px&&x<=px+renderer.width(m,client)*m.scale&&y>=py&&y<=py+24*m.scale){selected=m;offsetX=x-px;offsetY=y-py;dragging=click.button()==0;if(click.button()==1)m.enabled=!m.enabled;resetArmed=false;rebuild();return true;}}
+            if(x>=px&&x<=px+renderer.width(m,client)*m.scale&&y>=py&&y<=py+20*m.scale){selected=m;offsetX=x-px;offsetY=y-py;dragging=click.button()==0;if(click.button()==1)m.enabled=!m.enabled;resetArmed=false;rebuild();return true;}}
         selected=null;dragging=false;resetArmed=false;rebuild();return false;
     }
     @Override public boolean mouseDragged(Click click,double dx,double dy){

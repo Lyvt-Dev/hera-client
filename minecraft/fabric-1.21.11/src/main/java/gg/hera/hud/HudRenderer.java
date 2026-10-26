@@ -42,7 +42,7 @@ public final class HudRenderer {
             default -> m.id;
         };
     }
-    public int width(HudModule module, MinecraftClient client) { return client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 20; }
+    public int width(HudModule module, MinecraftClient client) { return client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 22; }
     public void render(DrawContext ctx, boolean editing) {
         MinecraftClient c = MinecraftClient.getInstance();
         if (c.player == null && !editing || c.options.hudHidden && !editing) return;
@@ -50,13 +50,15 @@ public final class HudRenderer {
             if (!m.enabled && !editing) continue;
             m.normalize();
             int x = Math.min(Math.round(m.x * ctx.getScaledWindowWidth()), Math.max(0, ctx.getScaledWindowWidth() - Math.round(width(m, c) * m.scale)));
-            int y = Math.min(Math.round(m.y * ctx.getScaledWindowHeight()), Math.max(0, ctx.getScaledWindowHeight() - Math.round(24 * m.scale)));
+            int y = Math.min(Math.round(m.y * ctx.getScaledWindowHeight()), Math.max(0, ctx.getScaledWindowHeight() - Math.round(20 * m.scale)));
             ctx.getMatrices().pushMatrix();
             ctx.getMatrices().translate(x, y); ctx.getMatrices().scale(m.scale, m.scale);
-            HeraTheme.round(ctx,0,0,width(m,c),24,6,m.background);
-            if(m.background!=0)HeraTheme.round(ctx,0,6,2,12,1,m.enabled?m.color:0xFF657086);
-            if(editing&&!m.enabled)HeraTheme.round(ctx,0,0,width(m,c),24,6,0x6614161C);
-            ctx.drawText(c.textRenderer,HeraTheme.text(value(m,c)),10,8,m.enabled?m.color:0xFF8892A4,false);
+            if(m.background!=0) {
+                HeraTheme.round(ctx,0,0,width(m,c),20,7,0x28FFFFFF);
+                HeraTheme.round(ctx,1,1,width(m,c)-2,18,6,m.background);
+            }
+            HeraTheme.round(ctx,7,8,3,3,1,m.enabled?HeraTheme.ACCENT:0xFF6C7585);
+            ctx.drawText(c.textRenderer,HeraTheme.text(value(m,c)),14,6,m.enabled?m.color:0xFF8892A4,false);
             ctx.getMatrices().popMatrix();
         }
     }

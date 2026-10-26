@@ -55,7 +55,7 @@ public final class ModuleScreen extends Screen {
         addDrawableChild(new HeraButton(layout.contentX()+layout.contentWidth()-74,fy,74,22,"Fertig",true,this::close));
     }
     @Override public void render(DrawContext c,int mx,int my,float delta) {
-        applyBlur(c);c.fill(0,0,width,height,0x55080B11);HeraTheme.panel(c,layout.x(),layout.y(),layout.width(),layout.height());
+        c.fill(0,0,width,height,0x55080B11);HeraTheme.panel(c,layout.x(),layout.y(),layout.width(),layout.height());
         HeraTheme.round(c,layout.x(),layout.y(),layout.side(),layout.height(),11,0x78191C23);
         c.fill(layout.x()+layout.side(),layout.y()+12,layout.x()+layout.side()+1,layout.y()+layout.height()-12,HeraTheme.LINE);
         HeraTheme.title(c,"Hera.",layout.x()+15,layout.y()+18,1.8f,HeraTheme.ACCENT);

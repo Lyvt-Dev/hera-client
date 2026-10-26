@@ -11,6 +11,10 @@ class FeatureConfigTest {
         config.crystalTotem = true; config.save();
         var reloaded = new FeatureConfig(file); reloaded.load(); assertTrue(reloaded.crystalTotem);
     }
+    @Test void legacyFeatureOptInNeedsFreshConsent() throws Exception {
+        Path file = directory.resolve("features.json");Files.writeString(file,"{\"crystalTotem\":true}");
+        var config = new FeatureConfig(file);config.load();assertFalse(config.crystalTotem);
+    }
     @Test void invalidConfigKeepsSafeDefault() throws Exception {
         Path file = directory.resolve("features.json");
         Files.writeString(file, "invalid json");

@@ -13,7 +13,7 @@ public final class HeraTheme {
     public static MutableText text(String value) { return Text.literal(value).setStyle(FONT); }
     public static void round(DrawContext c,int x,int y,int w,int h,int r,int color) {
         if(w<=0||h<=0)return;
-        r=Math.min(r,Math.min(w,h)/2); c.fill(x+r,y,x+w-r,y+h,color); c.fill(x,y+r,x+w,y+h-r,color);
+        r=Math.max(0,Math.min(r,Math.min(w,h)/2)); c.fill(x,y+r,x+w,y+h-r,color);
         for(int row=0;row<r;row++) {
             int inset=(int)Math.ceil(r-Math.sqrt(r*r-(r-row-0.5)*(r-row-0.5)));
             c.fill(x+inset,y+row,x+w-inset,y+row+1,color);

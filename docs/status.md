@@ -1,5 +1,14 @@
 # Verification status
 
+## Mod 0.2.2 crash/defaults/HUD correction
+
+Owner feedback and local crash report confirmed a real multiplayer screen crash in 0.2.1: `IllegalStateException: Can only blur once per frame`, originating in `ModuleScreen.render`. Removed the explicit second blur invocation; do not reintroduce it. The report establishes that the owner loaded the mod in a live world, but does not validate the module menu or all gameplay features. No private crash report, server/player details or local game data are published.
+
+All new HUD modules now default disabled. Version-2 HUD/feature settings migrate old automatically enabled settings to disabled once, retain HUD coordinates, refresh the old HUD style, and persist subsequent explicit opt-ins. Gameplay modules also require fresh opt-in for legacy files. Rounded translucent rectangles now use disjoint spans, eliminating unintended alpha accumulation/striped fills. HUD chips use a compact 20px height, white Nunito values, subtle outlines and small accent dots; editor hit bounds match the new height.
+
+Automated-tested: Gradle build passed with 16 tests, including new all-off defaults, legacy activation migration with retained layout, explicit activation persistence and legacy gameplay-feature reset. The new JAR's menu omits the offending extra blur call. Actual new-build in-world/menu visual testing remains with the owner; no claim of observed crash-free gameplay is made from compilation alone.
+
+
 ## Mod 0.2.1 Liquid Glass UI
 
 Implemented: original translucent glass panels, vanilla menu background blur, rounded cards, Nunito (bundled unchanged with full SIL OFL license), HUD/game category filters, search, keyboard-accessible custom buttons and pagination. HUD Studio adds selection outlines, clickable scale/color/background controls, grid toggle, arrow-key nudging and a two-step layout reset preserving module toggles/colors. HUD uses rounded surfaces and the separate Hera font; the default Minecraft font is not overridden. Crystal-totem behavior remains unchanged.
