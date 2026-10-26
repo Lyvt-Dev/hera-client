@@ -1,0 +1,1 @@
+Derived from the Nunito Project variable font under SIL OFL 1.1. Static weights 600 and 750 instantiated with FontTools; internal family renamed Hera UI. Original copyright and full OFL are retained in META-INF/licenses/OFL-Nunito.txt. No other font-outline modifications.

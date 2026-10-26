@@ -42,7 +42,7 @@ public final class HudRenderer {
             default -> m.id;
         };
     }
-    public int width(HudModule module, MinecraftClient client) { return client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 22; }
+    public int width(HudModule module, MinecraftClient client) { return client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 16; }
     public void render(DrawContext ctx, boolean editing) {
         MinecraftClient c = MinecraftClient.getInstance();
         if (c.player == null && !editing || c.options.hudHidden && !editing) return;
@@ -57,8 +57,7 @@ public final class HudRenderer {
                 HeraTheme.round(ctx,0,0,width(m,c),20,7,0x28FFFFFF);
                 HeraTheme.round(ctx,1,1,width(m,c)-2,18,6,m.background);
             }
-            HeraTheme.round(ctx,7,8,3,3,1,m.enabled?HeraTheme.ACCENT:0xFF6C7585);
-            ctx.drawText(c.textRenderer,HeraTheme.text(value(m,c)),14,6,m.enabled?m.color:0xFF8892A4,false);
+            ctx.drawText(c.textRenderer,HeraTheme.text(value(m,c)),8,6,m.enabled?m.color:0xFF8892A4,false);
             ctx.getMatrices().popMatrix();
         }
     }

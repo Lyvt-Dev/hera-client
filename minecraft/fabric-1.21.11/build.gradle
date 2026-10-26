@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.14.10'; id 'maven-publish' }
-version = '0.2.2'
+version = '0.2.3'
 group = 'gg.hera'
 base { archivesName = 'hera-fabric-1.21.11' }
 repositories { mavenCentral() }
@@ -15,3 +15,5 @@ processResources { inputs.property 'version', project.version; filesMatching('fa
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) }; withSourcesJar() }
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
 test { useJUnitPlatform() }
+
+loom { runs { client { if (project.hasProperty('uiPreview')) vmArg '-Dhera.previewUi=true' } } }

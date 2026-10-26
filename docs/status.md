@@ -1,5 +1,14 @@
 # Verification status
 
+## Mod 0.2.3 typography/rasterization/menu-density correction
+
+Owner screenshots showed thin/broken variable-font glyphs, coarse rasterized corners and an oversized menu. Switched Hera's font resources to derived static Nunito weights 600 and 750, internal family Hera UI, with original copyright/full OFL and a derived-font notice retained. Removed the unused variable-font resources. Added original procedural antialiased nine-slice masks and outline icons; no third-party client art/code copied. The menu now uses shorter labels, actual module descriptions and a compact dark two-column layout. HUD badges no longer have the decorative bullet. All-off defaults/legacy migration and the duplicate-blur fix remain.
+
+Build/test: Gradle build and 16 tests, including configuration activation and GUI layout boundaries. A development-only preview is guarded by both Fabric development mode and explicit `hera.previewUi`; it opens the menu without a world. Minecraft F2 capture verified actual loaded static fonts, smooth surfaces, icons and the module screen. No extra blur crash occurred in that menu preview. The preview exposed large sizing at GUI scale 4, so final code applies a physical-density transform to rendering and matching mouse events. User stopped Computer Use with Escape and requested the JAR for personal feedback; final density transform and updated HUD remain unverified in a world. No offline or authenticated gameplay was entered by the agent.
+
+Asset production used local FontTools/Pillow; those tools are not runtime dependencies or bundled code. Minecraft game data and screenshots remain excluded from Git and releases.
+
+
 ## Mod 0.2.2 crash/defaults/HUD correction
 
 Owner feedback and local crash report confirmed a real multiplayer screen crash in 0.2.1: `IllegalStateException: Can only blur once per frame`, originating in `ModuleScreen.render`. Removed the explicit second blur invocation; do not reintroduce it. The report establishes that the owner loaded the mod in a live world, but does not validate the module menu or all gameplay features. No private crash report, server/player details or local game data are published.

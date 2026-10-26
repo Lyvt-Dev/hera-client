@@ -19,7 +19,7 @@ public class HeraButton extends ClickableWidget {
     @Override protected void appendClickableNarrations(NarrationMessageBuilder builder){appendDefaultNarrations(builder);}
     @Override protected void renderWidget(DrawContext c,int mx,int my,float delta) {
         boolean hover=isHovered()||isFocused();
-        HeraTheme.round(c,getX(),getY(),width,height,6,accent?(hover?0xF0FFCBA5:0xDDF0A46E):(hover?0xAA536075:HeraTheme.RAISED));
+        HeraTheme.round(c,getX(),getY(),width,height,6,accent?(hover?0xFFFFBC8D:0xFFF0A46E):(hover?0xFF343D4D:HeraTheme.RAISED));
         if(isFocused()) { c.fill(getX()+7,getY()+height-2,getX()+width-7,getY()+height-1,HeraTheme.ACCENT); }
         var renderer=MinecraftClient.getInstance().textRenderer;
         c.drawText(renderer,getMessage(),getX()+(width-renderer.getWidth(getMessage()))/2,getY()+(height-9)/2,active?(accent?0xFF261A12:HeraTheme.TEXT):HeraTheme.MUTED,false);
