@@ -1,5 +1,9 @@
 # Verification status
 
+## 0.1.4 profile dialog fixes
+
+New-profile Fabric/Forge tiles are selectable from the default 26.3 setup. Selecting either changes the draft to their implemented Minecraft 1.21.1 target and announces the change inline; version changes back to other versions explicitly explain the return to Vanilla. Existing profiles keep their version/loader immutable. Backdrop and dialog-padding clicks no longer dismiss modals. Escape, the close icon and Cancel remain deliberate dismissal actions; cancel events prevent the browser from closing a dialog independently of the guarded React close handler.
+
 ## 0.1.3 versions and profile UX (26 October 2026)
 
 Implemented: official Mojang catalog through 26.3, including releases, snapshots, historical alpha and beta entries (915 catalog entries observed). Search, type filters, incremental list rendering and direct profile creation replace the 1.21.1-only catalog. The profile editor defaults to Vanilla, shows loader choices with their actual scope, keeps advanced Java configuration collapsed, and prevents changing the version or loader of an existing profile. Official IDs containing spaces are accepted; traversal and separators are rejected.
@@ -85,3 +89,5 @@ Authenticate an owned Java account with our app registration, install from empty
 - Automated approval review initially required explicit consent before transferring the signing key. The owner then expressly approved storing it as an encrypted Actions secret. The key was sealed with GitHub's public key, stored as TAURI_SIGNING_PRIVATE_KEY and a new Windows workflow was dispatched. No private key was printed, committed or uploaded as an artifact.
 
 0.1.2 packaging: final Windows NSIS setup built successfully at 7,008,258 bytes with embedded Nunito/font license, pumpkin avatar and generated world image. All final TypeScript checks, 38 scoped tests and web/backend builds passed; final Rust run passed 18 tests (3 opt-in integrations skipped). Publishing uses an isolated Git index based on origin/main so the unrelated local VConnect commit and worktree edits are not included in the Hera source release.
+
+0.1.4 verification: TypeScript checks/build and all 48 tests passed. Browser interaction verified Fabric and Forge selection, automatic 1.21.1 preselection, and that an outside click preserves the open dialog, selected loader and unsaved profile name. No mod/native behavior changed beyond the app version; no new gameplay claim.
