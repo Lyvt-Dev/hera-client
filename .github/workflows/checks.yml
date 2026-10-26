@@ -42,3 +42,19 @@ jobs:
       - run: gradle -p minecraft build --no-daemon
       - uses: actions/upload-artifact@v4
         with: {name: hera-fabric-experimental, path: minecraft/fabric-modern/build/libs/*.jar}
+
+  minecraft_12111:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: 21}
+      - uses: gradle/actions/setup-gradle@v4
+        with: {gradle-version: 9.2.1}
+      - run: gradle -p minecraft/fabric-1.21.11 build --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hera-fabric-1.21.11
+          path: |
+            minecraft/fabric-1.21.11/build/libs/*.jar
+            !minecraft/fabric-1.21.11/build/libs/*-sources.jar

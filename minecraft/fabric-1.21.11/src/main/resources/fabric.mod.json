@@ -1,0 +1,1 @@
+{"schemaVersion":1,"id":"hera","version":"${version}","name":"Hera Client","description":"Client HUD, layout editor and optional hotbar totem selection.","authors":["Hera contributors"],"environment":"client","entrypoints":{"client":["gg.hera.HeraClient"]},"depends":{"fabricloader":">=0.18.1","minecraft":"1.21.11","java":">=21","fabric-api":"*"}}

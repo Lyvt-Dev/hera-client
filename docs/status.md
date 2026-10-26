@@ -1,5 +1,14 @@
 # Verification status
 
+## Standalone Fabric 1.21.11 mod 0.2.0 (26 October 2026)
+
+Implemented separately in `minecraft/fabric-1.21.11`: nine HUD modules, editor and module menu ported to the 1.21.11 HUD registry, 2D matrix stack, keybinding categories and input records. Existing 1.21.1 sources remain unchanged. The new optional `Kristall-Totem` module detects another living non-spectator player with an End Crystal in either hand within eight blocks, selects a Totem of Undying only from hotbar slots 0–8 and sends the normal selected-slot update. It defaults off, persists its opt-in separately, does nothing while a screen is open/dead/spectating/disconnected, does not move inventory items, and switches once per continuous threat episode. Own crystals do not trigger it. It rearms after the threat clears or the blocked state resets. Installation/test steps and dependency provenance are in the module README.
+
+Automated-tested: JDK 21 / Gradle 9.2.1 / Loom 1.14.10 `build` passed, including 10 JUnit tests (HUD normalization, slot-policy boundaries/rearming, config opt-in persistence and invalid-config handling). The output JAR has remapped intermediary Minecraft references, correct 1.21.11 metadata, feature/editor classes and no bundled Minecraft or JUnit classes. First download was interrupted by upstream DNS; retry succeeded. No TypeScript or native implementation changed; this is a separate mod release, not a launcher installer update. New CI job builds this standalone project without replacing the old mod job.
+
+Game-tested: not yet. No authenticated in-game HUD/input or two-player crystal detection has been observed. Deliver as an experimental test build, not certified support; the owner will test it via an existing authenticated Fabric launcher. Hera's launcher-side Fabric adapter remains 1.21.1 and app approval remains blocked.
+
+
 ## 0.1.4 profile dialog fixes
 
 New-profile Fabric/Forge tiles are selectable from the default 26.3 setup. Selecting either changes the draft to their implemented Minecraft 1.21.1 target and announces the change inline; version changes back to other versions explicitly explain the return to Vanilla. Existing profiles keep their version/loader immutable. Backdrop and dialog-padding clicks no longer dismiss modals. Escape, the close icon and Cancel remain deliberate dismissal actions; cancel events prevent the browser from closing a dialog independently of the guarded React close handler.

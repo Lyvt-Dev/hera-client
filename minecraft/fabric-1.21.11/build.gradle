@@ -1,0 +1,17 @@
+plugins { id 'fabric-loom' version '1.14.10'; id 'maven-publish' }
+version = '0.2.0'
+group = 'gg.hera'
+base { archivesName = 'hera-fabric-1.21.11' }
+repositories { mavenCentral() }
+dependencies {
+ minecraft 'com.mojang:minecraft:1.21.11'
+ mappings 'net.fabricmc:yarn:1.21.11+build.6:v2'
+ modImplementation 'net.fabricmc:fabric-loader:0.18.1'
+ modImplementation 'net.fabricmc.fabric-api:fabric-api:0.141.6+1.21.11'
+ testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+ testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+processResources { inputs.property 'version', project.version; filesMatching('fabric.mod.json') { expand 'version': project.version } }
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) }; withSourcesJar() }
+tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
+test { useJUnitPlatform() }
