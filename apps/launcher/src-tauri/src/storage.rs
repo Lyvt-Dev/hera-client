@@ -51,7 +51,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             reduced_motion: false,
-            accent: "violet".into(),
+            accent: "orange".into(),
             scale: 1.0,
         }
     }
@@ -148,7 +148,7 @@ impl Store {
             .unwrap_or_else(|| Ok(Settings::default()))
     }
     pub fn save_settings(&self, s: &Settings) -> Result<()> {
-        if !["violet", "cyan"].contains(&s.accent.as_str())
+        if !["orange", "violet", "cyan"].contains(&s.accent.as_str())
             || !s.scale.is_finite()
             || !(0.85..=1.2).contains(&s.scale)
         {

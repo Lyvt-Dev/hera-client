@@ -5,13 +5,13 @@ export const profileSchema = z.object({
   javaPath: z.string().min(1).max(1024).refine(s => !/[\r\n\0]/.test(s) && /^(?:java(?:\.exe)?|(?:[A-Za-z]:[\\/]|\/).*[/\\]java(?:\.exe)?)$/i.test(s), 'Java-Pfad muss auf java oder java.exe zeigen'),
 });
 export type Profile = z.infer<typeof profileSchema>;
-export const settingsSchema = z.object({ reducedMotion: z.boolean(), accent: z.enum(['violet','cyan']), scale: z.number().min(0.85).max(1.2) }).strict();
+export const settingsSchema = z.object({ reducedMotion: z.boolean(), accent: z.enum(['orange','violet','cyan']), scale: z.number().min(0.85).max(1.2) }).strict();
 export type Settings = z.infer<typeof settingsSchema>;
 export interface Account { id: string; name: string }
 export interface Transfer { stage: string; completed: number; total: number }
 export interface Runtime { java: string | null; platform: string; authConfigured: boolean }
 export interface Version { id: string; type: string; releaseTime: string }
-export const defaultSettings: Settings = { reducedMotion: false, accent: 'violet', scale: 1 };
+export const defaultSettings: Settings = { reducedMotion: false, accent: 'orange', scale: 1 };
 export const modSourceSchema = z.enum(['modrinth','curseforge']);
 export type ModSource = z.infer<typeof modSourceSchema>;
 export const modFileSchema = z.object({ filename:z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9._+\-]*\.jar$/),url:z.url(),size:z.number().int().positive().max(128*1024*1024),sha1:z.string().regex(/^[a-f0-9]{40}$/i) });

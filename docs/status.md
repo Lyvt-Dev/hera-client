@@ -1,6 +1,12 @@
 # Verification status
 
-Development snapshot: 25 October 2026. This is a foundation implementation, not feature parity with NoRisk/Lunar and not a production release.
+## 0.1.2 Minecraft 403 diagnosis
+
+The owner reached Minecraft authentication after Microsoft/Xbox/XSTS and reported HTTP 403. The original generic error did not retain a specific cause, so missing Minecraft app approval is not yet confirmed. Version 0.1.2 distinguishes an explicit `Invalid app registration` response (`MC_APP_NOT_APPROVED`) from unknown 403 errors (`MC_AUTH_FORBIDDEN`), without exposing arbitrary provider payloads or credentials. An approval-request draft is in [app-approval-de.md](app-approval-de.md). No approval was submitted or granted by this change; authenticated gameplay remains unverified.
+
+The same release adds the owner's Discord-site visual language and locally bundled OFL Nunito, an original Minecraft hero, consistent orange/charcoal components and persistent selected-profile state. See [design and asset provenance](launcher-design.md). TypeScript checks/builds and 38 tests passed; Rust tests passed with 18 unit tests and 3 opt-in live-download tests skipped. Browser font/image loading, no observed horizontal overflow, profile selection across reload, live Modrinth results and modal cancellation were verified. Vitest is explicitly scoped to Hera's `tests/**/*.test.ts`; the unrelated VConnect project uses a different test runner and was not modified.
+
+Development snapshot: 26 October 2026. This is a foundation implementation, not feature parity with NoRisk/Lunar and not a production release.
 
 ## Implemented
 
@@ -66,3 +72,5 @@ Authenticate an owned Java account with our app registration, install from empty
 - scripts/verify-release.py downloaded all 4,454,298 published installer bytes via the real update channel, verified both Minisign Ed25519 signatures against the embedded public key, and confirmed that a changed byte is rejected. This is a real transport/signature check; installation/upgrade on a separate Windows machine remains untested.
 - GitHub browser authentication succeeded via Git Credential Manager. Only source and public release artifacts were pushed; no local key, token or game data was committed.
 - Automated approval review initially required explicit consent before transferring the signing key. The owner then expressly approved storing it as an encrypted Actions secret. The key was sealed with GitHub's public key, stored as TAURI_SIGNING_PRIVATE_KEY and a new Windows workflow was dispatched. No private key was printed, committed or uploaded as an artifact.
+
+0.1.2 packaging: final Windows NSIS setup built successfully at 7,008,258 bytes with embedded Nunito/font license, pumpkin avatar and generated world image. All final TypeScript checks, 38 scoped tests and web/backend builds passed; final Rust run passed 18 tests (3 opt-in integrations skipped). Publishing uses an isolated Git index based on origin/main so the unrelated local VConnect commit and worktree edits are not included in the Hera source release.

@@ -41,6 +41,16 @@ async fn response(r: reqwest::Response, stage: &str) -> Result<Value> {
         .map_err(|_| format!("{stage}: Ungültige Antwort"))
 }
 fn provider_error(body: &Value, stage: &str, status: u16) -> String {
+    if stage == "Minecraft-Anmeldung" && status == 403 {
+        let message = body["errorMessage"]
+            .as_str()
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        if message.contains("invalid app registration") {
+            return "Microsoft und Xbox haben die Anmeldung bestätigt. Minecraft hat die Hera-App jedoch noch nicht für seinen Anmeldedienst freigegeben (MC_APP_NOT_APPROVED). Der Herausgeber muss die Minecraft-App-Freigabe beantragen. Erneutes Einloggen behebt diese Sperre nicht.".into();
+        }
+        return "Microsoft und Xbox haben die Anmeldung bestätigt. Minecraft lehnt die Kontoübernahme ab (MC_AUTH_FORBIDDEN, HTTP 403). Die Antwort bestätigt keine konkrete Ursache; die App-Freigabe muss geprüft werden.".into();
+    }
     let codes = body["error_codes"].as_array();
     let has = |code: u64| codes.is_some_and(|list| list.iter().any(|v| v.as_u64() == Some(code)));
     if has(70002) || has(7000218) {
@@ -59,6 +69,30 @@ fn provider_error(body: &Value, stage: &str, status: u16) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn distinguishes_app_approval_from_unknown_forbidden_without_leaking_payload() {
+        let known = provider_error(
+            &json!({"errorMessage":"Invalid app registration, see https://aka.ms/AppRegInfo", "access_token":"private-token"}),
+            "Minecraft-Anmeldung",
+            403,
+        );
+        assert!(known.contains("MC_APP_NOT_APPROVED"));
+        assert!(!known.contains("private-token"));
+        let unknown = provider_error(
+            &json!({"errorMessage":"private account detail"}),
+            "Minecraft-Anmeldung",
+            403,
+        );
+        assert!(unknown.contains("MC_AUTH_FORBIDDEN"));
+        assert!(!unknown.contains("MC_APP_NOT_APPROVED"));
+        assert!(!unknown.contains("private account detail"));
+        assert!(!provider_error(
+            &json!({"errorMessage":"Invalid app registration"}),
+            "Minecraft-Besitzprüfung",
+            403
+        )
+        .contains("MC_APP_NOT_APPROVED"));
+    }
     #[test]
     fn explains_public_client_configuration_without_echoing_provider_payload() {
         let body = json!({"error_codes":[70002],"error_description":"secret diagnostic payload", "access_token":"must-not-leak"});

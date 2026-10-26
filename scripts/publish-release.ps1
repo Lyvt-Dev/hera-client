@@ -1,4 +1,4 @@
-param([string]$Repository = 'Lyvt-Dev/hera-client')
+param([string]$Repository = 'Lyvt-Dev/hera-client', [string]$Revision = 'HEAD')
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath (Split-Path $PSScriptRoot -Parent)
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Repository als Benutzer/Repository angeben.' }
@@ -22,7 +22,7 @@ $tokenLine = $credentialLines | Where-Object { $_.StartsWith('password=') } | Se
 if (!$tokenLine) { throw 'GitHub-Anmeldung fehlt.' }
 $headers = @{ Authorization = "Bearer $($tokenLine.Substring(9))"; Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28' }
 $api = "https://api.github.com/repos/$Repository"
-$commit = (git rev-parse HEAD).Trim()
+$commit = (git rev-parse --verify "$Revision`^{commit}").Trim()
 if ($LASTEXITCODE) { throw 'Commit fehlt.' }
 $remote = git ls-remote origin refs/heads/main
 if (!$remote -or !($remote -match $commit)) { throw 'Den aktuellen Commit zuerst nach origin/main pushen.' }
