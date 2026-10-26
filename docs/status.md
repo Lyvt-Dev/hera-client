@@ -1,5 +1,12 @@
 # Verification status
 
+## Mod 0.2.1 Liquid Glass UI
+
+Implemented: original translucent glass panels, vanilla menu background blur, rounded cards, Nunito (bundled unchanged with full SIL OFL license), HUD/game category filters, search, keyboard-accessible custom buttons and pagination. HUD Studio adds selection outlines, clickable scale/color/background controls, grid toggle, arrow-key nudging and a two-step layout reset preserving module toggles/colors. HUD uses rounded surfaces and the separate Hera font; the default Minecraft font is not overridden. Crystal-totem behavior remains unchanged.
+
+Automated-tested: Gradle build and 12 JUnit tests passed, including scaled GUI layout/page boundaries. Remapped JAR metadata/font paths and included license checked. Development client reached the title screen; actual resource loading exposed a duplicate font-folder path, now fixed. Native capture failed; Minecraft's own F2 capture verified the title screen only. The mod menu and HUD Studio were not visually validated in-game; owner explicitly requested the JAR immediately for feedback. No world was entered, no authenticated gameplay observed. Test-client game data/screenshots are excluded via the module's `/run/` ignore rule.
+
+
 ## Standalone Fabric 1.21.11 mod 0.2.0 (26 October 2026)
 
 Implemented separately in `minecraft/fabric-1.21.11`: nine HUD modules, editor and module menu ported to the 1.21.11 HUD registry, 2D matrix stack, keybinding categories and input records. Existing 1.21.1 sources remain unchanged. The new optional `Kristall-Totem` module detects another living non-spectator player with an End Crystal in either hand within eight blocks, selects a Totem of Undying only from hotbar slots 0–8 and sends the normal selected-slot update. It defaults off, persists its opt-in separately, does nothing while a screen is open/dead/spectating/disconnected, does not move inventory items, and switches once per continuous threat episode. Own crystals do not trigger it. It rearms after the threat clears or the blocked state resets. Installation/test steps and dependency provenance are in the module README.
