@@ -1,17 +1,26 @@
 # Hera for Minecraft Java 1.21.11
 
-Experimental standalone Fabric client mod, version 0.2.3. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. The Hera launcher itself still has a 1.21.1 Fabric adapter; use your existing launcher for this test build.
+Experimental standalone Fabric client mod, version 0.3.0. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. The Hera launcher itself still has a 1.21.1 Fabric adapter; use your existing launcher for this test build.
 
 ## Install and test
 
 1. Close Minecraft. Open the game directory of your **Fabric 1.21.11** profile and its `mods` folder.
-2. Put `hera-fabric-1.21.11-0.2.3.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
+2. Put `hera-fabric-1.21.11-0.3.0.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
 3. Start the profile. Right Shift opens Hera's module menu. All HUD and gameplay modules start disabled. Legacy settings are migrated to disabled once; only fresh explicit choices are then persisted. The nine HUD modules and HUD editor are included.
 4. Turn **Kristall-Totem** on and press **Fertig**. It is disabled by default.
 5. Put a Totem of Undying in hotbar slots 1–9 and select another item. Have a second player within eight blocks hold an End Crystal in their main hand or offhand. Hera selects your first hotbar totem, keeping an already-selected totem. It does not take a totem from other inventory slots or move anything to the offhand.
 6. It switches once per threat episode. You can choose another item afterwards; the automatic switch rearms after no nearby other player holds a crystal, after closing a menu or after reconnecting. Without a hotbar totem, no switch occurs. Your own crystal does not trigger it. Dead/spectator players and open menus do not trigger it.
 
 Menu density is independent of Minecraft GUI scale, with transformed mouse hitboxes. The compact module menu uses dark panels, antialiased nine-slice surfaces, original outline icons, static Nunito 600/750 fonts, search, HUD/game filters and pagination. It never submits an extra blur pass. HUD Studio provides selection outlines, dragging, Shift grid snapping, wheel or +/- scaling, clickable text-color/background controls, right-click toggles, arrow-key nudging (Shift for eight pixels), C text color and B background. Reset requires a second click or R press and preserves module toggles/colors. Escape saves and returns to the module menu. Configuration lives in `config/hera/hud.json` and `config/hera/features.json` within that game profile. No tokens, login flow or launcher registration are included in this mod.
+
+## New modules
+
+- **Item-ESP** opens the searchable item picker. Search by localized name or ID, select the items to mark, then enable Item-ESP. Empty selection marks nothing. The range button cycles 16, 32, 64 and 128 blocks. Drops receive outlines; selected loaded containers receive name/distance markers through walls. Select `minecraft:barrel` (Fass) to locate barrels. Their hidden contents cannot be read by the client. Only already-loaded data is searched.
+- **Spieler-ESP / Mob-ESP** independently enable outlines within the same range. Disabling Hera ESP preserves vanilla server-assigned glow.
+- **Auto-Totem** swaps an inventory totem into the offhand, moving the old offhand item into its inventory slot. It waits while menus are open or the cursor carries an item. It is independent from Kristall-Totem.
+- **Fast Items** enables the integrated camera-facing drop renderer with flat-item side removal and preserved shadows. Special renderers remain vanilla. If standalone Fast Items is installed, that mod owns the rendering and Hera's integration is skipped. See THIRD-PARTY.md for the reviewed CC0 license and pinned source.
+
+All modules start off. Activate only the features you want. New rendering and automation still need in-game feedback; a successful build is not a gameplay compatibility claim.
 
 ## Build
 

@@ -1,5 +1,15 @@
 # Verification status
 
+## Mod 0.3.0 configurable ESP, Auto Totem and Fast Items
+
+Implemented: all new modules default off. Item ESP has a searchable Minecraft item registry picker (localized name or registry ID), independent item selection, selected-only filter, pagination, persisted exact-ID selection and 16–128 block range. Empty selection marks nothing. Selected loaded item entities receive vanilla glowing outlines. Selected loaded inventory block entities (for example barrels, chests and shulker boxes) receive projected name/distance markers through walls, with a bounded loaded-chunk scan every ten ticks and at most 128 nearest markers. No hidden container contents are queried, inferred or claimed. Player and mob outlines are independent opt-ins. Entities outside the shared range or unloaded entities are not revealed.
+
+Auto Totem uses a single vanilla SWAP into offhand, preserves the displaced item in the source slot, pauses for screens/cursor stacks/death/spectator and retries no faster than ten ticks. Kristall-Totem remains separate. Fast Items integrates the explicitly requested Lyvt-Dev/FastItems 1.21.11 port at pinned revision 131a2bc2e25630b704433afd94b338078ee7c5f6; CC0 reviewed and bundled with provenance. Integration is disabled by default and its rendering mixins are skipped if standalone fastitems is installed. No reference-client implementation copied. UI adds searchable item cards, selection toggles, module state accents and active count; existing Nunito/static fonts and single-blur behavior retained.
+
+Automated-tested: Gradle build and 24 tests pass, including empty/exact/bounded selection, config opt-in persistence and all main-inventory/hotbar slot mappings. Remapped JAR metadata and bundled mixin/license resources inspected. No TypeScript or Rust changes in this mod update.
+
+Game-tested: these new ESP, inventory automation and integrated Fast Items rendering paths have not yet been exercised in a live world. Compatibility with shaders, other render mods, anticheat rules and unusual resource-pack models remains unverified. Delivered as a separate experimental mod release for owner feedback; no new supported-adapter claim.
+
 ## Mod 0.2.3 typography/rasterization/menu-density correction
 
 Owner screenshots showed thin/broken variable-font glyphs, coarse rasterized corners and an oversized menu. Switched Hera's font resources to derived static Nunito weights 600 and 750, internal family Hera UI, with original copyright/full OFL and a derived-font notice retained. Removed the unused variable-font resources. Added original procedural antialiased nine-slice masks and outline icons; no third-party client art/code copied. The menu now uses shorter labels, actual module descriptions and a compact dark two-column layout. HUD badges no longer have the decorative bullet. All-off defaults/legacy migration and the duplicate-blur fix remain.

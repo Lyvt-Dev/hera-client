@@ -1,1 +1,26 @@
-{"schemaVersion":1,"id":"hera","version":"${version}","name":"Hera Client","description":"Client HUD, layout editor and optional hotbar totem selection.","authors":["Hera contributors"],"environment":"client","entrypoints":{"client":["gg.hera.HeraClient"]},"depends":{"fabricloader":">=0.18.1","minecraft":"1.21.11","java":">=21","fabric-api":"*"}}
+{
+  "schemaVersion": 1,
+  "id": "hera",
+  "version": "${version}",
+  "name": "Hera Client",
+  "description": "Optional HUD, configurable item/entity markers, Auto Totem and Fast Items.",
+  "authors": [
+    "Hera contributors"
+  ],
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "gg.hera.HeraClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "mixins": [
+    "hera.mixins.json",
+    "hera-fastitems.mixins.json"
+  ]
+}

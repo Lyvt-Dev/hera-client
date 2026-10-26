@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "gg.hera.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "EntityEspMixin",
+    "GameRendererAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "gg.hera.fastitems.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ItemEntityRenderStateMixin",
+    "ItemEntityRendererMixin",
+    "ItemRenderStateAccessor",
+    "LayerRenderStateAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "plugin": "gg.hera.fastitems.FastItemsMixinPlugin"
+}
