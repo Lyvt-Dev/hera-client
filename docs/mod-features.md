@@ -1,3 +1,15 @@
+# Fabric 1.21.11 — 0.5.0
+
+The menu is now a searchable three-pane workspace with inline settings. Select
+modules separately from enabling them; scroll module/detail panes independently.
+The old ellipsis/settings pagination workflow below is superseded.
+
+Rüstung ausblenden (off by default) hides only your own chosen armor slots in
+rendering. Armor remains equipped and effective; other players and Elytra are
+unchanged. ESP block snapshots persist across rescans, and moving overlays use
+render interpolation instead of tick positions. See status.md for the distinct
+build/launch-tested and world-tested evidence.
+
 # Fabric 1.21.11 — 0.4.0
 
 All modules start disabled. Right Shift opens the menu; click the bottom-right

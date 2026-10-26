@@ -2,6 +2,8 @@ package gg.hera.features;
 
 /** Persisted, client-only module settings. No gameplay module starts enabled. */
 public final class ModuleOptions {
+    public boolean hideOwnArmor;
+    public boolean hideHelmet=true,hideChest=true,hideLegs=true,hideBoots=true;
     public boolean hitboxes,tntTimer,itemHighlighter,noFog,timeChanger,weatherChanger,zoom,freeLook,fullBright,freecam;
     public boolean espTracers,espBoxes=true,espGlow=true,espLabels=true,hitboxPlayers=true,hitboxMobs=true,hitboxItems;
     public boolean tracerCenter;

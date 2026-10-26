@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.gl.RenderPipelines;
 
 public final class HeraTheme {
-    public static final int BG=0xF014171F, PANEL=0xE91C202A, RAISED=0xFF262C38, LINE=0xFF343B4B;
-    public static final int TEXT=0xFFF3F4F8, MUTED=0xFF9DA6B8, ACCENT=0xFFF0A46E;
+    public static final int BG=0xFF10151D, PANEL=0xFF171E28, RAISED=0xFF242D39, LINE=0xFF2C3543;
+    public static final int TEXT=0xFFF3F6FC, MUTED=0xFF98A5B8, ACCENT=0xFFFFB27C;
     private static final Style FONT=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","medium")));
     private static final Style BOLD=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","bold")));
     private HeraTheme() {}
@@ -20,7 +20,7 @@ public final class HeraTheme {
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","round/"+r),x,y,w,h,color);
     }
     public static void icon(DrawContext c,String name,int x,int y,int size,int color){
-        String id=switch(name){case "FPS","Zoom"->"fps";case "Koordinaten","Hitboxes","Item Highlighter"->"coords";case "Ping"->"ping";case "Speicher","Full Bright"->"memory";case "Uhr","TNT Timer","Time Changer"->"clock";case "Richtung","Free Look"->"direction";case "Geschwindigkeit","Freecam","Keystrokes"->"speed";case "Biome","Weather Changer","No Fog"->"biome";case "Kristall-Totem","Auto-Totem","Armor HUD"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
+        String id=switch(name){case "FPS","Zoom"->"fps";case "Koordinaten","Hitboxes","Item Highlighter"->"coords";case "Ping"->"ping";case "Speicher","Full Bright"->"memory";case "Uhr","TNT Timer","Time Changer"->"clock";case "Richtung","Free Look"->"direction";case "Geschwindigkeit","Freecam","Keystrokes"->"speed";case "Biome","Weather Changer","No Fog"->"biome";case "Kristall-Totem","Auto-Totem","Armor HUD","Rüstung ausblenden"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","icons/"+id),x,y,size,size,color);
     }
     public static void panel(DrawContext c,int x,int y,int w,int h) {

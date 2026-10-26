@@ -13,7 +13,8 @@
     "InputMixin",
     "ZoomMixin",
     "ItemHighlightMixin",
-    "FreecamInteractionMixin"
+    "FreecamInteractionMixin",
+    "HideOwnArmorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

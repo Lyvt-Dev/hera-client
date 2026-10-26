@@ -17,7 +17,7 @@ import java.util.*;
 public final class ContainerMarkers {
     private record Section(net.minecraft.world.chunk.WorldChunk chunk,int index){}
     private final FeatureConfig config;
-    private List<BlockPos> positions=List.of();private final java.util.ArrayDeque<Section> pending=new java.util.ArrayDeque<>();
+    private final StableScanResults<BlockPos> results=new StableScanResults<>();private final java.util.ArrayDeque<Section> pending=new java.util.ArrayDeque<>();
     private final java.util.HashSet<net.minecraft.block.Block> blocks=new java.util.HashSet<>();
     private java.util.PriorityQueue<BlockPos> nearest;private Object world;private java.util.Set<String> selection=java.util.Set.of();private int cooldown,lastRange;private BlockPos scanOrigin=BlockPos.ORIGIN;
     public ContainerMarkers(FeatureConfig config){this.config=config;}
@@ -47,15 +47,15 @@ public final class ContainerMarkers {
                 if(nearest.size()<128)nearest.add(pos);else if(distance<nearest.peek().getSquaredDistance(scanOrigin)){nearest.poll();nearest.add(pos);}
             }
         }
-        if(nearest!=null)positions=List.copyOf(nearest);
+        if(nearest!=null){if(pending.isEmpty())results.commit(nearest);else results.progress(nearest);}
         if(pending.isEmpty())cooldown=20;
     }
-    private void clear(){positions=List.of();pending.clear();blocks.clear();selection=java.util.Set.of();nearest=null;world=null;cooldown=0;}
+    private void clear(){results.clear();pending.clear();blocks.clear();selection=java.util.Set.of();nearest=null;world=null;cooldown=0;}
     public void render(DrawContext ctx){
         var c=MinecraftClient.getInstance();
-        if(!config.itemEsp || c.world==null || c.player==null || c.options.hudHidden || c.currentScreen!=null)return;
+        if(!config.itemEsp || c.world==null || c.player==null || c.options.hudHidden)return;
         var overlay=new WorldOverlay();var o=config.options;
-        for(var p:positions){
+        for(var p:results.visible()){
             if(!c.world.isChunkLoaded(p))continue;
             var state=c.world.getBlockState(p);String id=Registries.ITEM.getId(state.getBlock().asItem()).toString();
             if(!ItemSelection.matches(config.markedItems,id) || p.getSquaredDistance(c.player.getBlockPos())>(double)config.espRange*config.espRange)continue;

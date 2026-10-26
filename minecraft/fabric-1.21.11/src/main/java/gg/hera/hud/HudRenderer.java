@@ -44,7 +44,7 @@ public final class HudRenderer {
             default -> m.id;
         };
     }
-    public int width(HudModule module, MinecraftClient client) { return switch(module.id){case "Keystrokes"->82;case "Armor HUD"->104;default->client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 16;}; }
+    public int width(HudModule module, MinecraftClient client) { return switch(module.id){case "Keystrokes"->82;case "Armor HUD"->120;default->client.textRenderer.getWidth(HeraTheme.text(value(module, client))) + 16;}; }
     public int height(HudModule module){return switch(module.id){case "Keystrokes"->44+(Esp.options().keySpace?22:0)+(Esp.options().keyMouse?22:0);case "Armor HUD"->Esp.options().armorDurability?38:24;default->20;};}
     public void render(DrawContext ctx, boolean editing) {
         MinecraftClient c = MinecraftClient.getInstance();
@@ -73,8 +73,8 @@ public final class HudRenderer {
         if(Esp.options().keySpace)key(ctx,m,"SPACE",0,Esp.options().keyMouse?66:44,82,input&&c.options.jumpKey.isPressed());
     }
     private void armor(DrawContext ctx,MinecraftClient c,HudModule m){
-        HeraTheme.round(ctx,0,0,104,height(m),6,m.background);if(c.player==null){HeraTheme.label(ctx,"Armor HUD",8,8,m.color);return;}
+        HeraTheme.round(ctx,0,0,120,height(m),6,m.background);if(c.player==null){HeraTheme.label(ctx,"Armor HUD",8,8,m.color);return;}
         EquipmentSlot[] slots={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
-        for(int i=0;i<slots.length;i++){var stack=c.player.getEquippedStack(slots[i]);int x=5+i*25;ctx.drawItem(stack,x,4);if(Esp.options().armorDurability && !stack.isEmpty() && stack.isDamageable()){int percent=Math.round(100f*(stack.getMaxDamage()-stack.getDamage())/stack.getMaxDamage());HeraTheme.label(ctx,percent+"%",x,25,percent<20?0xFFFF7D9C:m.color);}}
+        for(int i=0;i<slots.length;i++){var stack=c.player.getEquippedStack(slots[i]);int x=5+i*29;ctx.drawItem(stack,x,4);if(Esp.options().armorDurability && !stack.isEmpty() && stack.isDamageable()){int percent=Math.round(100f*(stack.getMaxDamage()-stack.getDamage())/stack.getMaxDamage());HeraTheme.label(ctx,percent+"%",x,25,percent<20?0xFFFF7D9C:m.color);}}
     }
 }

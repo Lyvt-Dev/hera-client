@@ -1,22 +1,41 @@
 # Hera for Minecraft Java 1.21.11
 
-Experimental standalone Fabric client mod, version 0.4.0. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. The Hera launcher itself still has a 1.21.1 Fabric adapter; use your existing launcher for this test build.
+Experimental standalone Fabric client mod, version 0.5.0. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. The Hera launcher itself still has a 1.21.1 Fabric adapter; use your existing launcher for this test build.
 
 ## Install and test
 
 1. Close Minecraft. Open the game directory of your **Fabric 1.21.11** profile and its `mods` folder.
-2. Put `hera-fabric-1.21.11-0.4.0.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
+2. Put `hera-fabric-1.21.11-0.5.0.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
 3. Start the profile. Right Shift opens Hera's module menu. All HUD and gameplay modules start disabled. Legacy settings are migrated to disabled once; only fresh explicit choices are then persisted. The eleven HUD modules and HUD editor are included.
 4. Turn **Kristall-Totem** on and press **Schließen**. It is disabled by default.
 5. Put a Totem of Undying in hotbar slots 1–9 and select another item. Have a second player within eight blocks hold an End Crystal in their main hand or offhand. Hera selects your first hotbar totem, keeping an already-selected totem. It does not take a totem from other inventory slots or move anything to the offhand.
 6. It switches once per threat episode. You can choose another item afterwards; the automatic switch rearms after no nearby other player holds a crystal, after closing a menu or after reconnecting. Without a hotbar totem, no switch occurs. Your own crystal does not trigger it. Dead/spectator players and open menus do not trigger it.
 
-Menu density is independent of Minecraft GUI scale, with transformed mouse hitboxes. The compact module menu uses dark panels, antialiased nine-slice surfaces, original outline icons, static Nunito 600/750 fonts, search, HUD/game filters and pagination. It never submits an extra blur pass. HUD Studio provides selection outlines, dragging, Shift grid snapping, wheel or +/- scaling, clickable text-color/background controls, right-click toggles, arrow-key nudging (Shift for eight pixels), C text color and B background. Reset requires a second click or R press and preserves module toggles/colors. Escape saves and returns to the module menu. Configuration lives in `config/hera/hud.json` and `config/hera/features.json` within that game profile. No tokens, login flow or launcher registration are included in this mod.
+Menu density is independent of Minecraft GUI scale, with transformed mouse hitboxes. The compact module menu uses dark panels, antialiased nine-slice surfaces, original outline icons, static Nunito 600/750 fonts, search, category filters and inline settings. It never submits an extra blur pass. HUD Studio provides selection outlines, dragging, Shift grid snapping, wheel or +/- scaling, clickable text-color/background controls, right-click toggles, arrow-key nudging (Shift for eight pixels), C text color and B background. Reset requires a second click or R press and preserves module toggles/colors. Escape saves and returns to the module menu. Configuration lives in `config/hera/hud.json` and `config/hera/features.json` within that game profile. No tokens, login flow or launcher registration are included in this mod.
 
-## 0.4.0 modules and controls
+## 0.5.0 workspace and rendering fixes
 
-All new modules start OFF. Right Shift opens the menu. Click the bottom-right
-**…** on a card to customize that module. RGB colors, line widths, categories,
+Right Shift now opens a three-pane workspace. Choose a category, search/select a
+module, and edit its settings directly on the right. Toggle the module using its
+switch or the detail header. Scroll each pane independently. Save and close (or
+Escape) persists the setup. Item selection is at the top of the ESP detail pane.
+
+- ESP block results remain visible while the next incremental scan runs.
+- Hitboxes, tracer anchors and TNT labels interpolate with the render camera;
+  line lengths retain fractional coordinates. This fixes identified tick-step
+  behavior, without claiming a measured FPS increase.
+- **Rüstung ausblenden** hides your own rendered helmet/chest/legs/boots, with
+  independent slot controls. Your armor stays equipped and protects normally.
+  Other clients still see it; other players' armor and Elytra stay visible.
+- New module defaults OFF. Existing explicit choices persist.
+
+Build and 39 tests pass. The isolated launch opens all 28 module detail panels
+and both pickers; a framebuffer screenshot verifies the new layout. Actual
+world movement and armor hiding still need gameplay feedback.
+
+## Included modules and controls
+
+All new modules start OFF. Right Shift opens the menu. Select a module to customize it directly in the right-hand detail pane. RGB colors, line widths, categories,
 range and module-specific behavior are saved with **Fertig**. Clicking outside
 these screens does not dismiss them. HUD Studio controls placement and scale.
 
@@ -45,8 +64,8 @@ Selected block items also locate matching placed blocks in loaded chunks.
 Search is incremental, capped at 128 nearest block results; it cannot expose
 unloaded or server-hidden data or hidden container inventories.
 
-Build and 33 automated tests pass. The isolated client launch opened the menu,
-all 27 settings screens and both pickers without crashing. These new world and
+Build and 39 automated tests pass. The isolated client launch opened the menu,
+all 28 module detail panels and both pickers without crashing. These new world and
 camera features have not yet been tested in actual gameplay or with shaders.
 
 ## Existing modules

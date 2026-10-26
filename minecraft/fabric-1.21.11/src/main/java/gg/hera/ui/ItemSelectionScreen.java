@@ -19,14 +19,14 @@ public final class ItemSelectionScreen extends Screen {
     public ItemSelectionScreen(Screen parent,FeatureConfig config){super(HeraTheme.text("Item-Markierungen"));this.parent=parent;this.config=config;}
     public ItemSelectionScreen(Screen parent,FeatureConfig config,boolean espMode){this(parent,config);this.espMode=espMode;}
     @Override protected void init(){
-        w=Math.min(440,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-174)/29);
+        w=Math.min(440,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-174)/34);
         field=new TextFieldWidget(textRenderer,x+14,y+60,w-28,20,HeraTheme.text("Items suchen"));
         field.setMaxLength(100);field.setText(search);field.setPlaceholder(HeraTheme.text("Item-Name oder minecraft:ID …"));
         field.addFormatter((v,o)->HeraTheme.text(v).asOrderedText());
         field.setChangedListener(v->{search=v;page=0;rebuild();});rebuild();
     }
     private void rebuild(){
-        clearChildren();addDrawableChild(field);
+        boolean searchFocused=field.isFocused();clearChildren();addDrawableChild(field);if(searchFocused)setFocused(field);
         String query=search.toLowerCase(Locale.ROOT).trim();
         visible=Registries.ITEM.stream().filter(i->i!=Items.AIR).filter(i->!selectedOnly||config.markedItems.contains(Registries.ITEM.getId(i).toString()))
             .filter(i->i.getName().getString().toLowerCase(Locale.ROOT).contains(query)||Registries.ITEM.getId(i).toString().contains(query))
@@ -36,8 +36,8 @@ public final class ItemSelectionScreen extends Screen {
         addDrawableChild(new HeraButton(x+150,y+32,w-162,21,selectedOnly?"Nur Auswahl":"Alle Items",selectedOnly,()->{selectedOnly=!selectedOnly;page=0;rebuild();}));
         addDrawableChild(new HeraButton(x+12,y+h-76,110,20,"Reichweite: "+config.espRange+" m",false,()->{config.espRange=config.espRange>=128?16:config.espRange*2;rebuild();}));
         for(int row=0;row<rows && page*rows+row<visible.size();row++){
-            Item item=visible.get(page*rows+row);String id=Registries.ITEM.getId(item).toString();int ry=y+87+row*29;
-            addDrawableChild(new HeraButton(x+12,ry,w-24,26,item.getName().getString(),false,()->{
+            Item item=visible.get(page*rows+row);String id=Registries.ITEM.getId(item).toString();int ry=y+87+row*34;
+            addDrawableChild(new HeraButton(x+12,ry,w-24,31,item.getName().getString(),false,()->{
                 if(!config.markedItems.remove(id) && config.markedItems.size()<512)config.markedItems.add(id);rebuild();
             }){@Override protected void renderWidget(DrawContext c,int mx,int my,float d){HeraTheme.round(c,getX(),getY(),getWidth(),getHeight(),5,isHovered()?0xFF343D4D:HeraTheme.RAISED);}});
         }
@@ -49,10 +49,10 @@ public final class ItemSelectionScreen extends Screen {
         c.fill(0,0,width,height,0x88080B11);HeraTheme.panel(c,x,y,w,h);
         HeraTheme.title(c,"Item-Markierungen",x+14,y+13,1.15f,HeraTheme.TEXT);super.render(c,mx,my,delta);
         for(int row=0;row<rows && page*rows+row<visible.size();row++){
-            Item item=visible.get(page*rows+row);String id=Registries.ITEM.getId(item).toString();int ry=y+87+row*29;
+            Item item=visible.get(page*rows+row);String id=Registries.ITEM.getId(item).toString();int ry=y+87+row*34;
             c.drawItem(new ItemStack(item),x+18,ry+5);
             HeraTheme.label(c,HeraTheme.fit(item.getName().getString(),w-100),x+41,ry+4,HeraTheme.TEXT);
-            HeraTheme.label(c,HeraTheme.fit(id,w-100),x+41,ry+15,HeraTheme.MUTED);
+            HeraTheme.label(c,HeraTheme.fit(id,w-100),x+41,ry+18,HeraTheme.MUTED);
             HeraTheme.toggle(c,x+w-45,ry+7,config.markedItems.contains(id));
         }
         if(visible.isEmpty())HeraTheme.label(c,"Keine Items gefunden.",x+16,y+96,HeraTheme.MUTED);

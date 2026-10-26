@@ -7,17 +7,21 @@ import java.util.function.*;
 import java.io.IOException;
 import gg.hera.hud.*;
 public final class ModuleSettingsScreen extends Screen {
-    private record Setting(Supplier<String> label,Runnable change){}
+    public record Setting(Supplier<String> label,Runnable change){}
     private final Screen parent;private final FeatureConfig f;private final String id;private final List<Setting> settings=new ArrayList<>();
     private int x,y,w,h,page,rows;private String error="";
-    private HudConfig hud;private HudRenderer renderer;
+    private HudConfig hud;private HudRenderer renderer;private boolean embedded;
     public ModuleSettingsScreen(Screen parent,FeatureConfig f,String id){super(HeraTheme.text(id));this.parent=parent;this.f=f;this.id=id;}
     public ModuleSettingsScreen(Screen parent,FeatureConfig f,String id,HudConfig hud,HudRenderer renderer){this(parent,f,id);this.hud=hud;this.renderer=renderer;}
     private void option(Supplier<String> label,Runnable action){settings.add(new Setting(label,action));}
     private void flag(String label,BooleanSupplier value,Runnable action){option(()->label+": "+(value.getAsBoolean()?"An":"Aus"),action);}
-    private void color(String label,IntSupplier value,IntConsumer change){option(()->label+" →",()->client.setScreen(new ColorPickerScreen(this,value.getAsInt(),change)));}
+    private void color(String label,IntSupplier value,IntConsumer change){option(()->label+" →",()->client.setScreen(new ColorPickerScreen(returnTarget(),value.getAsInt(),change)));}
     @Override protected void init(){
-        w=Math.min(380,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-110)/29);settings.clear();var o=f.options;
+        w=Math.min(380,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-110)/29);collectSettings();rebuild();
+    }
+    public List<Setting> embedded(){embedded=true;collectSettings();return List.copyOf(settings);}
+    private Screen returnTarget(){return embedded?parent:this;}
+    private void collectSettings(){settings.clear();var o=f.options;
         var module=hud==null?null:hud.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);
         if(module==null)flag("Modul",()->ModuleCatalog.enabled(f,id),()->ModuleCatalog.toggle(f,id));
         else {
@@ -30,16 +34,17 @@ public final class ModuleSettingsScreen extends Screen {
             if(id.equals("Armor HUD"))flag("Haltbarkeit in Prozent",()->o.armorDurability,()->o.armorDurability=!o.armorDurability);
         }
         switch(id){
+            case "Rüstung ausblenden"->{flag("Helm ausblenden",()->o.hideHelmet,()->o.hideHelmet=!o.hideHelmet);flag("Brustplatte ausblenden",()->o.hideChest,()->o.hideChest=!o.hideChest);flag("Hose ausblenden",()->o.hideLegs,()->o.hideLegs=!o.hideLegs);flag("Stiefel ausblenden",()->o.hideBoots,()->o.hideBoots=!o.hideBoots);}
             case "Item-ESP","Spieler-ESP","Mob-ESP"->{
                 flag("Tracer",()->o.espTracers,()->o.espTracers=!o.espTracers);flag("Box-Umrandung",()->o.espBoxes,()->o.espBoxes=!o.espBoxes);flag("Entity-Leuchten",()->o.espGlow,()->o.espGlow=!o.espGlow);
                 flag("Block-Beschriftungen",()->o.espLabels,()->o.espLabels=!o.espLabels);option(()->"Tracer-Start: "+(o.tracerCenter?"Bildmitte":"Unten"),()->o.tracerCenter=!o.tracerCenter);
                 color("ESP-Farbe",()->o.espColor,v->o.espColor=v);option(()->"Linienstärke: "+o.lineWidth+" px",()->o.lineWidth=o.lineWidth%4+1);
                 option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);
-                option(()->"Items & Container auswählen →",()->client.setScreen(new ItemSelectionScreen(this,f)));
+                option(()->"Items & Container auswählen →",()->client.setScreen(new ItemSelectionScreen(returnTarget(),f)));
             }
             case "Hitboxes"->{flag("Spieler",()->o.hitboxPlayers,()->o.hitboxPlayers=!o.hitboxPlayers);flag("Mobs",()->o.hitboxMobs,()->o.hitboxMobs=!o.hitboxMobs);flag("Item-Drops",()->o.hitboxItems,()->o.hitboxItems=!o.hitboxItems);color("Farbe",()->o.hitboxColor,v->o.hitboxColor=v);option(()->"Linienstärke: "+o.hitboxWidth+" px",()->o.hitboxWidth=o.hitboxWidth%4+1);option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);}
             case "TNT Timer"->{color("Timer-Farbe",()->o.tntColor,v->o.tntColor=v);option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);}
-            case "Item Highlighter"->{color("Markierungsfarbe",()->o.highlightColor,v->o.highlightColor=v);option(()->"Items auswählen →",()->client.setScreen(new ItemSelectionScreen(this,f,false)));}
+            case "Item Highlighter"->{color("Markierungsfarbe",()->o.highlightColor,v->o.highlightColor=v);option(()->"Items auswählen →",()->client.setScreen(new ItemSelectionScreen(returnTarget(),f,false)));}
             case "Time Changer"->option(()->"Tageszeit: "+o.worldTime+" Ticks",()->o.worldTime=(o.worldTime+1000)%24000);
             case "Weather Changer"->option(()->"Wetter: "+List.of("Klar","Regen","Gewitter").get(o.weather),()->o.weather=(o.weather+1)%3);
             case "Zoom"->option(()->"Vergrößerung: "+o.zoomFactor+"×",()->o.zoomFactor=o.zoomFactor>=12?2:o.zoomFactor+1);
@@ -52,7 +57,6 @@ public final class ModuleSettingsScreen extends Screen {
             case "Fast Items"->{flag("3D-Items drehen",()->o.fastItems3d,()->o.fastItems3d=!o.fastItems3d);flag("2D-Seiten behalten",()->o.fastItemsSides,()->o.fastItemsSides=!o.fastItemsSides);flag("Schatten",()->o.fastItemsShadows,()->o.fastItemsShadows=!o.fastItemsShadows);}
             default->{}
         }
-        rebuild();
     }
     private void rebuild(){clearChildren();page=Math.clamp(page,0,Math.max(0,(settings.size()-1)/rows));for(int i=0;i<rows && page*rows+i<settings.size();i++){var s=settings.get(page*rows+i);addDrawableChild(new HeraButton(x+14,y+46+i*29,w-28,25,s.label.get(),false,()->{s.change.run();f.options.normalize();if(client.currentScreen==this)rebuild();}));}
         addDrawableChild(new HeraButton(x+14,y+h-30,26,20,"‹",false,()->{page--;rebuild();}));addDrawableChild(new HeraButton(x+44,y+h-30,26,20,"›",false,()->{page++;rebuild();}));addDrawableChild(new HeraButton(x+w-90,y+h-30,76,20,"Fertig",true,this::close));}

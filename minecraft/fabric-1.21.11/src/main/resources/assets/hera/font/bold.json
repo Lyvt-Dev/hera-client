@@ -1,1 +1,1 @@
-{"providers": [{"type": "ttf", "file": "hera:nunito-bold.ttf", "size": 10, "oversample": 4, "shift": [0, 0]}, {"type": "reference", "id": "minecraft:default"}]}
+{"providers": [{"type": "ttf", "file": "hera:nunito-bold.ttf", "size": 12, "oversample": 4, "shift": [0, 0]}, {"type": "reference", "id": "minecraft:default"}]}
