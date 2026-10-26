@@ -19,13 +19,19 @@ test('SQLite authentication, ownership, persistence and demos',async()=>{
  await store.action('/api/profile',{id:bob.id,name:'Alice updated',role:'VTuber',bio:'Hello',tags:'Art',link:'https://example.com',collab:true},alice.id);
  assert.equal(store.snapshot(bob.id).profiles.find(p=>p.id===bob.id).name,'Bob');
  await assert.rejects(store.action('/api/profile',{name:'Bad',role:'VTuber',bio:'',tags:'',link:'javascript:alert(1)',collab:false},alice.id),/HTTP/);
- await store.action('/api/posts',{text:'First post'},alice.id);const post=store.snapshot(bob.id).posts[0];assert.equal(post.author,alice.id);
+ await store.action('/api/profile',{name:'Alice styled',role:'VTuber',bio:'Artist',tags:'Art',link:'',collab:true,theme:'ocean',avatar:'moon',banner:'waves',pronouns:'sie/ihr',languages:'Deutsch',formats:'Co-Working',schedule:'Di 19 Uhr',twitch:'https://twitch.tv/test'},alice.id);
+ const styled=store.snapshot(alice.id).profiles.find(p=>p.id===alice.id);assert.equal(styled.theme,'ocean');assert.equal(styled.formats,'Co-Working');assert.equal(styled.avatar,'moon');
+ await assert.rejects(store.action('/api/profile',{...styled,theme:'url(javascript:bad)'},alice.id),/Design/);
+ await store.action('/api/onboarding',{step:3,status:'active'},alice.id);assert.equal(store.snapshot(alice.id).onboarding.step,3);assert.equal(store.snapshot(bob.id).onboarding.step,0);
+ await assert.rejects(store.action('/api/onboarding',{step:20,status:'completed'},alice.id),/Tutorial/);
+ await assert.rejects(store.action('/api/onboarding',{step:1,status:'completed'},alice.id),/Tutorial/);
+ await store.action('/api/posts',{text:'First post',kind:'collab'},alice.id);const post=store.snapshot(bob.id).posts[0];assert.equal(post.author,alice.id);assert.equal(post.kind,'collab');assert.ok(store.snapshot(bob.id).recommendations.every(r=>r.id!==bob.id));
  await store.action('/api/interactions',{target:post.id,kind:'post-like'},bob.id);await store.action('/api/interactions',{target:post.id,kind:'save'},bob.id);
  assert.equal(store.snapshot(alice.id).posts[0].liked,false);assert.equal(store.snapshot(bob.id).posts[0].likes,1);assert.equal(store.snapshot(alice.id).saved.length,0);
  await store.action('/api/interactions',{target:'demo-1',kind:'like'},bob.id);assert.deepEqual(store.snapshot(bob.id).liked,['demo-1']);
+ await store.action('/api/undo-swipe',{target:'demo-1'},bob.id);assert.deepEqual(store.snapshot(bob.id).liked,[]);await store.action('/api/interactions',{target:'demo-2',kind:'skip'},bob.id);
  await store.action('/api/reset-swipes',{},bob.id);assert.deepEqual(store.snapshot(bob.id).liked,[]);
- store.db.close();store=createStore(path);assert.equal(store.snapshot(null).profiles.length,2);assert.equal(store.snapshot(null).posts.length,1);assert.equal(store.session('vc_session='+alice.token),alice.id);
+ store.db.close();store=createStore(path);assert.equal(store.snapshot(null).profiles.length,2);assert.equal(store.snapshot(null).posts.length,1);assert.equal(store.snapshot(alice.id).onboarding.step,3);assert.equal(store.snapshot(alice.id).profiles.find(p=>p.id===alice.id).banner,'waves');assert.equal(store.session('vc_session='+alice.token),alice.id);
  await store.action('/api/logout',{},alice.id);assert.equal(store.session('vc_session='+alice.token),null);
  }finally{store.db.close();await rm(dir,{recursive:true,force:true})}
 });
-
