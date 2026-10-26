@@ -21,9 +21,14 @@ public final class HeraClient implements ClientModInitializer {
         config.load(); HudRenderer renderer = new HudRenderer(config);
         FeatureConfig features = new FeatureConfig(FabricLoader.getInstance().getConfigDir().resolve("hera/features.json"));
         features.load(); CrystalTotem crystalTotem = new CrystalTotem(features);
+        if(FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.smokeTest"))DevelopmentSmoke.register(config,renderer,features);
         Esp.config=features; AutoTotem autoTotem=new AutoTotem(features); ContainerMarkers containers=new ContainerMarkers(features);
-        KeyBinding menu = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.modules", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, KeyBinding.Category.create(Identifier.of("hera", "client"))));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { crystalTotem.tick(client);autoTotem.tick(client);containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
+        var category=KeyBinding.Category.create(Identifier.of("hera", "client"));
+        CameraController.zoomKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.zoom",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_C,category));
+        CameraController.lookKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freelook",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_LEFT_ALT,category));
+        CameraController.camKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freecam",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_V,category));
+        KeyBinding menu = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.modules", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { CameraController.tick(client);crystalTotem.tick(client);autoTotem.tick(client);containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
         // Explicit developer-only title-screen preview; never active in production or entering a world.
         if (FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.previewUi")) {
             boolean[] opened = {false};
@@ -35,7 +40,7 @@ public final class HeraClient implements ClientModInitializer {
             });
         }
         HudElementRegistry.addLast(Identifier.of("hera", "hud"), (ctx, tickCounter) -> {
-            containers.render(ctx);
+            WorldOverlay.render(ctx);containers.render(ctx);ItemHighlights.render(ctx);
             if (!(net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof HudEditorScreen)) renderer.render(ctx, false);
         });
     }

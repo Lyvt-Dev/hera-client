@@ -3,7 +3,7 @@
   "id": "hera",
   "version": "${version}",
   "name": "Hera Client",
-  "description": "Optional HUD, configurable item/entity markers, Auto Totem and Fast Items.",
+  "description": "Customizable HUD, camera utilities, visual modules, item/block/entity ESP, Auto Totem and Fast Items.",
   "authors": [
     "Hera contributors"
   ],

@@ -10,6 +10,7 @@ import net.minecraft.registry.Registries;
 public final class Esp {
     public static FeatureConfig config;
     private Esp() {}
+    public static ModuleOptions options(){return config==null?new ModuleOptions():config.options;}
     public static boolean marked(Entity entity) {
         var c=MinecraftClient.getInstance();var f=config;
         if(f==null || c.player==null || c.world==null || entity==c.player || entity.getEntityWorld()!=c.world || entity.isRemoved())return false;

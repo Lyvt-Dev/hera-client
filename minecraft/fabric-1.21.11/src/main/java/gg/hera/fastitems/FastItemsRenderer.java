@@ -34,8 +34,10 @@ public final class FastItemsRenderer {
             if (layer.fastitems$specialRenderer() != null || layers[i].getQuads().isEmpty()) return;
             flat &= isFlat(layers[i], layer);
         }
+        if(!flat && !config.options.fastItems3d)return;
         extension.fastitems$setBillboard(true);
-        if (!flat) return;
+        if(!config.options.fastItemsShadows){state.shadowRadius=0;state.shadowPieces.clear();}
+        if (!flat || config.options.fastItemsSides) return;
 
         // Keep vanilla extents for bobbing, stacking and bounding-box calculations.
         // Removing vertices must not shift the entity or collapse stack spacing.

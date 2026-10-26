@@ -14,9 +14,10 @@ import java.io.IOException;
 public final class ItemSelectionScreen extends Screen {
     private final Screen parent;private final FeatureConfig config;
     private String search="",error="";private boolean selectedOnly;private int page,x,y,w,h,rows;
-    private TextFieldWidget field;
+    private TextFieldWidget field;private boolean espMode=true;
     private List<Item> visible=List.of();
     public ItemSelectionScreen(Screen parent,FeatureConfig config){super(HeraTheme.text("Item-Markierungen"));this.parent=parent;this.config=config;}
+    public ItemSelectionScreen(Screen parent,FeatureConfig config,boolean espMode){this(parent,config);this.espMode=espMode;}
     @Override protected void init(){
         w=Math.min(440,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-174)/29);
         field=new TextFieldWidget(textRenderer,x+14,y+60,w-28,20,HeraTheme.text("Items suchen"));
@@ -31,7 +32,7 @@ public final class ItemSelectionScreen extends Screen {
             .filter(i->i.getName().getString().toLowerCase(Locale.ROOT).contains(query)||Registries.ITEM.getId(i).toString().contains(query))
             .sorted(Comparator.comparing(i->i.getName().getString())).toList();
         page=Math.clamp(page,0,Math.max(0,(visible.size()-1)/rows));
-        addDrawableChild(new HeraButton(x+12,y+32,132,21,"Item-ESP: "+(config.itemEsp?"An":"Aus"),config.itemEsp,()->{config.itemEsp=!config.itemEsp;rebuild();}));
+        addDrawableChild(new HeraButton(x+12,y+32,132,21,(espMode?"Item-ESP: ":"Highlighter: ")+((espMode?config.itemEsp:config.options.itemHighlighter)?"An":"Aus"),espMode?config.itemEsp:config.options.itemHighlighter,()->{if(espMode)config.itemEsp=!config.itemEsp;else config.options.itemHighlighter=!config.options.itemHighlighter;rebuild();}));
         addDrawableChild(new HeraButton(x+150,y+32,w-162,21,selectedOnly?"Nur Auswahl":"Alle Items",selectedOnly,()->{selectedOnly=!selectedOnly;page=0;rebuild();}));
         addDrawableChild(new HeraButton(x+12,y+h-76,110,20,"Reichweite: "+config.espRange+" m",false,()->{config.espRange=config.espRange>=128?16:config.espRange*2;rebuild();}));
         for(int row=0;row<rows && page*rows+row<visible.size();row++){
@@ -56,7 +57,7 @@ public final class ItemSelectionScreen extends Screen {
         }
         if(visible.isEmpty())HeraTheme.label(c,"Keine Items gefunden.",x+16,y+96,HeraTheme.MUTED);
         HeraTheme.label(c,config.markedItems.size()+" ausgewählt · "+(page+1)+" / "+(Math.max(0,(visible.size()-1)/rows)+1),x+76,y+h-24,HeraTheme.MUTED);
-        HeraTheme.label(c,error.isEmpty()?"Drops & Container markieren · Inhalt bleibt unbekannt.":error,x+12,y+h-46,error.isEmpty()?HeraTheme.MUTED:0xFFFF9DAB);
+        HeraTheme.label(c,error.isEmpty()?"Auswahl für Drops, Blöcke und Inventar-Markierungen.":error,x+12,y+h-46,error.isEmpty()?HeraTheme.MUTED:0xFFFF9DAB);
     }
     @Override public boolean mouseScrolled(double x,double y,double h,double v){page+=(int)-Math.signum(v);rebuild();return true;}
     @Override public void close(){try{config.save();client.setScreen(parent);}catch(IOException e){error="Speichern fehlgeschlagen.";}}

@@ -11,10 +11,11 @@ public final class FeatureConfig {
     private final Path file;
     public boolean crystalTotem = false;
     public boolean autoTotem, fastItems, itemEsp, playerEsp, mobEsp;
+    public ModuleOptions options = new ModuleOptions();
     public int espRange = 64;
     public java.util.Set<String> markedItems = new java.util.LinkedHashSet<>();
     public static final double RANGE = 8.0;
-    private static final class Data { int schemaVersion; boolean crystalTotem, autoTotem, fastItems, itemEsp, playerEsp, mobEsp; int espRange=64; java.util.Set<String> markedItems; }
+    private static final class Data { int schemaVersion; boolean crystalTotem, autoTotem, fastItems, itemEsp, playerEsp, mobEsp; int espRange=64; java.util.Set<String> markedItems; ModuleOptions options; }
     public FeatureConfig(Path file) { this.file = file; }
     public void load() {
         if (!Files.exists(file)) return;
@@ -26,6 +27,7 @@ public final class FeatureConfig {
                 autoTotem=data.autoTotem; fastItems=data.fastItems; itemEsp=data.itemEsp; playerEsp=data.playerEsp; mobEsp=data.mobEsp;
                 espRange=Math.clamp(data.espRange,16,128);
                 markedItems=ItemSelection.clean(data.markedItems);
+                options=data.options==null?new ModuleOptions():data.options;options.normalize();
             }
         } catch (IOException | RuntimeException e) { LoggerFactory.getLogger("Hera").warn("Feature config could not be loaded; disabled defaults retained"); }
     }
@@ -36,6 +38,7 @@ public final class FeatureConfig {
             Data data = new Data(); data.schemaVersion = 2; data.crystalTotem = crystalTotem;
             data.autoTotem=autoTotem;data.fastItems=fastItems;data.itemEsp=itemEsp;data.playerEsp=playerEsp;data.mobEsp=mobEsp;
             data.espRange=Math.clamp(espRange,16,128);data.markedItems=ItemSelection.clean(markedItems);
+            options.normalize();data.options=options;
             Files.writeString(temporary, GSON.toJson(data));
             try { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
             catch (AtomicMoveNotSupportedException e) { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING); }

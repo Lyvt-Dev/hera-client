@@ -4,7 +4,16 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "EntityEspMixin",
-    "GameRendererAccessor"
+    "GameRendererAccessor",
+    "WorldVisualMixin",
+    "FogMixin",
+    "LightmapMixin",
+    "CameraMixin",
+    "MouseMixin",
+    "InputMixin",
+    "ZoomMixin",
+    "ItemHighlightMixin",
+    "FreecamInteractionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

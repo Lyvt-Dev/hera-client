@@ -1,7 +1,7 @@
 package gg.hera.ui;
 
 import gg.hera.hud.*;
-import gg.hera.features.FeatureConfig;
+import gg.hera.features.*;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.DrawContext;
@@ -26,7 +26,7 @@ public final class ModuleScreen extends Screen {
     }
     private List<String> filtered() {
         List<String> ids=new ArrayList<>();
-        if(!category.equals("HUD"))ids.addAll(List.of("Kristall-Totem","Auto-Totem","Fast Items","Item-ESP","Spieler-ESP","Mob-ESP"));
+        if(!category.equals("HUD"))ids.addAll(ModuleCatalog.IDS);
         if(!category.equals("Spiel"))config.modules.forEach(m->ids.add(m.id));
         return ids.stream().filter(id->id.toLowerCase(Locale.ROOT).contains(search.toLowerCase(Locale.ROOT))).toList();
     }
@@ -53,15 +53,15 @@ public final class ModuleScreen extends Screen {
             String id=ids.get(i);HudModule module=config.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);
             int local=i-page*layout.pageSize();
             int x=layout.contentX()+(local%layout.columns())*(layout.cardWidth()+8),y=layout.gridY()+(local/layout.columns())*(layout.cardHeight()+8);
-            addDrawableChild(new ModuleCard(x,y,layout.cardWidth(),layout.cardHeight(),id,description(id),()->module==null?enabled(id):module.enabled,()->{if(module==null)toggle(id);else module.enabled=!module.enabled;}));
+            addDrawableChild(new ModuleCard(x,y,layout.cardWidth(),layout.cardHeight(),id,description(id),()->module==null?enabled(id):module.enabled,()->{if(module==null)toggle(id);else module.enabled=!module.enabled;},()->{client.setScreen(new ModuleSettingsScreen(this,features,id,config,renderer));}));
         }
         int fy=layout.y()+layout.height()-31;
         var previous=new HeraButton(layout.contentX(),fy,24,22,"‹",false,()->{page--;rebuild();});previous.active=page>0;addDrawableChild(previous);
         var next=new HeraButton(layout.contentX()+29,fy,24,22,"›",false,()->{page++;rebuild();});next.active=page<layout.maxPage(ids.size());addDrawableChild(next);
         addDrawableChild(new HeraButton(layout.contentX()+layout.contentWidth()-74,fy,74,22,"Schließen",true,this::close));
     }
-    private boolean enabled(String id){return switch(id){case "Auto-Totem"->features.autoTotem;case "Fast Items"->features.fastItems;case "Item-ESP"->features.itemEsp;case "Spieler-ESP"->features.playerEsp;case "Mob-ESP"->features.mobEsp;default->features.crystalTotem;};}
-    private void toggle(String id){switch(id){case "Auto-Totem"->features.autoTotem=!features.autoTotem;case "Fast Items"->{if(net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("fastitems"))error="Fast Items wird von der separaten Mod verwaltet.";else features.fastItems=!features.fastItems;}case "Item-ESP"->client.setScreen(new ItemSelectionScreen(this,features));case "Spieler-ESP"->features.playerEsp=!features.playerEsp;case "Mob-ESP"->features.mobEsp=!features.mobEsp;default->features.crystalTotem=!features.crystalTotem;}}
+    private boolean enabled(String id){return ModuleCatalog.enabled(features,id);}
+    private void toggle(String id){ModuleCatalog.toggle(features,id);}
     @Override public void render(DrawContext c,int mx,int my,float delta) {
         c.getMatrices().pushMatrix();c.getMatrices().scale(uiScale,uiScale);
         mx=Math.round(mx/uiScale);my=Math.round(my/uiScale);
@@ -71,7 +71,7 @@ public final class ModuleScreen extends Screen {
         HeraTheme.title(c,"HERA",layout.x()+14,layout.y()+17,1.2f,HeraTheme.ACCENT);
         HeraTheme.label(c,"1.21.11",layout.x()+14,layout.y()+35,HeraTheme.MUTED);
         HeraTheme.title(c,"Module",layout.contentX(),layout.y()+16,1.35f,HeraTheme.TEXT);
-        long active=config.modules.stream().filter(m->m.enabled).count()+List.of("Kristall-Totem","Auto-Totem","Fast Items","Item-ESP","Spieler-ESP","Mob-ESP").stream().filter(this::enabled).count();
+        long active=config.modules.stream().filter(m->m.enabled).count()+ModuleCatalog.IDS.stream().filter(this::enabled).count();
         HeraTheme.label(c,active+" aktiv",layout.contentX()+80,layout.y()+19,HeraTheme.MUTED);
         int sy=layout.gridY()-25;
         HeraTheme.round(c,layout.contentX(),sy,layout.contentWidth(),21,6,HeraTheme.RAISED);
@@ -82,7 +82,7 @@ public final class ModuleScreen extends Screen {
         if(!error.isEmpty())HeraTheme.label(c,HeraTheme.fit(error,layout.contentWidth()),layout.contentX(),layout.y()+layout.height()-44,0xFFFF9DAB);
         c.getMatrices().popMatrix();
     }
-    private static String description(String id){return switch(id){case "Auto-Totem"->"Totem in die Nebenhand";case "Fast Items"->"Optimierte Item-Drops";case "Item-ESP"->"Items suchen & auswählen";case "Spieler-ESP"->"Geladene Spieler markieren";case "Mob-ESP"->"Geladene Mobs markieren";case "Kristall-Totem"->"8 Blöcke · nur Hotbar";case "FPS"->"Bilder pro Sekunde";case "Koordinaten"->"Deine Position";case "Ping"->"Verbindung in ms";case "Speicher"->"RAM-Verbrauch";case "Uhr"->"Lokale Uhrzeit";case "Richtung"->"Deine Blickrichtung";case "Geschwindigkeit"->"Blöcke pro Sekunde";case "Biome"->"Deine Umgebung";default->"Aktueller Server";};}
+    private static String description(String id){if(ModuleCatalog.IDS.contains(id) && !ModuleCatalog.description(id).isEmpty())return ModuleCatalog.description(id);return switch(id){case "Keystrokes"->"WASD · Mausklicks · Leertaste";case "Armor HUD"->"Rüstung & Haltbarkeit";case "Auto-Totem"->"Totem in die Nebenhand";case "Fast Items"->"Optimierte Item-Drops";case "Item-ESP"->"Items suchen & auswählen";case "Spieler-ESP"->"Geladene Spieler markieren";case "Mob-ESP"->"Geladene Mobs markieren";case "Kristall-Totem"->"8 Blöcke · nur Hotbar";case "FPS"->"Bilder pro Sekunde";case "Koordinaten"->"Deine Position";case "Ping"->"Verbindung in ms";case "Speicher"->"RAM-Verbrauch";case "Uhr"->"Lokale Uhrzeit";case "Richtung"->"Deine Blickrichtung";case "Geschwindigkeit"->"Blöcke pro Sekunde";case "Biome"->"Deine Umgebung";default->"Aktueller Server";};}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         x/=uiScale;y/=uiScale;
         if(x<layout.contentX()||y<layout.gridY())return super.mouseScrolled(x,y,horizontal,vertical);
@@ -96,8 +96,9 @@ public final class ModuleScreen extends Screen {
     @Override public void close(){try{config.save();features.save();super.close();}catch(IOException e){error="Speichern fehlgeschlagen. Bitte erneut versuchen.";}}
     @Override public boolean shouldPause(){return false;}
     private static final class ModuleCard extends HeraButton {
-        private final String name,description;private final BooleanSupplier enabled;
-        ModuleCard(int x,int y,int w,int h,String name,String description,BooleanSupplier enabled,Runnable toggle){super(x,y,w,h,name,false,toggle);this.name=name;this.description=description;this.enabled=enabled;}
+        private final String name,description;private final BooleanSupplier enabled;private final Runnable settings;
+        ModuleCard(int x,int y,int w,int h,String name,String description,BooleanSupplier enabled,Runnable toggle,Runnable settings){super(x,y,w,h,name,false,toggle);this.name=name;this.description=description;this.enabled=enabled;this.settings=settings;}
+        @Override public void onClick(Click click,boolean doubled){if(click.x()>getX()+width-28 && click.y()>getY()+height-24)settings.run();else super.onClick(click,doubled);}
         @Override protected void renderWidget(DrawContext c,int mx,int my,float delta){
             boolean on=enabled.getAsBoolean(),hover=isHovered()||isFocused();setMessage(HeraTheme.text(name+" · "+(on?"An":"Aus")));
             HeraTheme.round(c,getX(),getY(),width,height,7,hover?0xFF596273:on?0xFF826347:HeraTheme.LINE);
@@ -107,7 +108,8 @@ public final class ModuleScreen extends Screen {
             HeraTheme.icon(c,name,getX()+15,getY()+16,14,on?HeraTheme.ACCENT:0xFFABB5C8);
             HeraTheme.toggle(c,getX()+width-35,getY()+12,on);
             HeraTheme.label(c,HeraTheme.fit(name,width-82),getX()+43,getY()+13,HeraTheme.TEXT);
-            if(height>=50)HeraTheme.label(c,HeraTheme.fit(description,width-55),getX()+43,getY()+31,HeraTheme.MUTED);
+            HeraTheme.label(c,"⋯",getX()+width-20,getY()+height-18,HeraTheme.ACCENT);
+            if(height>=50)HeraTheme.label(c,HeraTheme.fit(description,width-82),getX()+43,getY()+31,HeraTheme.MUTED);
         }
     }
 }

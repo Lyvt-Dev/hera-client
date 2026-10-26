@@ -20,7 +20,7 @@ public final class HeraTheme {
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","round/"+r),x,y,w,h,color);
     }
     public static void icon(DrawContext c,String name,int x,int y,int size,int color){
-        String id=switch(name){case "FPS"->"fps";case "Koordinaten"->"coords";case "Ping"->"ping";case "Speicher"->"memory";case "Uhr"->"clock";case "Richtung"->"direction";case "Geschwindigkeit"->"speed";case "Biome"->"biome";case "Kristall-Totem","Auto-Totem"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
+        String id=switch(name){case "FPS","Zoom"->"fps";case "Koordinaten","Hitboxes","Item Highlighter"->"coords";case "Ping"->"ping";case "Speicher","Full Bright"->"memory";case "Uhr","TNT Timer","Time Changer"->"clock";case "Richtung","Free Look"->"direction";case "Geschwindigkeit","Freecam","Keystrokes"->"speed";case "Biome","Weather Changer","No Fog"->"biome";case "Kristall-Totem","Auto-Totem","Armor HUD"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","icons/"+id),x,y,size,size,color);
     }
     public static void panel(DrawContext c,int x,int y,int w,int h) {
