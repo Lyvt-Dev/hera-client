@@ -18,6 +18,9 @@ pub async fn install(
     p: &Profile,
     progress: &impl Fn(Transfer),
 ) -> Result<Installation> {
+    if p.loader != "vanilla" && p.version != "1.21.1" {
+        return Err("Fabric und Forge sind derzeit für Minecraft 1.21.1 eingerichtet. Für diese Version bitte Vanilla auswählen.".into());
+    }
     let mut base = minecraft::install(http, root, p, progress).await?;
     match p.loader.as_str() {
         "vanilla" => {}

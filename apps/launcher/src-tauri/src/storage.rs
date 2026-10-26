@@ -14,6 +14,15 @@ pub struct Profile {
     pub memory_mb: u32,
     pub java_path: String,
 }
+pub fn valid_version_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 80
+        && !id.contains("..")
+        && id.as_bytes()[0].is_ascii_alphanumeric()
+        && id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b"._+ -".contains(&b))
+}
 impl Profile {
     pub fn validate(&self) -> Result<()> {
         uuid::Uuid::parse_str(&self.id).map_err(|_| "Ungültige Profil-ID")?;
@@ -28,7 +37,7 @@ impl Profile {
         }
         if self.name.trim().is_empty()
             || self.name.chars().count() > 48
-            || self.version != "1.21.1"
+            || !valid_version_id(&self.version)
             || !["vanilla", "fabric", "forge"].contains(&self.loader.as_str())
             || !(2048..=16384).contains(&self.memory_mb)
             || self.java_path.is_empty()
@@ -86,9 +95,9 @@ impl Store {
         if self
             .profiles()?
             .iter()
-            .any(|old| old.id == p.id && old.loader != p.loader)
+            .any(|old| old.id == p.id && (old.loader != p.loader || old.version != p.version))
         {
-            return Err("Loader eines bestehenden Profils kann nicht geändert werden. Neues Profil erstellen.".into());
+            return Err("Version oder Loader eines bestehenden Profils kann nicht geändert werden. Neues Profil erstellen.".into());
         }
         self.0.lock().map_err(|_|"Datenbank gesperrt")?.execute("INSERT INTO profiles(id,data) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET data=excluded.data",params![p.id,serde_json::to_string(p).map_err(|e|e.to_string())?]).map_err(|e|e.to_string())?;
         Ok(())
@@ -182,6 +191,23 @@ mod tests {
         assert_eq!(s.profiles().unwrap().len(), 2);
         s.delete(&a.id).unwrap();
         assert_eq!(s.profile(&b.id).unwrap().name, "Andere Welt");
+    }
+    #[test]
+    fn version_ids_cannot_escape_directories() {
+        for id in ["26.3", "1.8.9", "b1.7.3", "rd-132211"] {
+            assert!(valid_version_id(id));
+        }
+        for id in [
+            "../outside",
+            "..",
+            "C:/game",
+            "/absolute",
+            "a\\b",
+            "",
+            "a..b",
+        ] {
+            assert!(!valid_version_id(id));
+        }
     }
     #[test]
     fn rejects_unsafe_profiles() {

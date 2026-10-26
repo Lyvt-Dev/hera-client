@@ -1,8 +1,19 @@
 # Verification status
 
+## 0.1.3 versions and profile UX (26 October 2026)
+
+Implemented: official Mojang catalog through 26.3, including releases, snapshots, historical alpha and beta entries (915 catalog entries observed). Search, type filters, incremental list rendering and direct profile creation replace the 1.21.1-only catalog. The profile editor defaults to Vanilla, shows loader choices with their actual scope, keeps advanced Java configuration collapsed, and prevents changing the version or loader of an existing profile. Official IDs containing spaces are accepted; traversal and separators are rejected.
+
+Native Vanilla installation now follows per-version metadata for Java 8/16/17/21/25, legacy `minecraftArguments`, named virtual/resource assets, and official hash-verified logging configuration. JVMs are still user-installed; 26.3 requires Java 25. This is an experimental adapter expansion, **not a claim that every version is game-tested**. Fabric/Forge adapters and the Hera HUD mod remain 1.21.1-specific; incompatible loader/version combinations are rejected before downloading.
+
+Automated: `npm run check`, `npm test` (48 tests), `npm run build`; Rust unit tests (20 passed, four network tests opt-in). Real Windows installation/argument smoke matrix: rd-132211, 1.0, 1.8.9, 1.12.2, 1.20.1 and 26.3. Downloads verify official hashes/sizes, classpath entries exist and legacy/modern game arguments resolve. Tests never acquire account credentials or start offline gameplay. Browser checks cover 26.3/1.8.9 search, type filtering, version preselection and profile-dialog cancellation. Other operating systems, exhaustive installation of 915 versions, native Java 8/17/25 process start and authenticated gameplay remain unverified.
+
+Game-tested: none. Minecraft Services still rejects Hera's app registration. No authentication bypass was implemented. Mod feature inventory: [mod-features.md](mod-features.md).
+
+
 ## 0.1.2 Minecraft 403 diagnosis
 
-The owner reached Minecraft authentication after Microsoft/Xbox/XSTS and reported HTTP 403. The original generic error did not retain a specific cause, so missing Minecraft app approval is not yet confirmed. Version 0.1.2 distinguishes an explicit `Invalid app registration` response (`MC_APP_NOT_APPROVED`) from unknown 403 errors (`MC_AUTH_FORBIDDEN`), without exposing arbitrary provider payloads or credentials. An approval-request draft is in [app-approval-de.md](app-approval-de.md). No approval was submitted or granted by this change; authenticated gameplay remains unverified.
+The owner reached Minecraft authentication after Microsoft/Xbox/XSTS and reported HTTP 403. The owner subsequently reproduced `MC_APP_NOT_APPROVED` in 0.1.2, confirming the app-registration rejection. Version 0.1.2 distinguishes an explicit `Invalid app registration` response (`MC_APP_NOT_APPROVED`) from unknown 403 errors (`MC_AUTH_FORBIDDEN`), without exposing arbitrary provider payloads or credentials. An approval-request draft is in [app-approval-de.md](app-approval-de.md). No approval was submitted or granted by this change; authenticated gameplay remains unverified.
 
 The same release adds the owner's Discord-site visual language and locally bundled OFL Nunito, an original Minecraft hero, consistent orange/charcoal components and persistent selected-profile state. See [design and asset provenance](launcher-design.md). TypeScript checks/builds and 38 tests passed; Rust tests passed with 18 unit tests and 3 opt-in live-download tests skipped. Browser font/image loading, no observed horizontal overflow, profile selection across reload, live Modrinth results and modal cancellation were verified. Vitest is explicitly scoped to Hera's `tests/**/*.test.ts`; the unrelated VConnect project uses a different test runner and was not modified.
 

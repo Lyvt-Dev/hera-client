@@ -1,4 +1,4 @@
-//! Modern vanilla adapter. Deliberately restricted to 1.21.1 and 64-bit x86 hosts.
+//! Official-metadata vanilla adapter for legacy and modern versions on x86_64 hosts.
 use crate::{
     auth::Session,
     storage::{Profile, Result},
@@ -281,7 +281,12 @@ pub async fn install(
     }
     let manifest: Value =
         serde_json::from_slice(&bytes).map_err(|_| "Ungültige Versionsmetadaten")?;
-    if manifest["id"] != profile.version || manifest["javaVersion"]["majorVersion"] != 21 {
+    if manifest["id"] != profile.version
+        || !matches!(
+            manifest["javaVersion"]["majorVersion"].as_u64(),
+            Some(8 | 16 | 17 | 21 | 25)
+        )
+    {
         return Err("Adapter unterstützt diese Metadaten nicht".into());
     }
     let game = root.join("profiles").join(&profile.id);
@@ -335,6 +340,10 @@ pub async fn install(
         .join("client.jar");
     classpath.push(client_path.clone());
     files.push((client, client_path));
+    if manifest["logging"]["client"].is_object() {
+        let config = artifact(&manifest["logging"]["client"]["file"])?;
+        files.push((config, game.join("logging.xml")));
+    }
     let ai = artifact(&manifest["assetIndex"])?;
     let asset_id = text(&manifest["assetIndex"], "id")?;
     if !asset_id
@@ -351,11 +360,13 @@ pub async fn install(
             .map_err(|e| e.to_string())?,
     )
     .map_err(|_| "Ungültiger Asset-Index")?;
-    for obj in asset_index["objects"]
+    for (name, obj) in asset_index["objects"]
         .as_object()
         .ok_or("Asset-Liste fehlt")?
-        .values()
+        .iter()
     {
+        // Validate every legacy mapping before downloads or filesystem writes.
+        safe_join(&assets, name)?;
         let hash = text(obj, "hash")?;
         if hash.len() != 40 || !hash.bytes().all(|b| b.is_ascii_hexdigit()) {
             return Err("Ungültiger Asset-Hash".into());
@@ -370,6 +381,32 @@ pub async fn install(
             },
             assets.join("objects").join(rel),
         ));
+    }
+    // Older versions expect named assets, not only the content-addressed object store.
+    if asset_index["virtual"] == true || asset_index["map_to_resources"] == true {
+        let target = if asset_index["map_to_resources"] == true {
+            game.join("resources")
+        } else {
+            assets.join("virtual").join(asset_id)
+        };
+        for (name, obj) in asset_index["objects"]
+            .as_object()
+            .ok_or("Asset-Liste fehlt")?
+        {
+            let hash = text(obj, "hash")?;
+            files.push((
+                Artifact {
+                    url: format!(
+                        "https://resources.download.minecraft.net/{}/{hash}",
+                        &hash[..2]
+                    ),
+                    sha1: hash.into(),
+                    size: obj["size"].as_u64().ok_or("Asset-Größe fehlt")?,
+                    path: None,
+                },
+                safe_join(&target, name)?,
+            ));
+        }
     }
     // Bounded concurrency keeps first installation usable without flooding the provider.
     let total = files.len();
@@ -477,21 +514,42 @@ fn arguments(v: &Value, vars: &HashMap<String, String>) -> Result<Vec<String>> {
     Ok(result)
 }
 pub(crate) async fn check_java(path: &str) -> Result<()> {
+    check_java_major(path, 21).await
+}
+fn java_major(output: &str) -> Option<u64> {
+    let version = output.split('"').nth(1)?;
+    let mut parts = version.split('.');
+    let first = parts.next()?.parse::<u64>().ok()?;
+    if first == 1 {
+        parts.next()?.parse().ok()
+    } else {
+        Some(first)
+    }
+}
+async fn check_java_major(path: &str, required: u64) -> Result<()> {
     let output = Command::new(path)
         .arg("-version")
         .output()
         .await
-        .map_err(|_| "Java nicht gefunden. Bitte Java 21 installieren und im Profil auswählen.")?;
-    let java = String::from_utf8_lossy(&output.stderr);
-    if !output.status.success()
-        || !(java.contains("version \"21.") || java.contains("version \"21\""))
-    {
-        return Err("Dieses Profil benötigt eine Java-21-Runtime".into());
+        .map_err(|_| format!("Java nicht gefunden. Dieses Profil benötigt Java {required}."))?;
+    let combined = format!(
+        "{} {}",
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    if !output.status.success() || java_major(&combined) != Some(required) {
+        return Err(format!("Dieses Profil benötigt Java {required}. Bitte die passende Java-Datei in den erweiterten Profileinstellungen auswählen."));
     }
     Ok(())
 }
 pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> Result<Command> {
-    check_java(&profile.java_path).await?;
+    check_java_major(
+        &profile.java_path,
+        i.manifest["javaVersion"]["majorVersion"]
+            .as_u64()
+            .ok_or("Java-Anforderung fehlt")?,
+    )
+    .await?;
     let cp = std::env::join_paths(&i.classpath)
         .map_err(|_| "Ungültiger Klassenpfad")?
         .into_string()
@@ -519,6 +577,23 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
             "classpath_separator",
             if cfg!(windows) { ";" } else { ":" }.into(),
         ),
+        ("user_properties", "{}".into()),
+        (
+            "auth_session",
+            format!("token:{}:{}", session.token, session.account.id),
+        ),
+        (
+            "game_assets",
+            (if i.manifest["assetIndex"]["id"] == "pre-1.6" {
+                i.game.join("resources")
+            } else {
+                i.assets
+                    .join("virtual")
+                    .join(text(&i.manifest["assetIndex"], "id")?)
+            })
+            .to_string_lossy()
+            .into(),
+        ),
         ("clientid", String::new()),
         ("auth_xuid", String::new()),
     ] {
@@ -528,9 +603,31 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
     c.current_dir(&i.game)
         .arg(format!("-Xmx{}M", profile.memory_mb))
         .arg("-Xms512M");
-    c.args(arguments(&i.manifest["arguments"]["jvm"], &vars)?)
-        .arg(text(&i.manifest, "mainClass")?)
-        .args(arguments(&i.manifest["arguments"]["game"], &vars)?);
+    if let Some(logging) = i.manifest["logging"]["client"]["argument"].as_str() {
+        let path = i.game.join("logging.xml");
+        if !path.is_file() {
+            return Err("Geprüfte Logging-Konfiguration fehlt".into());
+        }
+        c.arg(logging.replace("${path}", &path.to_string_lossy()));
+    }
+    if i.manifest["arguments"].is_object() {
+        c.args(arguments(&i.manifest["arguments"]["jvm"], &vars)?)
+            .arg(text(&i.manifest, "mainClass")?)
+            .args(arguments(&i.manifest["arguments"]["game"], &vars)?);
+    } else {
+        c.arg(format!("-Djava.library.path={}", i.natives.display()))
+            .arg("-cp")
+            .arg(vars.get("classpath").ok_or("Klassenpfad fehlt")?)
+            .arg(text(&i.manifest, "mainClass")?);
+        let legacy = text(&i.manifest, "minecraftArguments")?;
+        let values = Value::Array(
+            legacy
+                .split_whitespace()
+                .map(|s| Value::String(s.into()))
+                .collect(),
+        );
+        c.args(arguments(&values, &vars)?);
+    }
     // Never print command arguments: they contain the Minecraft access token.
     c.stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
@@ -543,6 +640,66 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn java_generations_are_parsed() {
+        assert_eq!(java_major("java version \"1.8.0_402\""), Some(8));
+        assert_eq!(java_major("openjdk version \"17.0.12\""), Some(17));
+        assert_eq!(java_major("openjdk version \"25.0.1\""), Some(25));
+        assert_eq!(java_major("invalid"), None);
+    }
+    #[tokio::test]
+    #[ignore = "Downloads official legacy and current game files"]
+    async fn version_matrix_install() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.local/version-matrix");
+        let client = http().unwrap();
+        for version in ["rd-132211", "1.0", "1.8.9", "1.12.2", "1.20.1", "26.3"] {
+            let p = Profile {
+                id: uuid::Uuid::new_v4().to_string(),
+                name: "Matrix".into(),
+                version: version.into(),
+                loader: "vanilla".into(),
+                memory_mb: 4096,
+                java_path: "java".into(),
+            };
+            let i = install(&client, &root, &p, &|_| {})
+                .await
+                .unwrap_or_else(|e| panic!("{version}: {e}"));
+            assert!(i.classpath.iter().all(|p| p.is_file()));
+            // Exercise authenticated argument construction without obtaining credentials or launching a process.
+            let vars = HashMap::from([
+                ("auth_player_name".into(), "Test Player".into()),
+                ("auth_session".into(), "test-session".into()),
+                ("auth_uuid".into(), "test-uuid".into()),
+                ("auth_access_token".into(), "test-token".into()),
+                ("version_name".into(), version.into()),
+                ("game_directory".into(), "C:/Test Path".into()),
+                ("assets_root".into(), "assets".into()),
+                ("assets_index_name".into(), "index".into()),
+                ("game_assets".into(), "assets".into()),
+                ("user_properties".into(), "{}".into()),
+                ("user_type".into(), "msa".into()),
+                ("version_type".into(), "release".into()),
+                ("clientid".into(), "".into()),
+                ("auth_xuid".into(), "".into()),
+            ]);
+            let game_args = if i.manifest["arguments"].is_object() {
+                i.manifest["arguments"]["game"].clone()
+            } else {
+                Value::Array(
+                    text(&i.manifest, "minecraftArguments")
+                        .unwrap()
+                        .split_whitespace()
+                        .map(|s| Value::String(s.into()))
+                        .collect(),
+                )
+            };
+            arguments(&game_args, &vars).unwrap_or_else(|e| panic!("{version}: {e}"));
+            println!(
+                "{version}: installation verified ({} classpath entries)",
+                i.classpath.len()
+            );
+        }
+    }
     #[test]
     fn path_traversal_rejected() {
         for p in [

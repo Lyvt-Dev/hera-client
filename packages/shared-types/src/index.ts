@@ -1,6 +1,6 @@
 import { z } from 'zod';
 export const profileSchema = z.object({
-  id: z.uuid(), name: z.string().trim().min(1).max(48), version: z.literal('1.21.1'),
+  id: z.uuid(), name: z.string().trim().min(1).max(48), version: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._+ \-]{0,79}$/).refine(v=>!v.includes('..'), 'Ungültige Versions-ID'),
   loader: z.enum(['vanilla','fabric','forge']), memoryMb: z.number().int().min(2048).max(16384),
   javaPath: z.string().min(1).max(1024).refine(s => !/[\r\n\0]/.test(s) && /^(?:java(?:\.exe)?|(?:[A-Za-z]:[\\/]|\/).*[/\\]java(?:\.exe)?)$/i.test(s), 'Java-Pfad muss auf java oder java.exe zeigen'),
 });
