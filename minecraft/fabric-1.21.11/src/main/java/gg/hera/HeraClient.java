@@ -24,7 +24,7 @@ public final class HeraClient implements ClientModInitializer {
             public void reload(net.minecraft.resource.ResourceManager manager){renderer.invalidate();WorldOverlay.clearTextCache();}
         });
         FeatureConfig features = new FeatureConfig(FabricLoader.getInstance().getConfigDir().resolve("hera/features.json"));
-        features.load(); CrystalTotem crystalTotem = new CrystalTotem(features);
+        features.load(); CustomCrosshair.load(); CrystalTotem crystalTotem = new CrystalTotem(features);
         if(FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.smokeTest"))DevelopmentSmoke.register(config,renderer,features);
         Esp.config=features; AutoTotem autoTotem=new AutoTotem(features); ContainerMarkers containers=new ContainerMarkers(features);DTap dTap=new DTap(features);
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player,world,hand,entity,hit)->{if(world.isClient() && player==net.minecraft.client.MinecraftClient.getInstance().player && entity instanceof net.minecraft.entity.player.PlayerEntity target)dTap.hit(target);return net.minecraft.util.ActionResult.PASS;});

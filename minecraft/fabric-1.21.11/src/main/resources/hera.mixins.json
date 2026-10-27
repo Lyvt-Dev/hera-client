@@ -16,7 +16,9 @@
     "FreecamInteractionMixin",
     "HideOwnArmorMixin",
     "DTapNetworkMixin",
-    "LocalCapeMixin"
+    "LocalCapeMixin",
+    "CrosshairMixin",
+    "OwnNametagMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -34,6 +34,19 @@ public final class ModuleSettingsScreen extends Screen {
             if(id.equals("Armor HUD"))flag("Haltbarkeit in Prozent",()->o.armorDurability,()->o.armorDurability=!o.armorDurability);
         }
         switch(id){
+            case "Custom Crosshair"->{
+                option(()->"Stil: "+(o.crosshairImage?"Eigenes PNG":"Fadenkreuz"),()->o.crosshairImage=!o.crosshairImage);
+                option(()->"Eigenes PNG importieren & Vorschau →",()->client.setScreen(new CrosshairScreen(returnTarget(),f)));
+                color("Farbe",()->o.crosshairColor,v->o.crosshairColor=v);
+                option(()->"Länge: "+o.crosshairLength,()->o.crosshairLength=o.crosshairLength%16+1);
+                option(()->"Abstand: "+o.crosshairGap,()->o.crosshairGap=(o.crosshairGap+1)%13);
+                option(()->"Stärke: "+o.crosshairThickness,()->o.crosshairThickness=o.crosshairThickness%5+1);
+                flag("Mittelpunkt",()->o.crosshairDot,()->o.crosshairDot=!o.crosshairDot);
+                flag("Schwarze Kontur",()->o.crosshairOutline,()->o.crosshairOutline=!o.crosshairOutline);
+                option(()->"PNG-Größe: "+o.crosshairSize+" px",()->o.crosshairSize=o.crosshairSize>=96?8:o.crosshairSize+4);
+                option(()->"Deckkraft: "+o.crosshairOpacity+"%",()->o.crosshairOpacity=o.crosshairOpacity>=100?10:o.crosshairOpacity+10);
+            }
+            case "Own Nametag"->flag("Auch beim Schleichen",()->o.nametagSneaking,()->o.nametagSneaking=!o.nametagSneaking);
             case "D-Tap"->{flag("Vorsichtig: Fadenkreuz & Erholung",()->o.dTapCautious,()->o.dTapCautious=!o.dTapCautious);option(()->"Mindest-Zielschaden: "+o.dTapTarget,()->o.dTapTarget=o.dTapTarget>=30?2:o.dTapTarget+1);option(()->"Max. Eigenschaden: "+o.dTapSelf,()->o.dTapSelf=o.dTapSelf>=30?2:o.dTapSelf+1);option(()->"Lebensreserve: "+o.dTapReserve,()->o.dTapReserve=o.dTapReserve>=20?2:o.dTapReserve+1);option(()->"Aktionspause: "+DTapPolicy.actionDelay(o.dTapDelay,o.dTapCautious)+" Ticks",()->o.dTapDelay=o.dTapDelay%10+1);flag("Statusmeldungen",()->o.dTapFeedback,()->o.dTapFeedback=!o.dTapFeedback);}
             case "Rüstung ausblenden"->{flag("Helm ausblenden",()->o.hideHelmet,()->o.hideHelmet=!o.hideHelmet);flag("Brustplatte ausblenden",()->o.hideChest,()->o.hideChest=!o.hideChest);flag("Hose ausblenden",()->o.hideLegs,()->o.hideLegs=!o.hideLegs);flag("Stiefel ausblenden",()->o.hideBoots,()->o.hideBoots=!o.hideBoots);}
             case "Item-ESP","Spieler-ESP","Mob-ESP"->{
