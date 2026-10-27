@@ -18,13 +18,16 @@ final class DevelopmentSmoke {
                 frame[0]=0;return;
             }
             frame[0]++;
-            if(frame[0]==3)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.8.0-title.png",c.getFramebuffer(),1,t->{});
+            if(frame[0]==3)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.9.0-title.png",c.getFramebuffer(),1,t->{});
             if(frame[0]==12)c.setScreen(new ModuleScreen(hud,renderer,features));
-            if(frame[0]==15)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.8.0-workspace.png",c.getFramebuffer(),1,t->{});
+            if(frame[0]==15)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.9.0-workspace.png",c.getFramebuffer(),1,t->{});
             if(frame[0]>=20 && frame[0]%4==0){int i=frame[0]/4-5;if(i<ids.size()){var workspace=new ModuleScreen(hud,renderer,features);c.setScreen(workspace);workspace.select(ids.get(i));}
                 else if(i==ids.size())c.setScreen(new ItemSelectionScreen(new ModuleScreen(hud,renderer,features),features));
                 else if(i==ids.size()+1)c.setScreen(new ColorPickerScreen(new ModuleScreen(hud,renderer,features),0xFFF0A46E,v->{}));
                 else if(i==ids.size()+2)c.setScreen(new CrosshairScreen(new ModuleScreen(hud,renderer,features),features));
+                else if(i==ids.size()+3)c.setScreen(new HudEditorScreen(hud,renderer,features));
+                else if(i==ids.size()+4)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.9.0-hud-editor.png",c.getFramebuffer(),1,t->{});
+                else if(i==ids.size()+5)c.setScreen(new HudPresetScreen(new HudEditorScreen(hud,renderer,features),hud,renderer));
                 else {org.slf4j.LoggerFactory.getLogger("Hera").info("HERA_SMOKE_OK: menu, {} module settings, item picker and color picker",ids.size());c.scheduleStop();}
             }
         });

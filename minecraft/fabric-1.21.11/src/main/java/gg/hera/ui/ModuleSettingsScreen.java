@@ -27,7 +27,24 @@ public final class ModuleSettingsScreen extends Screen {
         else {
             flag("Modul",()->module.enabled,()->module.enabled=!module.enabled);
             option(()->String.format(Locale.ROOT,"Größe: %.1f×",module.scale),()->{module.scale=module.scale>=3?.5f:module.scale+.1f;module.normalize();});
-            color("Textfarbe",()->module.color,v->module.color=v);
+            if(id.equals("FPS")){flag("Gemessene Framezeit",()->module.showFrameTime,()->module.showFrameTime=!module.showFrameTime);flag("Framezeit-Graph",()->module.showGraph,()->module.showGraph=!module.showGraph);}
+            if(id.equals("Ping"))flag("Latenz-Farben",()->module.latencyColor,()->module.latencyColor=!module.latencyColor);
+            if(id.equals("Koordinaten")){flag("Mehrzeilig",()->module.expanded,()->module.expanded=!module.expanded);option(()->"Nachkommastellen: "+module.precision,()->module.precision=(module.precision+1)%4);flag("Chunk",()->module.showChunk,()->module.showChunk=!module.showChunk);flag("Biom",()->module.showBiome,()->module.showBiome=!module.showBiome);flag("Richtung",()->module.showFacing,()->module.showFacing=!module.showFacing);}
+            if(id.equals("CPS"))option(()->"Messfenster: "+module.cpsInterval+" s",()->module.cpsInterval=module.cpsInterval%5+1);
+            if(id.equals("Effekte"))flag("Name & Verstärker",()->module.expanded,()->module.expanded=!module.expanded);
+            if(id.equals("Keystrokes")){flag("CPS in Maustasten",()->module.showCps,()->module.showCps=!module.showCps);flag("Sprintstatus",()->module.showSprint,()->module.showSprint=!module.showSprint);}
+            if(id.equals("Armor HUD")){flag("Vertikal",()->module.vertical,()->module.vertical=!module.vertical);flag("Haltbarkeitsbalken",()->module.showBars,()->module.showBars=!module.showBars);}
+
+            option(()->"Darstellung: "+(hud.advancedSettings.contains(id)?"Weniger":"Mehr"),()->{if(!hud.advancedSettings.remove(id))hud.advancedSettings.add(id);});
+            if(hud.advancedSettings.contains(id)){
+            if(!id.equals("Inventar"))color("Textfarbe",()->module.color,v->module.color=v);
+            if(List.of("FPS","Armor HUD","Keystrokes").contains(id))color("Akzent",()->module.accent,v->module.accent=v);
+            option(()->"Deckkraft Text / Fläche: "+Math.round(module.opacity*100)+"%",()->module.opacity=module.opacity>=1?.1f:module.opacity+.1f);
+            option(()->"Innenabstand: "+module.padding+" px",()->module.padding=module.padding>=12?2:module.padding+1);
+            option(()->"Eckenradius: "+module.radius+" px",()->module.radius=(module.radius+1)%9);
+            if(!id.equals("Inventar"))flag("Minecraft-Schrift",()->module.vanillaFont,()->module.vanillaFont=!module.vanillaFont);
+                if(!List.of("Armor HUD","Inventar","Keystrokes").contains(id))option(()->"Ausrichtung: "+List.of("Links","Mitte","Rechts").get(module.alignment),()->module.alignment=(module.alignment+1)%3);
+            }
             option(()->"Hintergrund: "+(module.background==0?"Aus":"An"),()->module.background=module.background==0?0xC01A202B:0);
             option(()->"Position im HUD-Editor →",()->client.setScreen(new HudEditorScreen(hud,renderer,f)));
             if(id.equals("Keystrokes")){flag("Mausklicks",()->o.keyMouse,()->o.keyMouse=!o.keyMouse);flag("Leertaste",()->o.keySpace,()->o.keySpace=!o.keySpace);}
@@ -47,7 +64,7 @@ public final class ModuleSettingsScreen extends Screen {
                 option(()->"Deckkraft: "+o.crosshairOpacity+"%",()->o.crosshairOpacity=o.crosshairOpacity>=100?10:o.crosshairOpacity+10);
             }
             case "Own Nametag"->flag("Auch beim Schleichen",()->o.nametagSneaking,()->o.nametagSneaking=!o.nametagSneaking);
-            case "D-Tap"->{flag("Vorsichtig: Fadenkreuz & Erholung",()->o.dTapCautious,()->o.dTapCautious=!o.dTapCautious);option(()->"Mindest-Zielschaden: "+o.dTapTarget,()->o.dTapTarget=o.dTapTarget>=30?2:o.dTapTarget+1);option(()->"Max. Eigenschaden: "+o.dTapSelf,()->o.dTapSelf=o.dTapSelf>=30?2:o.dTapSelf+1);option(()->"Lebensreserve: "+o.dTapReserve,()->o.dTapReserve=o.dTapReserve>=20?2:o.dTapReserve+1);option(()->"Aktionspause: "+DTapPolicy.actionDelay(o.dTapDelay,o.dTapCautious)+" Ticks",()->o.dTapDelay=o.dTapDelay%10+1);flag("Statusmeldungen",()->o.dTapFeedback,()->o.dTapFeedback=!o.dTapFeedback);}
+            case "D-Tap"->{flag("Automatisch sichtbar ausrichten",()->o.dTapAutoAim,()->o.dTapAutoAim=!o.dTapAutoAim);flag("Vorsichtig: Fadenkreuz & Erholung",()->o.dTapCautious,()->o.dTapCautious=!o.dTapCautious);option(()->"Mindest-Zielschaden: "+o.dTapTarget,()->o.dTapTarget=o.dTapTarget>=30?2:o.dTapTarget+1);option(()->"Max. Eigenschaden: "+o.dTapSelf,()->o.dTapSelf=o.dTapSelf>=30?2:o.dTapSelf+1);option(()->"Lebensreserve: "+o.dTapReserve,()->o.dTapReserve=o.dTapReserve>=20?2:o.dTapReserve+1);option(()->"Aktionspause: "+DTapPolicy.actionDelay(o.dTapDelay,o.dTapCautious)+" Ticks",()->o.dTapDelay=o.dTapDelay%10+1);flag("Statusmeldungen",()->o.dTapFeedback,()->o.dTapFeedback=!o.dTapFeedback);}
             case "Rüstung ausblenden"->{flag("Helm ausblenden",()->o.hideHelmet,()->o.hideHelmet=!o.hideHelmet);flag("Brustplatte ausblenden",()->o.hideChest,()->o.hideChest=!o.hideChest);flag("Hose ausblenden",()->o.hideLegs,()->o.hideLegs=!o.hideLegs);flag("Stiefel ausblenden",()->o.hideBoots,()->o.hideBoots=!o.hideBoots);}
             case "Item-ESP","Spieler-ESP","Mob-ESP"->{
                 flag("Tracer",()->o.espTracers,()->o.espTracers=!o.espTracers);flag("Box-Umrandung",()->o.espBoxes,()->o.espBoxes=!o.espBoxes);flag("Entity-Leuchten",()->o.espGlow,()->o.espGlow=!o.espGlow);
@@ -72,10 +89,10 @@ public final class ModuleSettingsScreen extends Screen {
             default->{}
         }
     }
-    private void rebuild(){clearChildren();page=Math.clamp(page,0,Math.max(0,(settings.size()-1)/rows));for(int i=0;i<rows && page*rows+i<settings.size();i++){var s=settings.get(page*rows+i);addDrawableChild(new HeraButton(x+14,y+46+i*29,w-28,25,s.label.get(),false,()->{s.change.run();f.options.normalize();if(client.currentScreen==this)rebuild();}));}
+    private void rebuild(){collectSettings();clearChildren();page=Math.clamp(page,0,Math.max(0,(settings.size()-1)/rows));for(int i=0;i<rows && page*rows+i<settings.size();i++){var s=settings.get(page*rows+i);addDrawableChild(new HeraButton(x+14,y+46+i*29,w-28,25,s.label.get(),false,()->{s.change.run();f.options.normalize();if(client.currentScreen==this)rebuild();}));}
         addDrawableChild(new HeraButton(x+14,y+h-30,26,20,"‹",false,()->{page--;rebuild();}));addDrawableChild(new HeraButton(x+44,y+h-30,26,20,"›",false,()->{page++;rebuild();}));addDrawableChild(new HeraButton(x+w-90,y+h-30,76,20,"Fertig",true,this::close));}
     @Override public void render(DrawContext c,int mx,int my,float d){c.fill(0,0,width,height,0x88080B11);HeraTheme.panel(c,x,y,w,h);HeraTheme.title(c,id,x+14,y+15,1.2f,HeraTheme.TEXT);super.render(c,mx,my,d);HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?hint():error,w-28),x+14,y+h-48,HeraTheme.MUTED);HeraTheme.label(c,(page+1)+" / "+(Math.max(0,(settings.size()-1)/rows)+1),x+82,y+h-23,HeraTheme.MUTED);}
     private String hint(){return switch(id){case "Freecam"->"WASD · Leertaste/Shift · V zum Zurückkehren";case "Free Look"->"Linkes Alt halten · Bewegung bleibt unverändert";case "Zoom"->"C halten · Tasten in Minecraft neu belegbar";case "No Fog","Full Bright","Time Changer","Weather Changer"->"Lokale Darstellung · Server bleibt unverändert";default->"Einstellungen werden mit Fertig gespeichert.";};}
-    @Override public void close(){try{f.save();if(hud!=null)hud.save();client.setScreen(parent);}catch(IOException e){error="Speichern fehlgeschlagen.";}}
+    @Override public void close(){try{f.save();if(hud!=null)hud.save();if(renderer!=null)renderer.invalidate();client.setScreen(parent);}catch(IOException e){error="Speichern fehlgeschlagen.";}}
     @Override public boolean shouldPause(){return false;}
 }

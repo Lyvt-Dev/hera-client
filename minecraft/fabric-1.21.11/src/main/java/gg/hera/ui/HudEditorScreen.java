@@ -1,5 +1,4 @@
 package gg.hera.ui;
-
 import gg.hera.hud.*;
 import gg.hera.features.FeatureConfig;
 import net.minecraft.client.gui.Click;
@@ -7,71 +6,70 @@ import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.DrawContext;
 import org.lwjgl.glfw.GLFW;
+import java.util.*;
 import java.io.IOException;
-import java.util.Locale;
 
 public final class HudEditorScreen extends Screen {
-    private static final int[] COLORS={0xFFF0A46E,0xFFF3F4F8,0xFF9AE8E2,0xFFA7DBA0,0xFFF4A5C4};
     private final HudConfig config;private final HudRenderer renderer;private final FeatureConfig features;
-    private HudModule selected;private double offsetX,offsetY;private boolean dragging,grid=true,resetArmed;
-    private String error="";
-    public HudEditorScreen(HudConfig config,HudRenderer renderer,FeatureConfig features){super(HeraTheme.text("Hera · HUD Studio"));this.config=config;this.renderer=renderer;this.features=features;}
-    @Override protected void init(){rebuild();}
-    private void rebuild(){
-        clearChildren();int tw=Math.min(390,width-20),tx=(width-tw)/2;
-        addDrawableChild(new HeraButton(tx+tw-65,19,55,22,"Fertig",true,this::close));
-        addDrawableChild(new HeraButton(tx+tw-119,19,48,22,grid?"Raster an":"Raster aus",false,()->{grid=!grid;rebuild();}));
-        addDrawableChild(new HeraButton(tx+tw-179,19,54,22,resetArmed?"Sicher?":"Reset",false,this::reset));
-        if(selected!=null){
-            int iw=Math.min(370,width-20),ix=(width-iw)/2,iy=height-76;
-            addDrawableChild(new HeraButton(ix+iw-67,iy+8,57,20,selected.enabled?"Aktiv":"Inaktiv",selected.enabled,()->{selected.enabled=!selected.enabled;rebuild();}));
-            addDrawableChild(new HeraButton(ix+10,iy+35,24,21,"−",false,()->resize(-.1f)));
-            addDrawableChild(new HeraButton(ix+79,iy+35,24,21,"+",false,()->resize(.1f)));
-            addDrawableChild(new HeraButton(ix+111,iy+35,58,21,"Farbe",false,this::color));
-            addDrawableChild(new HeraButton(ix+177,iy+35,Math.min(92,iw-187),21,selected.background==0?"Fläche aus":"Fläche an",false,()->{selected.background=selected.background==0?0xDB1B1E26:0;rebuild();}));
+    private final Deque<String> undo=new ArrayDeque<>(),redo=new ArrayDeque<>();
+    private HudModule selected;private double offsetX,offsetY,startScale;private boolean dragging,resizing,grid=true,snap=true,resetArmed;
+    private String error="",gesture="";private int guideX=-1,guideY=-1,paletteScroll;
+    public HudEditorScreen(HudConfig config,HudRenderer renderer,FeatureConfig features){super(HeraTheme.text("Hera · HUD Studio"));this.config=config;this.renderer=renderer;this.features=features;this.selected=config.modules.getFirst();}
+    @Override protected void init(){if(selected!=null){String id=selected.id;selected=config.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);}renderer.invalidate();rebuild();}
+    private void remember(){undo.addLast(config.snapshot());while(undo.size()>40)undo.removeFirst();redo.clear();}
+    private void mutate(Runnable action){remember();action.run();renderer.invalidate();rebuild();}
+    private void history(boolean forward){var from=forward?redo:undo;var to=forward?undo:redo;if(from.isEmpty())return;String id=selected==null?null:selected.id;to.addLast(config.snapshot());config.restore(from.removeLast());selected=id==null?null:config.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);renderer.invalidate();rebuild();}
+    private void rebuild(){clearChildren();int w=Math.min(460,width-16),x=(width-w)/2,button=(w-16)/7;
+        String[] labels={grid?"Raster ✓":"Raster",snap?"Snap ✓":"Snap","Undo","Redo","Presets","Reset","Fertig"};
+        Runnable[] actions={()->{grid=!grid;rebuild();},()->{snap=!snap;rebuild();},()->history(false),()->history(true),()->{remember();client.setScreen(new HudPresetScreen(this,config,renderer));},this::reset,this::close};
+        addDrawableChild(new HeraButton(x+w-60,8,52,17,"Akzent",false,()->client.setScreen(new ColorPickerScreen(this,config.accent,v->config.accent=v))));
+        for(int i=0;i<7;i++){var b=new HeraButton(x+8+i*button,29,button-3,22,labels[i],i==6,actions[i]);b.active=i!=2||!undo.isEmpty();if(i==3)b.active=!redo.isEmpty();addDrawableChild(b);}
+        int paletteRows=Math.max(1,(height-146)/22);paletteScroll=Math.clamp(paletteScroll,0,Math.max(0,config.modules.size()-paletteRows));
+        for(int i=paletteScroll;i<Math.min(config.modules.size(),paletteScroll+paletteRows);i++){var m=config.modules.get(i);int row=i-paletteScroll;addDrawableChild(new HeraButton(width-108,78+row*22,96,20,HeraTheme.fit(m.id,85),m==selected,()->{selected=m;rebuild();}));}
+        if(selected!=null){int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;
+            addDrawableChild(new HeraButton(ix+8,iy+29,48,22,selected.enabled?"An":"Aus",selected.enabled,()->mutate(()->selected.enabled=!selected.enabled)));
+            addDrawableChild(new HeraButton(ix+60,iy+29,24,22,"−",false,()->resize(-.1f)));addDrawableChild(new HeraButton(ix+88,iy+29,24,22,"+",false,()->resize(.1f)));
+            addDrawableChild(new HeraButton(ix+116,iy+29,58,22,"Anker",false,this::anchor));
+            addDrawableChild(new HeraButton(ix+178,iy+29,57,22,"Position",false,()->mutate(()->{selected.x=.02f;selected.y=.12f;selected.anchorX=0;selected.anchorY=0;selected.scale=1;})));
+            if(iw>=340)addDrawableChild(new HeraButton(ix+239,iy+29,iw-247,22,"Einstellungen",false,()->{remember();client.setScreen(new ModuleSettingsScreen(this,features,selected.id,config,renderer));}));
+            else addDrawableChild(new HeraButton(ix+239,iy+29,iw-247,22,"…",false,()->client.setScreen(new ModuleSettingsScreen(this,features,selected.id,config,renderer))));
         }
     }
-    private void reset(){if(!resetArmed){resetArmed=true;rebuild();return;}for(int i=0;i<config.modules.size();i++){HudModule m=config.modules.get(i);int rows=Math.max(1,(height-145)/30);m.x=m.id.equals("Keystrokes")||m.id.equals("Armor HUD")?.70f:(12+(i/rows)*Math.min(160,width/2))/(float)width;m.y=m.id.equals("Keystrokes")?.28f:m.id.equals("Armor HUD")?.68f:(62+(i%rows)*30)/(float)height;m.scale=1;}selected=null;resetArmed=false;rebuild();}
-    private void resize(float amount){if(selected!=null){selected.scale=Math.clamp(selected.scale+amount,.5f,3);rebuild();}}
-    private void color(){if(selected==null)return;int next=0;for(int i=0;i<COLORS.length;i++)if(selected.color==COLORS[i])next=(i+1)%COLORS.length;selected.color=COLORS[next];}
-    private int px(HudModule m){return Math.min(Math.round(m.x*width),Math.max(0,width-Math.round(renderer.width(m,client)*m.scale)));}
-    private int py(HudModule m){return Math.min(Math.round(m.y*height),Math.max(0,height-Math.round(renderer.height(m)*m.scale)));}
+    private void anchor(){mutate(()->{int x=px(selected),y=py(selected);selected.anchorX=(selected.anchorX+1)%3;selected.anchorY=selected.anchorX;place(selected,x,y);});}
+    private void reset(){if(!resetArmed){resetArmed=true;error="Reset erneut wählen: Positionen werden zurückgesetzt.";rebuild();return;}mutate(()->{for(int i=0;i<config.modules.size();i++){var m=config.modules.get(i);m.x=.025f+(i/8)*.35f;m.y=.15f+(i%8)*.07f;m.anchorX=0;m.anchorY=0;m.scale=1;}selected=null;});resetArmed=false;error="";}
+    private void resize(float amount){if(selected!=null)mutate(()->{selected.scale=Math.clamp(selected.scale+amount,.5f,3);selected.normalize();});}
+    private int pw(HudModule m){return Math.round(renderer.width(m,client)*m.scale);}private int ph(HudModule m){return Math.round(renderer.height(m)*m.scale);}
+    private int px(HudModule m){return renderer.x(m,width,client);}private int py(HudModule m){return renderer.y(m,height);}
+    private void place(HudModule m,double x,double y){m.x=HudGeometry.offset(x,m.anchorX,width,pw(m));m.y=HudGeometry.offset(y,m.anchorY,height,ph(m));m.normalize();}
+    private boolean overlap(){if(selected==null)return false;int x=px(selected),y=py(selected),w=pw(selected),h=ph(selected);return y+h>height-46&&x<width/2+100&&x+w>width/2-100||y+h>height-130&&x<Math.min(300,width/2);}
     @Override public void render(DrawContext c,int mx,int my,float delta){
-        c.fill(0,0,width,height,0x550A0D13);
-        if(grid){for(int x=0;x<width;x+=8)c.fill(x,0,x+1,height,0x08FFFFFF);for(int y=0;y<height;y+=8)c.fill(0,y,width,y+1,0x08FFFFFF);}
-        renderer.render(c,true);
-        if(selected!=null){int x=px(selected),y=py(selected),w=Math.round(renderer.width(selected,client)*selected.scale),h=Math.round(renderer.height(selected)*selected.scale);
-            c.fill(x-2,y-2,x+w+2,y-1,HeraTheme.ACCENT);c.fill(x-2,y+h+1,x+w+2,y+h+2,HeraTheme.ACCENT);c.fill(x-2,y-2,x-1,y+h+2,HeraTheme.ACCENT);c.fill(x+w+1,y-2,x+w+2,y+h+2,HeraTheme.ACCENT);
-            if(dragging){c.fill(width/2,48,width/2+1,height-85,0x44F0A46E);c.fill(0,height/2,width,height/2+1,0x44F0A46E);}
+        c.fill(0,0,width,height,0x440A0C10);if(grid){for(int x=0;x<width;x+=8)c.fill(x,0,x+1,height,0x06FFFFFF);for(int y=0;y<height;y+=8)c.fill(0,y,width,y+1,0x06FFFFFF);}
+        renderer.render(c,true,selected==null?"":selected.id);if(selected!=null){int x=px(selected),y=py(selected),w=pw(selected),h=ph(selected),color=config.accent;
+            c.fill(x-1,y-1,x+w+1,y,color);c.fill(x-1,y+h,x+w+1,y+h+1,color);c.fill(x-1,y,x,y+h,color);c.fill(x+w,y,x+w+1,y+h,color);HeraTheme.round(c,x+w-3,y+h-3,6,6,1,color);
+            if(guideX>=0)c.fill(guideX,57,guideX+1,height-70,0x6670CBA4);if(guideY>=0)c.fill(0,guideY,width,guideY+1,0x6670CBA4);
         }
-        int tw=Math.min(390,width-20),tx=(width-tw)/2;
-        HeraTheme.panel(c,tx,10,tw,40);HeraTheme.logo(c,tx+10,18,23);HeraTheme.title(c,"HUD Studio",tx+40,21,1.2f,HeraTheme.TEXT);
-        int iw=Math.min(370,width-20),ix=(width-iw)/2,iy=height-76;
-        HeraTheme.panel(c,ix,iy,iw,65);
-        if(selected==null){HeraTheme.title(c,"Alles an seinem Platz.",ix+13,iy+12,1.15f,HeraTheme.TEXT);HeraTheme.label(c,"Ein HUD anklicken und ziehen.",ix+13,iy+32,HeraTheme.MUTED);HeraTheme.label(c,"Shift: Raster · Mausrad: Größe · Esc: fertig",ix+13,iy+47,HeraTheme.MUTED);}
-        else{HeraTheme.title(c,selected.id,ix+12,iy+12,1.1f,HeraTheme.TEXT);HeraTheme.label(c,String.format(Locale.ROOT,"%.1f×",selected.scale),ix+43,iy+42,HeraTheme.ACCENT);HeraTheme.round(c,ix+153,iy+42,7,7,3,selected.color);}
+        HeraTheme.round(c,width-112,60,104,Math.max(1,(height-146)/22)*22+20,4,0xEB111318);HeraTheme.label(c,"ELEMENTE",width-104,66,HeraTheme.MUTED);
+        int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx,6,tw,50,5,0xF0111318);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD STUDIO · Vorschau",tx+28,13,HeraTheme.TEXT);
+        int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix,iy,iw,59,5,0xF0111318);
+        if(selected==null){HeraTheme.label(c,"Element wählen · ziehen · Ecke zum Skalieren",ix+10,iy+12,HeraTheme.TEXT);HeraTheme.label(c,"Tab: Auswahl · Pfeile: Position · Strg+Z / Y",ix+10,iy+32,HeraTheme.MUTED);}
+        else{String label=selected.id+" · "+Math.round(selected.scale*100)+"% · "+List.of("Oben links","Unten rechts","Zentriert").get(selected.anchorX);HeraTheme.label(c,HeraTheme.fit(label,iw-20),ix+10,iy+10,HeraTheme.TEXT);}
+        if(!error.isEmpty()||overlap())HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?"Mögliche Überlappung mit Chat / Hotbar":error,width-24),12,60,0xFFF1B66B);
         super.render(c,mx,my,delta);
-        if(!error.isEmpty())HeraTheme.label(c,error,12,56,0xFFFF9DAB);
     }
-    @Override public boolean mouseClicked(Click click,boolean doubled){
-        if(super.mouseClicked(click,doubled))return true;
-        double x=click.x(),y=click.y();int tw=Math.min(390,width-20),iw=Math.min(370,width-20);
-        if((y>=10&&y<=50&&x>=(width-tw)/2&&x<=(width+tw)/2)||(y>=height-76&&x>=(width-iw)/2&&x<=(width+iw)/2))return true;
-        for(int i=config.modules.size()-1;i>=0;i--){HudModule m=config.modules.get(i);double px=px(m),py=py(m);
-            if(x>=px&&x<=px+renderer.width(m,client)*m.scale&&y>=py&&y<=py+renderer.height(m)*m.scale){selected=m;offsetX=x-px;offsetY=y-py;dragging=click.button()==0;if(click.button()==1)m.enabled=!m.enabled;resetArmed=false;rebuild();return true;}}
-        selected=null;dragging=false;resetArmed=false;rebuild();return false;
+    @Override public boolean mouseClicked(Click click,boolean doubled){if(super.mouseClicked(click,doubled))return true;if(click.y()<57||click.y()>height-70)return true;
+        for(int i=config.modules.size()-1;i>=0;i--){var m=config.modules.get(i);if(!m.enabled&&m!=selected)continue;int x=px(m),y=py(m),w=pw(m),h=ph(m);if(click.x()>=x-2&&click.x()<=x+w+4&&click.y()>=y-2&&click.y()<=y+h+4){selected=m;gesture=config.snapshot();offsetX=click.x()-x;offsetY=click.y()-y;startScale=m.scale;resizing=click.button()==0&&click.x()>=x+w-6&&click.y()>=y+h-6;dragging=click.button()==0&&!resizing;if(click.button()==1)mutate(()->selected.enabled=!selected.enabled);resetArmed=false;error="";rebuild();return true;}}
+        selected=null;dragging=false;resizing=false;rebuild();return false;
     }
-    @Override public boolean mouseDragged(Click click,double dx,double dy){
-        if(selected==null||!dragging)return super.mouseDragged(click,dx,dy);
-        double x=click.x()-offsetX,y=click.y()-offsetY;if(click.hasShift()){x=Math.round(x/8)*8;y=Math.round(y/8)*8;}
-        selected.x=(float)Math.clamp(x/width,0,1);selected.y=(float)Math.clamp(y/height,0,1);return true;
+    @Override public boolean mouseDragged(Click click,double dx,double dy){if(selected==null||!dragging&&!resizing)return super.mouseDragged(click,dx,dy);if(resizing){selected.scale=(float)Math.clamp(startScale*(click.x()-px(selected))/Math.max(1,offsetX),.5,3);return true;}
+        int x=(int)Math.round(click.x()-offsetX),y=(int)Math.round(click.y()-offsetY);guideX=-1;guideY=-1;
+        if(snap||click.hasShift()){if(click.hasShift()){x=Math.round(x/8f)*8;y=Math.round(y/8f)*8;}else{int sx=HudGeometry.snap(x,pw(selected),width,width/2,0),sy=HudGeometry.snap(y,ph(selected),height,height/2,0);if(sx!=x)guideX=sx;if(sy!=y)guideY=sy;x=sx;y=sy;for(var m:config.modules)if(m!=selected&&m.enabled){sx=HudGeometry.snap(x,pw(selected),width,px(m),pw(m));sy=HudGeometry.snap(y,ph(selected),height,py(m),ph(m));if(sx!=x)guideX=sx;if(sy!=y)guideY=sy;x=sx;y=sy;}}}
+        place(selected,x,y);return true;
     }
-    @Override public boolean mouseReleased(Click click){dragging=false;return super.mouseReleased(click);}
-    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(selected==null)return false;resize((float)vertical*.1f);return true;}
-    @Override public boolean keyPressed(KeyInput input){
-        if(input.key()==GLFW.GLFW_KEY_R){reset();return true;}
-        if(selected!=null){if(input.key()==GLFW.GLFW_KEY_C){color();return true;}if(input.key()==GLFW.GLFW_KEY_B){selected.background=selected.background==0?0xDB1B1E26:0;rebuild();return true;}
-            int step=input.hasShift()?8:1;switch(input.key()){case GLFW.GLFW_KEY_LEFT->selected.x-=step/(float)width;case GLFW.GLFW_KEY_RIGHT->selected.x+=step/(float)width;case GLFW.GLFW_KEY_UP->selected.y-=step/(float)height;case GLFW.GLFW_KEY_DOWN->selected.y+=step/(float)height;default->{return super.keyPressed(input);}}selected.normalize();return true;}
+    @Override public boolean mouseReleased(Click click){if((dragging||resizing)&&!gesture.equals(config.snapshot())){undo.addLast(gesture);while(undo.size()>40)undo.removeFirst();redo.clear();}dragging=false;resizing=false;guideX=-1;guideY=-1;rebuild();return super.mouseReleased(click);}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(x>=width-112&&y>=60&&y<height-70){paletteScroll+=(int)-Math.signum(vertical);rebuild();return true;}if(selected==null)return false;resize((float)vertical*.1f);return true;}
+    @Override public boolean keyPressed(KeyInput input){if(input.hasCtrl()&&input.key()==GLFW.GLFW_KEY_Z){history(input.hasShift());return true;}if(input.hasCtrl()&&input.key()==GLFW.GLFW_KEY_Y){history(true);return true;}
+        if(input.key()==GLFW.GLFW_KEY_TAB){int i=selected==null?-1:config.modules.indexOf(selected);selected=config.modules.get(Math.floorMod(i+(input.hasShift()?-1:1),config.modules.size()));rebuild();return true;}
+        if(selected!=null){int step=input.hasShift()?8:1;int x=px(selected),y=py(selected);switch(input.key()){case GLFW.GLFW_KEY_LEFT->x-=step;case GLFW.GLFW_KEY_RIGHT->x+=step;case GLFW.GLFW_KEY_UP->y-=step;case GLFW.GLFW_KEY_DOWN->y+=step;case GLFW.GLFW_KEY_SPACE->{mutate(()->selected.enabled=!selected.enabled);return true;}case GLFW.GLFW_KEY_ENTER->{client.setScreen(new ModuleSettingsScreen(this,features,selected.id,config,renderer));return true;}default->{return super.keyPressed(input);}}remember();place(selected,x,y);return true;}
         return super.keyPressed(input);
     }
     @Override public void close(){try{config.save();features.save();client.setScreen(new ModuleScreen(config,renderer,features));}catch(IOException e){error="Layout konnte nicht gespeichert werden.";}}

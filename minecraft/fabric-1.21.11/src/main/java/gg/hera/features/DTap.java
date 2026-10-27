@@ -23,6 +23,7 @@ public final class DTap {
     private record Plan(BlockPos base,BlockHitResult support,double score){}
     private final FeatureConfig config;private Phase phase=Phase.IDLE;
     private PlayerEntity target;private Object world;private Plan plan;private int tick,deadline,nextAction,cooldown,oldSlot,ownedSlot,crystalId=-1;
+    private int lastAimTick=-1;
     private boolean baseConfirmed,hitConfirmed;private final DTapGate gate=new DTapGate();
     private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
     private static final Direction[] SIDES=Direction.values();
@@ -47,10 +48,11 @@ public final class DTap {
         switch(phase){
             case HIT->{if(!hitConfirmed)return;if(!target.getMainHandStack().isOf(Items.TOTEM_OF_UNDYING)&&!target.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)){finish(c,"Ziel hält kein Totem");return;}if(plan==null){plan=findPlan(c);if(plan==null){if(searchCursor>=50)finish(c,"Kein geeigneter Platz");return;}deadline=tick+40;}
                 if(c.world.getBlockState(plan.base).isOf(Blocks.OBSIDIAN)||c.world.getBlockState(plan.base).isOf(Blocks.BEDROCK)){baseConfirmed=true;placeCrystal(c,false);}
-                else {int obsidian=slot(c,Items.OBSIDIAN);if(obsidian<0){finish(c,"Obsidian fehlt in der Hotbar");return;}var support=placementHit(c,plan.support);if(support==null)return;if(!safe(c,plan.base)){finish(c,"Schadensprüfung");return;}if(!prepareSlot(c,obsidian))return;c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,support);c.player.swingHand(Hand.MAIN_HAND);phase=Phase.BASE;deadline=tick+40;nextAction=tick+delay();}}
+                else {int obsidian=slot(c,Items.OBSIDIAN);if(obsidian<0){finish(c,"Obsidian fehlt in der Hotbar");return;}var support=placementHit(c,plan.support);if(support==null)return;if(!safe(c,plan.base)){finish(c,"Schadensprüfung");return;}if(!prepareSlot(c,obsidian))return;var result=c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,support);if(!result.isAccepted()){finish(c,"Obsidian-Platzierung abgelehnt");return;}c.player.swingHand(Hand.MAIN_HAND);phase=Phase.BASE;deadline=tick+40;nextAction=tick+delay();}}
             case BASE->{if(baseConfirmed)placeCrystal(c,false);}
             case CRYSTAL_ONE,CRYSTAL_TWO->{var crystal=crystal(c);if(crystal==null)return;
                 if(phase==Phase.CRYSTAL_TWO && target.hurtTime>0)return;
+                if(!aim(c,crystal.getBoundingBox().getCenter()))return;
                 if(config.options.dTapCautious && (!(c.crosshairTarget instanceof EntityHitResult hit) || hit.getEntity()!=crystal || c.player.getAttackCooldownProgress(0)<1f))return;
                 if(!c.player.canAttackEntityIn(crystal.getBoundingBox(),0) || !c.player.canSee(crystal) || !safe(c,plan.base)){finish(c,"Reichweite oder Schadensprüfung");return;}
                 crystalId=crystal.getId();boolean second=phase==Phase.CRYSTAL_TWO;if(!second)gate.begin(target.getId(),crystalId);c.interactionManager.attackEntity(c.player,crystal);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.DONE:Phase.POP;deadline=tick+40;nextAction=tick+delay();}
@@ -69,22 +71,31 @@ public final class DTap {
         if(config.options.dTapCautious){nextAction=tick+delay();return false;}
         return true;
     }
+    private boolean aim(MinecraftClient c,Vec3d point){
+        if(!config.options.dTapAutoAim)return true;var delta=point.subtract(c.player.getEyePos());
+        float yaw=DTapAim.yaw(delta.x,delta.z),pitch=DTapAim.pitch(delta.x,delta.y,delta.z);
+        if(Math.abs(DTapAim.difference(yaw,c.player.getYaw()))>1 || Math.abs(pitch-c.player.getPitch())>1){
+            c.player.setYaw(DTapAim.step(c.player.getYaw(),yaw,45));c.player.setPitch(Math.clamp(DTapAim.step(c.player.getPitch(),pitch,35),-90,90));lastAimTick=tick;nextAction=tick+1;return false;
+        }
+        return tick>lastAimTick;
+    }
     private BlockHitResult placementHit(MinecraftClient c,BlockHitResult planned){
+        if(!aim(c,planned.getPos()))return null;
         if(!config.options.dTapCautious)return planned;
-        return c.crosshairTarget instanceof BlockHitResult hit && hit.getType()==HitResult.Type.BLOCK && hit.getBlockPos().equals(planned.getBlockPos()) && hit.getSide()==planned.getSide()?hit:null;
+        return c.crosshairTarget instanceof BlockHitResult hit && hit.getType()==HitResult.Type.BLOCK && hit.getBlockPos().equals(planned.getBlockPos()) && (hit.getSide()==planned.getSide() || c.world.getBlockState(planned.getBlockPos()).isOf(Blocks.OBSIDIAN) || c.world.getBlockState(planned.getBlockPos()).isOf(Blocks.BEDROCK))?hit:null;
     }
     private void placeCrystal(MinecraftClient c,boolean second){
         int slot=slot(c,Items.END_CRYSTAL);if(slot<0){finish(c,"Kristalle fehlen");return;}
         var hit=new BlockHitResult(plan.base.toCenterPos().add(0,.5,0),Direction.UP,plan.base,false);var aimed=placementHit(c,hit);if(aimed==null)return;
         if(!c.player.canInteractWithBlockAt(plan.base,0)||!space(c,plan.base)||!visible(c,hit)||!safe(c,plan.base)){finish(c,"Platz nicht mehr geeignet");return;}
-        if(!prepareSlot(c,slot))return;c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,aimed);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.CRYSTAL_TWO:Phase.CRYSTAL_ONE;deadline=tick+40;nextAction=tick+delay();
+        if(!prepareSlot(c,slot))return;var result=c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,aimed);if(!result.isAccepted()){finish(c,"Kristall-Platzierung abgelehnt");return;}c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.CRYSTAL_TWO:Phase.CRYSTAL_ONE;deadline=tick+40;nextAction=tick+delay();
     }
     private EndCrystalEntity crystal(MinecraftClient c){return c.world.getEntitiesByClass(EndCrystalEntity.class,new Box(plan.base.up()).expand(.4,1,.4),e->!e.isRemoved() && e.getId()!=crystalId).stream().findFirst().orElse(null);}
     private boolean space(MinecraftClient c,BlockPos base){return c.world.getBlockState(base.up()).isAir() && c.world.getBlockState(base.up(2)).isAir() && c.world.getOtherEntities(null,new Box(base.up()).stretch(0,1,0),e->!e.isRemoved()).isEmpty();}
     private boolean visible(MinecraftClient c,BlockHitResult hit){var ray=c.world.raycast(new RaycastContext(c.player.getEyePos(),hit.getPos(),RaycastContext.ShapeType.COLLIDER,RaycastContext.FluidHandling.NONE,c.player));return ray.getType()==HitResult.Type.BLOCK && ray.getBlockPos().equals(hit.getBlockPos());}
     private Plan findPlan(MinecraftClient c){
         if(searchAnchor==null){searchAnchor=target.getBlockPos();deadline=tick+40;}
-        if(!target.getBlockPos().equals(searchAnchor)){searchCursor=50;searchBest=null;return null;}
+        if(!target.getBlockPos().equals(searchAnchor)){searchAnchor=target.getBlockPos();searchCursor=0;searchBest=null;}
         var budget=new WorkBudget(4,1_000_000);boolean obsidian=slot(c,Items.OBSIDIAN)>=0;
         while(searchCursor<50&&budget.step()){
             int index=searchCursor++,dx=index/10-2,dz=(index/2)%5-2,dy=index%2-1;
@@ -94,7 +105,7 @@ public final class DTap {
             double targetDamage=damage(c,target,base,false),selfDamage=damage(c,c.player,base,true);var o=config.options;
             if(!DTapPolicy.suitable(targetDamage,selfDamage,c.player.getHealth()+c.player.getAbsorptionAmount(),DTapPolicy.requiredDamage(target.getHealth(),target.getAbsorptionAmount(),o.dTapTarget),o.dTapSelf,o.dTapReserve))continue;
             BlockHitResult support=null;
-            if(!existing)for(Direction side:SIDES){var neighbor=base.offset(side.getOpposite());if(!c.world.getBlockState(neighbor).isSideSolidFullSquare(c.world,neighbor,side))continue;var point=neighbor.toCenterPos().add(Vec3d.of(side.getVector()).multiply(.5));var hit=new BlockHitResult(point,side,neighbor,false);if(visible(c,hit)){support=hit;break;}}
+            if(!existing)for(Direction side:SIDES){var neighbor=base.offset(side.getOpposite());if(!c.world.getBlockState(neighbor).isSideSolidFullSquare(c.world,neighbor,side))continue;var point=neighbor.toCenterPos().add(Vec3d.of(side.getVector()).multiply(.4999));var hit=new BlockHitResult(point,side,neighbor,false);if(visible(c,hit)){support=hit;break;}}
             if(!existing && support==null)continue;
             double score=targetDamage-selfDamage*.6;if(searchBest==null || score>searchBest.score)searchBest=new Plan(base,support,score);
         }return searchBest;

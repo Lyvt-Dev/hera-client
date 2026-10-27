@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.gl.RenderPipelines;
 
 public final class HeraTheme {
-    public static final int BG=0xFF10151D, PANEL=0xFF171E28, RAISED=0xFF242D39, LINE=0xFF2C3543;
-    public static final int TEXT=0xFFF3F6FC, MUTED=0xFF98A5B8, ACCENT=0xFFFFB27C;
+    public static final int BG=0xFF111318, PANEL=0xFF1B1E25, RAISED=0xFF242830, LINE=0xFF30353D;
+    public static final int TEXT=0xFFF5F6F8, MUTED=0xFFA4ACB9, ACCENT=0xFFF49B63;
     private static final Style FONT=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","medium")));
     private static final Style BOLD=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","bold")));
     private static final Identifier LOGO=Identifier.of("hera","brand/hera");
@@ -32,8 +32,7 @@ public final class HeraTheme {
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,ICONS.get(id),x,y,size,size,color);
     }
     public static void panel(DrawContext c,int x,int y,int w,int h) {
-        round(c,x-4,y+5,w+8,h+3,13,0x30000000);
-        round(c,x-1,y-1,w+2,h+2,11,0xFF394452);round(c,x,y,w,h,10,BG);
+        round(c,x-1,y-1,w+2,h+2,6,LINE);round(c,x,y,w,h,5,BG);
     }
     public static void label(DrawContext c,String value,int x,int y,int color) { c.drawText(MinecraftClient.getInstance().textRenderer,text(value),x,y,color,false); }
     public static void title(DrawContext c,String value,int x,int y,float scale,int color) {

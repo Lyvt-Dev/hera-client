@@ -2,7 +2,7 @@ package gg.hera.features;
 
 /** Persisted, client-only module settings. No gameplay module starts enabled. */
 public final class ModuleOptions {
-    public boolean dTap,dTapFeedback=true,dTapCautious=true;
+    public boolean dTap,dTapFeedback=true,dTapCautious=true,dTapAutoAim=true;
     public int dTapDelay=2;public float dTapTarget=6,dTapSelf=10,dTapReserve=8;
     public boolean customCrosshair,ownNametag,nametagSneaking=true;
     public boolean crosshairDot=true,crosshairOutline=true,crosshairImage;
