@@ -38,3 +38,6 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 
 
 0.2.0 redesigns the launcher workspace and bundles Hera mod 0.8.0 for Fabric 1.21.11, including configurable crosshair/PNG import and own nametag. Both modules default off. Existing profile/account data and updater signing identity are preserved.
+
+
+0.2.1 embeds mod 0.9.0 (HUD Studio and visible D-Tap aiming), with aligned frontend/native version metadata. Fabric 1.21.11 install/repair upgrades the managed Hera JAR. No extra manual JAR copy is needed for that profile combination.
