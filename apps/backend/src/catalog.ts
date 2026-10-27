@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
-import { modProjectSchema, modVersionSchema, type ModProject, type ModVersion } from '@hera/shared-types';
+import { profileSchema, modProjectSchema, modVersionSchema, type ModProject, type ModVersion } from '@hera/shared-types';
 
-const querySchema=z.object({source:z.enum(['modrinth','curseforge']),loader:z.enum(['fabric','forge']),version:z.literal('1.21.1'),query:z.string().max(100).default(''),id:z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),projectId:z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),offset:z.coerce.number().int().min(0).max(10000).default(0)});
+const querySchema=z.object({source:z.enum(['modrinth','curseforge']),loader:z.enum(['fabric','forge']),version:profileSchema.shape.version,query:z.string().max(100).default(''),id:z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),projectId:z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).optional(),offset:z.coerce.number().int().min(0).max(10000).default(0)});
 export class CatalogError extends Error {constructor(public status:number,message:string){super(message);}}
 type Fetch=typeof fetch;
 export function createCatalog(key:string|undefined, request:Fetch=fetch) {

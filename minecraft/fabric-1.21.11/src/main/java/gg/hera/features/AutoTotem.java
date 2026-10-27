@@ -11,7 +11,7 @@ public final class AutoTotem {
     public AutoTotem(FeatureConfig config){this.config=config;}
     public void tick(MinecraftClient c){
         if(cooldown>0){cooldown--;return;}
-        if(CameraController.detached() || !config.autoTotem || c.player==null || c.interactionManager==null || c.currentScreen!=null || !c.player.isAlive() || c.player.isSpectator())return;
+        if(CameraController.detached() || !config.autoTotem || c.player==null || c.interactionManager==null || c.currentScreen!=null || c.player.isUsingItem() || !c.player.isAlive() || c.player.isSpectator())return;
         if(c.player.currentScreenHandler!=c.player.playerScreenHandler || !c.player.currentScreenHandler.getCursorStack().isEmpty() || c.player.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING))return;
         var inv=c.player.getInventory();
         for(int i=0;i<36;i++)if(inv.getStack(i).isOf(Items.TOTEM_OF_UNDYING)){

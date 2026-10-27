@@ -75,7 +75,7 @@ public final class ModuleScreen extends Screen {
         HeraTheme.round(c,l.x()+1,l.y()+1,l.rail()-1,l.height()-2,10,0xFF11151C);
         c.fill(l.listX(),l.y()+1,l.detailX(),l.bottom(),0xFF171C25);c.fill(l.detailX(),l.y()+1,l.x()+l.width()-10,l.bottom(),0xFF131820);
         c.fill(l.listX(),l.y()+1,l.listX()+1,l.bottom(),HeraTheme.LINE);c.fill(l.detailX(),l.y()+1,l.detailX()+1,l.bottom(),HeraTheme.LINE);
-        HeraTheme.round(c,l.x()+16,l.y()+22,23,23,7,HeraTheme.ACCENT);HeraTheme.title(c,"H",l.x()+22,l.y()+27,1.2f,0xFF211A16);HeraTheme.title(c,"hera",l.x()+46,l.y()+23,1.6f,HeraTheme.TEXT);HeraTheme.label(c,"DEIN SETUP",l.x()+17,l.y()+61,HeraTheme.MUTED);
+        HeraTheme.logo(c,l.x()+15,l.y()+17,29);HeraTheme.title(c,"hera",l.x()+46,l.y()+23,1.6f,HeraTheme.TEXT);HeraTheme.label(c,"DEIN SETUP",l.x()+17,l.y()+61,HeraTheme.MUTED);
         HeraTheme.title(c,category,l.listX()+18,l.y()+26,1.35f,HeraTheme.TEXT);HeraTheme.label(c,ids().size()+" Module",l.listX()+19,l.y()+49,HeraTheme.MUTED);
         HeraTheme.round(c,l.listX()+12,l.y()+75,l.list()-24,31,6,0xFF222A35);
         HeraTheme.label(c,group(selected).toUpperCase(Locale.ROOT),l.detailX()+24,l.y()+25,HeraTheme.MUTED);HeraTheme.title(c,HeraTheme.fit(selected,(int)((l.detailWidth()-45)/1.55f)),l.detailX()+24,l.y()+49,1.55f,HeraTheme.TEXT);

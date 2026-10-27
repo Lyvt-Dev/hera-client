@@ -12,6 +12,10 @@ public final class HeraTheme {
     private static final Style FONT=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","medium")));
     private static final Style BOLD=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","bold")));
     private HeraTheme() {}
+    /** Owner-supplied Hera identity, shared with the launcher. */
+    public static void logo(DrawContext c,int x,int y,int size) {
+        c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","brand/hera"),x,y,size,size);
+    }
     public static MutableText text(String value) { return Text.literal(value).setStyle(FONT); }
     public static void round(DrawContext c,int x,int y,int w,int h,int r,int color) {
         if(w<=0||h<=0)return;

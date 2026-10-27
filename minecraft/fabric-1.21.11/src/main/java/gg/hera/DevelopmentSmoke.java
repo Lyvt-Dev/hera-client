@@ -18,9 +18,9 @@ final class DevelopmentSmoke {
                 frame[0]=0;return;
             }
             frame[0]++;
-            if(frame[0]==3)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.6.0-title.png",c.getFramebuffer(),1,t->{});
+            if(frame[0]==3)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.6.1-title.png",c.getFramebuffer(),1,t->{});
             if(frame[0]==12)c.setScreen(new ModuleScreen(hud,renderer,features));
-            if(frame[0]==15)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.6.0-workspace.png",c.getFramebuffer(),1,t->{});
+            if(frame[0]==15)net.minecraft.client.util.ScreenshotRecorder.saveScreenshot(c.runDirectory,"hera-0.6.1-workspace.png",c.getFramebuffer(),1,t->{});
             if(frame[0]>=20 && frame[0]%4==0){int i=frame[0]/4-5;if(i<ids.size()){var workspace=new ModuleScreen(hud,renderer,features);c.setScreen(workspace);workspace.select(ids.get(i));}
                 else if(i==ids.size())c.setScreen(new ItemSelectionScreen(new ModuleScreen(hud,renderer,features),features));
                 else if(i==ids.size()+1)c.setScreen(new ColorPickerScreen(new ModuleScreen(hud,renderer,features),0xFFF0A46E,v->{}));

@@ -2,6 +2,7 @@ package gg.hera.features;
 /** Conservative client estimates, never a promise of a pop or kill. */
 public final class DTapPolicy {
     private DTapPolicy(){}
+    public static int actionDelay(int configured,boolean cautious){return Math.max(cautious?4:1,Math.clamp(configured,1,10));}
     public static double requiredDamage(double health,double absorption,double minimum){return Double.isFinite(health)&&Double.isFinite(absorption)&&health>0&&absorption>=0?Math.max(minimum,health+absorption):Double.POSITIVE_INFINITY;}
     public static double rawDamage(double distance,double exposure){
         if(!Double.isFinite(distance)||!Double.isFinite(exposure)||distance<0||distance>=12)return 0;

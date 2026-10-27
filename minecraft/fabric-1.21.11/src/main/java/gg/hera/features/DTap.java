@@ -14,7 +14,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.RaycastContext;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+
 
 /** Bounded two-crystal attempt, gated by server observations and conservative self damage. */
 public final class DTap {
@@ -27,7 +27,7 @@ public final class DTap {
     public DTap(FeatureConfig config){this.config=config;instance=this;}
     public boolean busy(){return phase!=Phase.IDLE;}
     public void hit(PlayerEntity other){var c=MinecraftClient.getInstance();
-        if(!config.options.dTap || busy() || tick<cooldown || c.player==null || c.currentScreen!=null || CameraController.detached() || other==c.player || !validTarget(c,other) || other.hurtTime>0 || c.player.getAttackCooldownProgress(0)<.9f)return;
+        if(!config.options.dTap || busy() || tick<cooldown || c.player==null || c.currentScreen!=null || c.player.isUsingItem() || c.player.currentScreenHandler!=c.player.playerScreenHandler || CameraController.detached() || other==c.player || !validTarget(c,other) || other.hurtTime>0 || c.player.getAttackCooldownProgress(0)<.9f)return;
         if(slot(c,Items.END_CRYSTAL)<0 || count(c,Items.END_CRYSTAL)<2)return;
         target=other;world=c.world;oldSlot=c.player.getInventory().getSelectedSlot();ownedSlot=oldSlot;phase=Phase.HIT;deadline=tick+12;gate.reset();hitConfirmed=false;baseConfirmed=false;crystalId=-1;
     }
@@ -37,19 +37,19 @@ public final class DTap {
     public void removed(int id){if(phase==Phase.POP)gate.removed(id);if(id==crystalId && phase==Phase.DONE)finish(MinecraftClient.getInstance(),"Sequenz bestätigt");}
     public void tick(MinecraftClient c){tick++;
         if(!busy())return;
-        if(!config.options.dTap || c.player==null || c.interactionManager==null || c.getNetworkHandler()==null || c.world!=world || c.currentScreen!=null || CameraController.detached() || !c.player.isAlive() || c.player.isSpectator() || !validTarget(c,target)){finish(c,"Abgebrochen");return;}
+        if(!config.options.dTap || c.player==null || c.interactionManager==null || c.getNetworkHandler()==null || c.world!=world || c.currentScreen!=null || c.player.isUsingItem() || c.player.currentScreenHandler!=c.player.playerScreenHandler || CameraController.detached() || !c.player.isAlive() || c.player.isSpectator() || !validTarget(c,target)){finish(c,"Abgebrochen");return;}
         if(c.player.getInventory().getSelectedSlot()!=ownedSlot){finish(c,"Slotwechsel – abgebrochen");return;}
         if(tick>deadline){finish(c,"Keine Server-Bestätigung");return;}
         if(tick<nextAction)return;
         switch(phase){
-            case HIT->{if(!hitConfirmed)return;if(!target.getMainHandStack().isOf(Items.TOTEM_OF_UNDYING)&&!target.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)){finish(c,"Ziel hält kein Totem");return;}plan=findPlan(c);if(plan==null){finish(c,"Kein geeigneter Platz");return;}
+            case HIT->{if(!hitConfirmed)return;if(!target.getMainHandStack().isOf(Items.TOTEM_OF_UNDYING)&&!target.getOffHandStack().isOf(Items.TOTEM_OF_UNDYING)){finish(c,"Ziel hält kein Totem");return;}if(plan==null){plan=findPlan(c);if(plan==null){finish(c,"Kein geeigneter Platz");return;}deadline=tick+40;}
                 if(c.world.getBlockState(plan.base).isOf(Blocks.OBSIDIAN)||c.world.getBlockState(plan.base).isOf(Blocks.BEDROCK)){baseConfirmed=true;placeCrystal(c,false);}
-                else {int obsidian=slot(c,Items.OBSIDIAN);if(obsidian<0){finish(c,"Obsidian fehlt in der Hotbar");return;}select(c,obsidian);c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,plan.support);c.player.swingHand(Hand.MAIN_HAND);phase=Phase.BASE;deadline=tick+40;nextAction=tick+config.options.dTapDelay;}}
+                else {int obsidian=slot(c,Items.OBSIDIAN);if(obsidian<0){finish(c,"Obsidian fehlt in der Hotbar");return;}if(!prepareSlot(c,obsidian))return;var support=placementHit(c,plan.support);if(support==null)return;c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,support);c.player.swingHand(Hand.MAIN_HAND);phase=Phase.BASE;deadline=tick+40;nextAction=tick+delay();}}
             case BASE->{if(baseConfirmed)placeCrystal(c,false);}
             case CRYSTAL_ONE,CRYSTAL_TWO->{var crystal=crystal(c);if(crystal==null)return;
                 if(phase==Phase.CRYSTAL_TWO && target.hurtTime>0)return;
                 if(!safe(c,plan.base) || !c.player.canAttackEntityIn(crystal.getBoundingBox(),0) || !c.player.canSee(crystal)){finish(c,"Reichweite oder Schadensprüfung");return;}
-                crystalId=crystal.getId();boolean second=phase==Phase.CRYSTAL_TWO;if(!second)gate.begin(target.getId(),crystalId);c.interactionManager.attackEntity(c.player,crystal);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.DONE:Phase.POP;deadline=tick+40;nextAction=tick+config.options.dTapDelay;}
+                if(config.options.dTapCautious && (!(c.crosshairTarget instanceof EntityHitResult hit) || hit.getEntity()!=crystal || c.player.getAttackCooldownProgress(0)<1f))return;crystalId=crystal.getId();boolean second=phase==Phase.CRYSTAL_TWO;if(!second)gate.begin(target.getId(),crystalId);c.interactionManager.attackEntity(c.player,crystal);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.DONE:Phase.POP;deadline=tick+40;nextAction=tick+delay();}
             case POP->{if(gate.ready())placeCrystal(c,true);}
             default->{}
         }
@@ -57,12 +57,23 @@ public final class DTap {
     private boolean validTarget(MinecraftClient c,PlayerEntity p){return p!=null && p.isAlive() && !p.isRemoved() && !p.isSpectator() && !p.isCreative() && p.getEntityWorld()==c.world && !c.player.isTeammate(p) && p.squaredDistanceTo(c.player)<=36;}
     private int slot(MinecraftClient c,Item item){for(int i=0;i<9;i++)if(c.player.getInventory().getStack(i).isOf(item))return i;return -1;}
     private int count(MinecraftClient c,Item item){int n=0;for(int i=0;i<9;i++){var stack=c.player.getInventory().getStack(i);if(stack.isOf(item))n+=stack.getCount();}return n;}
-    private void select(MinecraftClient c,int slot){ownedSlot=slot;c.player.getInventory().setSelectedSlot(slot);c.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));}
+    private void select(MinecraftClient c,int slot){ownedSlot=slot;c.player.getInventory().setSelectedSlot(slot);}
+    private int delay(){return DTapPolicy.actionDelay(config.options.dTapDelay,config.options.dTapCautious);}
+    private boolean prepareSlot(MinecraftClient c,int slot){
+        if(c.player.getInventory().getSelectedSlot()==slot)return true;
+        select(c,slot);
+        if(config.options.dTapCautious){nextAction=tick+delay();return false;}
+        return true;
+    }
+    private BlockHitResult placementHit(MinecraftClient c,BlockHitResult planned){
+        if(!config.options.dTapCautious)return planned;
+        return c.crosshairTarget instanceof BlockHitResult hit && hit.getType()==HitResult.Type.BLOCK && hit.getBlockPos().equals(planned.getBlockPos()) && hit.getSide()==planned.getSide()?hit:null;
+    }
     private void placeCrystal(MinecraftClient c,boolean second){
         if(!safe(c,plan.base) || !space(c,plan.base) || !c.player.canInteractWithBlockAt(plan.base,0)){finish(c,"Platz nicht mehr geeignet");return;}
         int slot=slot(c,Items.END_CRYSTAL);if(slot<0){finish(c,"Kristalle fehlen");return;}
         var hit=new BlockHitResult(plan.base.toCenterPos().add(0,.5,0),Direction.UP,plan.base,false);if(!visible(c,hit)){finish(c,"Keine freie Sicht");return;}
-        select(c,slot);c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,hit);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.CRYSTAL_TWO:Phase.CRYSTAL_ONE;deadline=tick+40;nextAction=tick+config.options.dTapDelay;
+        if(!prepareSlot(c,slot))return;var aimed=placementHit(c,hit);if(aimed==null)return;c.interactionManager.interactBlock(c.player,Hand.MAIN_HAND,aimed);c.player.swingHand(Hand.MAIN_HAND);phase=second?Phase.CRYSTAL_TWO:Phase.CRYSTAL_ONE;deadline=tick+40;nextAction=tick+delay();
     }
     private EndCrystalEntity crystal(MinecraftClient c){return c.world.getEntitiesByClass(EndCrystalEntity.class,new Box(plan.base.up()).expand(.4,1,.4),e->!e.isRemoved() && e.getId()!=crystalId).stream().findFirst().orElse(null);}
     private boolean space(MinecraftClient c,BlockPos base){return c.world.getBlockState(base.up()).isAir() && c.world.getBlockState(base.up(2)).isAir() && c.world.getOtherEntities(null,new Box(base.up()).stretch(0,1,0),e->!e.isRemoved()).isEmpty();}
@@ -88,7 +99,7 @@ public final class DTap {
         double result=armor*(1-Math.min(20,protection)/25d);var resistance=entity.getStatusEffect(StatusEffects.RESISTANCE);if(resistance!=null)result*=Math.max(0,1-.2*(resistance.getAmplifier()+1));return result;
     }
     private void finish(MinecraftClient c,String reason){
-        if(c.player!=null && c.world==world && c.getNetworkHandler()!=null && c.player.getInventory().getSelectedSlot()==ownedSlot && oldSlot>=0&&oldSlot<9){c.player.getInventory().setSelectedSlot(oldSlot);c.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(oldSlot));}
+        if(c.player!=null && c.world==world && c.getNetworkHandler()!=null && c.player.getInventory().getSelectedSlot()==ownedSlot && oldSlot>=0&&oldSlot<9){c.player.getInventory().setSelectedSlot(oldSlot);}
         if(c.player!=null && config.options.dTapFeedback)c.player.sendMessage(net.minecraft.text.Text.literal("D-Tap · "+reason),true);
         phase=Phase.IDLE;cooldown=tick+20;target=null;plan=null;crystalId=-1;
     }

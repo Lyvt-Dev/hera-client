@@ -31,3 +31,5 @@ When the workspace contains unrelated local commits, publish only the verified H
 ## 0.1.5 setup
 
 New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabric API are embedded and hash-checked during install/repair. Other loader/game combinations do not receive this version-specific payload. Native loader catalogs choose releases actually published for the selected Minecraft version. Windows x64 Java setup uses verified Mojang runtime downloads; custom Java paths remain available. Installation tests do not establish gameplay support. Installer updater signatures are distinct from Windows Authenticode certification.
+
+0.1.7 bundles Hera 0.6.1 (owner logo, native skin head and packet synchronization cleanup), and fixes mod catalog rejection/filtering of game versions other than 1.21.1. Mod downloads are still checked against the selected game/loader and published hashes.

@@ -2,6 +2,7 @@ package gg.hera.features;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class DTapPolicyTest {
+    @Test void cautiousModePreservesMinimumSpacing(){assertEquals(4,DTapPolicy.actionDelay(1,true));assertEquals(8,DTapPolicy.actionDelay(8,true));assertEquals(10,DTapPolicy.actionDelay(100,true));assertEquals(1,DTapPolicy.actionDelay(0,false));}
     @Test void suitabilityRequiresEnoughDamageForHealthAndAbsorption(){assertEquals(24,DTapPolicy.requiredDamage(20,4,6));assertEquals(6,DTapPolicy.requiredDamage(1,4,6));assertFalse(DTapPolicy.suitable(10,2,20,DTapPolicy.requiredDamage(20,0,6),10,8));}
     @Test void invalidTargetHealthCannotQualify(){assertEquals(Double.POSITIVE_INFINITY,DTapPolicy.requiredDamage(Double.NaN,0,6));assertEquals(Double.POSITIVE_INFINITY,DTapPolicy.requiredDamage(0,0,6));}
     @Test void explosionFalloffHasBoundedRadius(){assertEquals(85,DTapPolicy.rawDamage(0,1));assertEquals(0,DTapPolicy.rawDamage(12,1));assertTrue(DTapPolicy.rawDamage(2,1)>DTapPolicy.rawDamage(6,1));}

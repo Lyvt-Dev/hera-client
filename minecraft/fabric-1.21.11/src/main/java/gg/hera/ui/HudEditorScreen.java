@@ -45,7 +45,7 @@ public final class HudEditorScreen extends Screen {
             if(dragging){c.fill(width/2,48,width/2+1,height-85,0x44F0A46E);c.fill(0,height/2,width,height/2+1,0x44F0A46E);}
         }
         int tw=Math.min(390,width-20),tx=(width-tw)/2;
-        HeraTheme.panel(c,tx,10,tw,40);HeraTheme.title(c,"HUD Studio",tx+12,21,1.2f,HeraTheme.TEXT);
+        HeraTheme.panel(c,tx,10,tw,40);HeraTheme.logo(c,tx+10,18,23);HeraTheme.title(c,"HUD Studio",tx+40,21,1.2f,HeraTheme.TEXT);
         int iw=Math.min(370,width-20),ix=(width-iw)/2,iy=height-76;
         HeraTheme.panel(c,ix,iy,iw,65);
         if(selected==null){HeraTheme.title(c,"Alles an seinem Platz.",ix+13,iy+12,1.15f,HeraTheme.TEXT);HeraTheme.label(c,"Ein HUD anklicken und ziehen.",ix+13,iy+32,HeraTheme.MUTED);HeraTheme.label(c,"Shift: Raster · Mausrad: Größe · Esc: fertig",ix+13,iy+47,HeraTheme.MUTED);}

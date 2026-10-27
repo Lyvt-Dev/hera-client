@@ -1,6 +1,6 @@
 use crate::{
     minecraft::{self, Artifact},
-    storage::{Profile, Result},
+    storage::{valid_version_id, Profile, Result},
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -176,12 +176,7 @@ pub async fn catalog(http: &Client, action: &str, p: &HashMap<String, String>) -
             .map_err(|e| e.to_string())?;
         return get(&local, url).await;
     }
-    let loader = p.get("loader").map(String::as_str).unwrap_or("");
-    if !["fabric", "forge"].contains(&loader)
-        || p.get("version").map(String::as_str) != Some("1.21.1")
-    {
-        return Err("Ungültiges Mod-Zielprofil".into());
-    }
+    let (loader, game_version) = catalog_target(p)?;
     let query = p.get("query").cloned().unwrap_or_default();
     if query.len() > 400 {
         return Err("Suchanfrage zu lang".into());
@@ -210,7 +205,7 @@ pub async fn catalog(http: &Client, action: &str, p: &HashMap<String, String>) -
                     "facets",
                     &json!([
                         ["project_type:mod"],
-                        ["versions:1.21.1"],
+                        [format!("versions:{game_version}")],
                         [format!("categories:{loader}")],
                         ["client_side:required", "client_side:optional"]
                     ])
@@ -231,7 +226,7 @@ pub async fn catalog(http: &Client, action: &str, p: &HashMap<String, String>) -
         "versions" => {
             url.set_path(&format!("/v2/project/{item_id}/version"));
             url.query_pairs_mut()
-                .append_pair("game_versions", "[\"1.21.1\"]")
+                .append_pair("game_versions", &json!([game_version]).to_string())
                 .append_pair("loaders", &json!([loader]).to_string());
         }
         "version" => url.set_path(&format!("/v2/version/{item_id}")),
@@ -250,6 +245,14 @@ pub async fn catalog(http: &Client, action: &str, p: &HashMap<String, String>) -
         .map_err(|e| e.to_string())?),
         _ => serde_json::to_value(version(&body)?).map_err(|e| e.to_string()),
     }
+}
+fn catalog_target(p: &HashMap<String, String>) -> Result<(&str, &str)> {
+    let loader = p.get("loader").map(String::as_str).unwrap_or("");
+    let version = p.get("version").map(String::as_str).unwrap_or("");
+    if !["fabric", "forge"].contains(&loader) || !valid_version_id(version) {
+        return Err("Ungültiges Mod-Zielprofil".into());
+    }
+    Ok((loader, version))
 }
 fn params(source: &str, profile: &Profile, id: &str) -> HashMap<String, String> {
     [
@@ -496,20 +499,49 @@ pub async fn install(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn catalog_accepts_profile_versions_and_rejects_invalid_targets() {
+        for (loader, version) in [
+            ("fabric", "1.21.11"),
+            ("forge", "1.20.1"),
+            ("fabric", "26.3"),
+        ] {
+            let p = HashMap::from([
+                ("loader".into(), loader.into()),
+                ("version".into(), version.into()),
+            ]);
+            assert_eq!(catalog_target(&p).unwrap(), (loader, version));
+        }
+        for (loader, version) in [
+            ("vanilla", "1.21.11"),
+            ("fabric", "../escape"),
+            ("forge", ""),
+        ] {
+            let p = HashMap::from([
+                ("loader".into(), loader.into()),
+                ("version".into(), version.into()),
+            ]);
+            assert!(catalog_target(&p).is_err());
+        }
+    }
     #[tokio::test]
     #[ignore = "Downloads a real Modrinth mod into an isolated test profile"]
     async fn modrinth_install_smoke() {
         let root =
             std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.local/mod-smoke");
         let p = Profile {
-            id: "f1854701-8b0d-4eba-a288-c080932a5667".into(),
+            id: uuid::Uuid::new_v4().to_string(),
             name: "Mod test".into(),
-            version: "1.21.1".into(),
+            version: "1.21.11".into(),
             loader: "fabric".into(),
             memory_mb: 4096,
             java_path: "java".into(),
         };
         let http = minecraft::http().unwrap();
+        let mut search = params("modrinth", &p, "");
+        search.insert("query".into(), "sodium".into());
+        let results = catalog(&http, "search", &search).await.unwrap();
+        assert!(!results["projects"].as_array().unwrap().is_empty());
         let list: Vec<Version> = serde_json::from_value(
             catalog(&http, "versions", &params("modrinth", &p, "sodium"))
                 .await

@@ -2,7 +2,7 @@ package gg.hera.features;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+
 
 public final class CrystalTotem {
     private final CrystalTotemPolicy policy = new CrystalTotemPolicy();
@@ -11,7 +11,7 @@ public final class CrystalTotem {
     public void tick(MinecraftClient client) {
         if (!config.crystalTotem) { policy.select(false, true, false, -1, new boolean[0]); return; }
         boolean blocked = CameraController.detached() || client.player == null || client.world == null || client.getNetworkHandler() == null
-            || client.currentScreen != null || !client.player.isAlive() || client.player.isSpectator();
+            || client.currentScreen != null || client.player.isUsingItem() || client.player.currentScreenHandler != client.player.playerScreenHandler || !client.player.isAlive() || client.player.isSpectator();
         if (blocked) { policy.select(config.crystalTotem, true, false, -1, new boolean[0]); return; }
         boolean threat = client.world.getPlayers().stream().anyMatch(other -> other != client.player
             && other.isAlive() && !other.isSpectator()
@@ -23,7 +23,7 @@ public final class CrystalTotem {
         int slot = policy.select(config.crystalTotem, false, threat, inventory.getSelectedSlot(), totems);
         if (slot >= 0) {
             inventory.setSelectedSlot(slot);
-            client.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+            // Vanilla interaction manager synchronizes the changed slot once.
         }
     }
 }

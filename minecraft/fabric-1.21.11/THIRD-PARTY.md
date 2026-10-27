@@ -20,3 +20,7 @@ renderers keep vanilla behavior. No general FPS improvement is promised.
 
 Static modified instances; see the bundled OFL-Nunito.txt license and
 assets/hera/font/derived-font-notice.txt.
+
+## Hera logo
+
+`assets/hera/textures/gui/sprites/brand/hera.png` is the owner's existing Hera pumpkin avatar, reused unchanged from the launcher for the same product at the owner's request. Provenance is recorded in docs/launcher-design.md. No reference-client branding was copied. Player heads use Minecraft's own skin provider and renderer; no skin images are bundled or requested from a third-party avatar service.

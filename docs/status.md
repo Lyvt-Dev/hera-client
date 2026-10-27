@@ -183,3 +183,17 @@ Automated-tested: cargo check and 29 Rust tests passed (8 opt-in integrations ex
 The opt-in real Fabric 1.21.11 installation/repair integration also passed with the 0.1.6 fix (57.13 seconds), including bundled Hera/Fabric API. This did not authenticate or launch gameplay.
 
 0.1.6 release verification: source 1ad076915ea9d5ee121d3eb571fbdb7a839c4849 pushed and signed Windows v0.1.6 published. Public updater verification downloaded 9,834,506 bytes, verified signatures and rejected a modified installer. No clean-machine upgrade or authenticated gameplay observation is claimed.
+
+## Mod 0.6.1 / launcher 0.1.7
+
+Implemented: owner's unchanged Hera pumpkin logo in title screen, module workspace and HUD Studio; refined title/account/button styling. Account head uses Minecraft PlayerSkinProvider's asynchronous cached supplier and PlayerSkinDrawer, with vanilla fallback during loading. No additional avatar service or login data in UI code.
+
+Packet correctness: removed direct UpdateSelectedSlotC2SPacket sends from CrystalTotem and D-Tap (including slot restoration). Local mapped vanilla bytecode confirms ClientPlayerInteractionManager synchronizes the selected slot on its tick and before interactions; the previous extra send did not update its cached slot and could duplicate that notification. AutoTotem retains vanilla clickSlot SWAP-to-offhand with handler/cursor checks. All three automatons pause during item use; CrystalTotem/D-Tap also reject a non-player inventory handler. These code findings do not establish the cause of the owner's private anti-cheat ban.
+
+D-Tap's new cautious option defaults on while D-Tap itself stays off: minimum four ticks between actions, separate slot-selection wait, actual crosshair block/face/hit vector required for placement, actual crosshair crystal and recovered attack cooldown required for attacks. Manual aiming is needed; otherwise bounded timeouts abort. Original behavior remains selectable. This is correctness/conservative execution work, not a tested anti-cheat bypass. No private plugin source, check details, or server trace was provided beyond "unfair advantage" / reported "bad packets".
+
+Launcher mod-catalog fix: remove the remaining Minecraft 1.21.1-only guard and filters in native Modrinth catalog and backend provider boundary. Validate the selected version using the existing profile rules, then use it for search and version listings for both providers. Existing download compatibility/integrity checks remain enforced. Launcher bundles the updated 0.6.1 mod.
+
+Automated-tested: Gradle build and 51 tests passed. Explicit development startup rendered the owner logo and fallback player head, opened all 29 module panels and item/color pickers, and emitted HERA_SMOKE_OK; title/workspace screenshots inspected. npm check, 58 tests, and production build passed. Real authenticated custom-skin rendering, live PvP, and anti-cheat compatibility remain unverified.
+
+Native verification: cargo check and 30 unit tests passed (8 opt-in integrations excluded from regular run). Real Modrinth search, Sodium download/hash verification, installation into a fresh Fabric 1.21.11 UUID profile and idempotent second installation passed in 3.50 seconds. The first integration attempt correctly rejected a conflicting older Sodium record in a reused test profile; the test now allocates a fresh UUID. CurseForge version-filter behavior has automated provider-double coverage; no live owner API-key/gateway proof was added.
