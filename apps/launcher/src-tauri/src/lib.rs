@@ -31,6 +31,10 @@ struct Native {
     pid: Arc<AtomicU32>,
 }
 #[tauri::command]
+fn game_running(s: State<Native>) -> bool {
+    s.pid.load(Ordering::SeqCst) != 0
+}
+#[tauri::command]
 fn local_cape(s: State<Native>, id: String) -> Result<Option<capes::Cape>> {
     capes::read(&s.root, &s.store.profile(&id)?)
 }
@@ -211,6 +215,14 @@ async fn launch(
         let _ = app.emit("transfer", t);
     }))
     .await?;
+    let _ = app.emit(
+        "transfer",
+        minecraft::Transfer {
+            stage: "Spielprozess starten".into(),
+            completed: 0,
+            total: 0,
+        },
+    );
     let mut child = minecraft::command(&p, &session, &installed)
         .await?
         .spawn()
@@ -307,6 +319,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            game_running,
             local_cape,
             save_local_cape,
             set_local_cape_enabled,

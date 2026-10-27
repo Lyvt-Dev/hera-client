@@ -35,3 +35,6 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 0.1.7 bundles Hera 0.6.1 (owner logo, native skin head and packet synchronization cleanup), and fixes mod catalog rejection/filtering of game versions other than 1.21.1. Mod downloads are still checked against the selected game/loader and published hashes.
 
 0.1.8 bundles Hera 0.7.0, local cape controls and the performance pass documented in capes.md / performance.md. No shared cape server is configured or advertised.
+
+
+0.2.0 redesigns the launcher workspace and bundles Hera mod 0.8.0 for Fabric 1.21.11, including configurable crosshair/PNG import and own nametag. Both modules default off. Existing profile/account data and updater signing identity are preserved.

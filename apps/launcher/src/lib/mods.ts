@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { installedModSchema, modProjectSchema, modVersionSchema, profileSchema, type InstalledMod, type ModProject, type ModSource, type ModVersion, type Profile } from '../../../../packages/shared-types/src';
 import { native } from './bridge';
 export interface ModTarget {source:ModSource;profile:Profile}
+export function catalogMessage(error:unknown,source:ModSource):string{
+ const message=String(error).replace(/^Error:\s*/,'');
+ if(source==='curseforge'&&/CURSEFORGE_|API.?key|API.Schlüssel|Gateway|nicht eingerichtet|HTTP 503/i.test(message))return 'CurseForge ist derzeit nicht verfügbar. Nutze Modrinth oder versuche es später erneut.';
+ return message.replace(' Bei CurseForge Gateway und API-Schlüssel prüfen.','');
+}
 export async function catalog<T>(action:string,target:ModTarget,fields:Record<string,string>,schema:z.ZodType<T>):Promise<T>{
  const params={source:target.source,loader:target.profile.loader,version:target.profile.version,...fields};
  if(native)return schema.parse(await invoke('catalog',{action,params}));

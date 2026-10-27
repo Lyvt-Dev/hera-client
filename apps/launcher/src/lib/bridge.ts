@@ -7,18 +7,16 @@ function read<T>(key: string, schema: z.ZodType<T>, fallback: T): T {
   try { return schema.parse(JSON.parse(localStorage.getItem(key) ?? 'null')); } catch { return fallback; }
 }
 export const api = {
+  gameRunning:():Promise<boolean>=>native?invoke('game_running'):Promise.resolve(false),
   localCape:(id:string)=>invoke<{version:number;owner:string;enabled:boolean;pngBase64:string}|null>('local_cape',{id}),
   saveLocalCape:(id:string,accountId:string,pngBase64:string)=>invoke<void>('save_local_cape',{id,accountId,pngBase64}),
   setLocalCapeEnabled:(id:string,enabled:boolean)=>invoke<void>('set_local_cape_enabled',{id,enabled}),
   removeLocalCape:(id:string)=>invoke<void>('remove_local_cape',{id}),
   loaderOptions:async(version:string):Promise<{fabric:string|null;forge:string|null}>=>{
     if(native)return invoke('loader_options',{version});
-    const [fabric,forge]=await Promise.all([fetch(`https://meta.fabricmc.net/v2/versions/loader/${encodeURIComponent(version)}`),fetch('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json')]);
-    if((!fabric.ok&&fabric.status!==404)||!forge.ok)throw Error('Loader-Katalog nicht erreichbar. Bitte erneut versuchen.');
-    const loaders=fabric.ok?await fabric.json() as {loader:{version:string;stable:boolean}}[]:[];
-    const promotions=await forge.json() as {promos:Record<string,string>};
-    const build=promotions.promos[`${version}-recommended`]??promotions.promos[`${version}-latest`];
-    return {fabric:loaders.find(v=>v.loader.stable)?.loader.version??null,forge:build?`${version}-${build}`:null};
+    const response=await fetch(`/api/loader-options?${new URLSearchParams({version})}`,{signal:AbortSignal.timeout(20000)});
+    if(!response.ok)throw Error('Loader-Katalog nicht verfügbar. Bitte erneut versuchen.');
+    return z.object({fabric:z.string().nullable(),forge:z.string().nullable()}).parse(await response.json());
   },
   profiles: (): Promise<Profile[]> => native ? invoke('profiles') : Promise.resolve(read('hera.profiles', z.array(profileSchema), [])),
   saveProfile: async (input: Profile) => {

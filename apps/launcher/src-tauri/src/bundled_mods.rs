@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
 
-pub const MOD_VERSION: &str = "0.7.0";
+pub const MOD_VERSION: &str = "0.8.0";
 pub fn includes(p: &Profile) -> bool {
     p.loader == "fabric" && p.version == "1.21.11"
 }
@@ -18,8 +18,8 @@ pub fn satisfies_api(p: &Profile, filename: &str, sha1: &str) -> bool {
 }
 const PAYLOADS: [(&str, &[u8]); 2] = [
     (
-        "hera-fabric-1.21.11-0.7.0.jar",
-        include_bytes!("../resources/hera-fabric-1.21.11-0.7.0.jar"),
+        "hera-fabric-1.21.11-0.8.0.jar",
+        include_bytes!("../resources/hera-fabric-1.21.11-0.8.0.jar"),
     ),
     (
         "fabric-api-0.141.6+1.21.11.jar",

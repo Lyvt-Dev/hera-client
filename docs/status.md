@@ -220,3 +220,10 @@ Implemented: two independent, disabled-by-default modules under Darstellung. Cus
 Automated-tested: Gradle build and all 60 tests passed, including PNG header/dimension/size rejection, configuration round-trip, disabled defaults and independent module toggles. Development startup loaded the new player/HUD mixins, rendered all 31 module settings panels plus the crosshair preview and existing pickers, and emitted HERA_SMOKE_OK. Launcher check, 66 JavaScript tests and production build also passed for the pending desktop redesign.
 
 Game-tested: startup/menu coverage only; authenticated in-world own-name visibility, actual drag-and-drop PNG acceptance and comparative frame times have not been observed. No zero-FPS-impact claim. Windows updater publication remains paused at the owner's WAIT instruction; the public launcher still embeds mod 0.7.0. The standalone 0.8.0 JAR is available locally for testing and will be integrated before the next installer build.
+
+
+## Launcher 0.2.0 — desktop redesign and mod 0.8.0 integration
+
+Implemented: redesigned eight-page graphite desktop UI, compact/collapsible navigation, central Play workspace, profile rows/search/filter/pagination, accessible tabs and dialogs, profile-removal confirmation, appearance/reduced-motion controls and stage-correct launch/download feedback. Real owned-game process query and throttled renderer progress; official loader proxy fixes browser-preview CORS. Includes mod 0.8.0 Custom Crosshair and Own Nametag for Fabric 1.21.11, hash-pinned with matching Fabric API. No other game/loader receives the incompatible payload. Owner explicitly resumed client publication after the additions.
+
+Automated-tested: TypeScript check, 66 JavaScript tests and production build passed. Mod Gradle build, 60 tests and development startup covering 31 panels plus pickers passed. Native checks rerun after updating the embedded payload. See desktop-redesign.md for actual renderer workflow and viewport coverage. Authenticated gameplay, real OS DPI and clean-machine upgrade remain unobserved; no new adapter certification or FPS guarantee.

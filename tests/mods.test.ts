@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { assertModUrl,resolveMods,type Resolver,type ModTarget } from '../apps/launcher/src/lib/mods';
+import { assertModUrl,resolveMods,catalogMessage,type Resolver,type ModTarget } from '../apps/launcher/src/lib/mods';
 import { createCatalog,version,CatalogError } from '../apps/backend/src/catalog';
 import { type InstalledMod,type ModProject,type ModVersion } from '../packages/shared-types/src';
 const profile={id:'f1854701-8b0d-4eba-a288-c080932a5667',name:'Mods',version:'1.21.1' as const,loader:'fabric' as const,memoryMb:4096,javaPath:'java'};
@@ -19,6 +19,8 @@ describe('mod dependency planning',()=>{
  it.each(['http://cdn.modrinth.com/file.jar','https://cdn.modrinth.com.evil.test/file.jar','https://evil.test/file.jar','https://user:pass@cdn.modrinth.com/file.jar'])('rejects unsafe download origin %s',url=>expect(()=>assertModUrl(url,'modrinth')).toThrow());
 });
 describe('provider boundary',()=>{
+ it('keeps publisher configuration out of player-facing catalog errors',()=>expect(catalogMessage(new Error('CurseForge ist noch nicht eingerichtet. CURSEFORGE_API_KEY serverseitig hinterlegen.'),'curseforge')).toBe('CurseForge ist derzeit nicht verfügbar. Nutze Modrinth oder versuche es später erneut.'));
+ it('preserves useful errors without irrelevant publisher instructions',()=>expect(catalogMessage(new Error('Mod-Katalog: HTTP 429. Bei CurseForge Gateway und API-Schlüssel prüfen.'),'modrinth')).toBe('Mod-Katalog: HTTP 429.'));
  it.each(['modrinth','curseforge'])('uses the selected game version for %s search',async source=>{let seen='';const service=createCatalog('test-key',async input=>{seen=String(input);return new Response(JSON.stringify(source==='modrinth'?{hits:[],total_hits:0}:{data:[]}));});await service.handle('search',{source,loader:'fabric',version:'1.21.11'});const url=new URL(seen);if(source==='modrinth')expect(JSON.parse(url.searchParams.get('facets')!)).toContainEqual(['versions:1.21.11']);else expect(url.searchParams.get('gameVersion')).toBe('1.21.11');});
  it('filters version listings using the actual profile',async()=>{let seen='';const service=createCatalog(undefined,async input=>{seen=String(input);return new Response('[]');});await service.handle('versions',{source:'modrinth',loader:'fabric',version:'1.21.11',id:'sodium'});expect(JSON.parse(new URL(seen).searchParams.get('game_versions')!)).toEqual(['1.21.11']);});
  it('rejects malformed target versions before requesting a provider',async()=>{let calls=0;const service=createCatalog(undefined,async()=>{calls++;throw Error('unexpected');});await expect(service.handle('search',{source:'modrinth',loader:'fabric',version:'../escape'})).rejects.toMatchObject({status:400});expect(calls).toBe(0);});

@@ -1,8 +1,14 @@
 import type { Plugin } from 'vite';
 import { createCatalog, CatalogError } from '../backend/src/catalog';
+import { loaderOptions } from '../backend/src/loader-options';
 export function catalogPlugin(key:string|undefined):Plugin {
  const catalog=createCatalog(key);
  return {name:'hera-local-catalog',configureServer(server){
+  server.middlewares.use('/api/loader-options',async(req,res)=>{
+   if(req.method!=='GET'){res.statusCode=405;res.end();return;}
+   try{const query=new URL(req.url??'/', 'http://localhost');const data=await loaderOptions(query.searchParams.get('version')??'');res.setHeader('Content-Type','application/json');res.end(JSON.stringify(data));}
+   catch{res.statusCode=502;res.setHeader('Content-Type','application/json');res.end(JSON.stringify({error:'Loader-Katalog nicht verfügbar. Bitte erneut versuchen.'}));}
+  });
   server.middlewares.use('/api/catalog',async(req,res,next)=>{
    if(req.method!=='GET'){res.statusCode=405;res.end();return;}
    try{
