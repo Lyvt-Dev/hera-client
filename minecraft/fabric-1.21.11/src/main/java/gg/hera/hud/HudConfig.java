@@ -17,7 +17,7 @@ public final class HudConfig {
     public final java.util.Set<String> advancedSettings=new java.util.HashSet<>();
     public int accent=0xFFF49B63;public boolean animations;public final Map<String,String> presets=new LinkedHashMap<>();
     public final List<HudModule> modules = new ArrayList<>();
-    public static final List<String> IDS = List.of("FPS", "Koordinaten", "Ping", "Speicher", "Uhr", "Richtung", "Geschwindigkeit", "Biome", "Server", "Keystrokes", "Armor HUD", "CPS", "Effekte", "Sprint", "Session", "Inventar");
+    public static final List<String> IDS = List.of("FPS", "Koordinaten", "Ping", "Speicher", "Uhr", "Richtung", "Geschwindigkeit", "Biome", "Server", "Keystrokes", "Armor HUD", "CPS", "Effekte", "Sprint", "Session", "Inventar", "Spotify");
     public HudConfig(Path file) { this.file = file; reset(); }
     public void reset() { modules.clear(); for (int i = 0; i < IDS.size(); i++) modules.add(new HudModule(IDS.get(i), i>=11?.55f:i>=9?.78f:.025f, i>=11?.1f+(i-11)*.12f:i>=9?.35f+(i-9)*.3f:.10f+i*.09f)); }
     public void load() {

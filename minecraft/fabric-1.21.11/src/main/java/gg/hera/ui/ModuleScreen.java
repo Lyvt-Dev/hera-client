@@ -62,7 +62,7 @@ public final class ModuleScreen extends Screen {
                     if(isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,5,0xFF202630);
                     c.fill(getX()+2,getY()+height-1,getX()+width-2,getY()+height,0xFF252C37);
                     HeraTheme.label(c,HeraTheme.fit(title,width-90),getX()+8,getY()+15,HeraTheme.TEXT);
-                    if(value.equals("An")||value.equals("Aus"))HeraTheme.toggle(c,getX()+width-35,getY()+13,value.equals("An"));else {int tw=textRenderer.getWidth(HeraTheme.text(value));HeraTheme.label(c,value,getX()+width-tw-9,getY()+15,HeraTheme.ACCENT);}
+                    if(value.equals("An")||value.equals("Aus"))HeraTheme.toggle(c,getX()+width-35,getY()+13,value.equals("An"));else {int tw=HeraTheme.measure(HeraTheme.text(value),false);HeraTheme.label(c,value,getX()+width-tw-9,getY()+15,HeraTheme.ACCENT);}
                 }
             });
         }

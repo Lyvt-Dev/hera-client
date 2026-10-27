@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.14.10'; id 'maven-publish' }
-version = '0.10.0'
+version = '0.11.0'
 group = 'gg.hera'
 base { archivesName = 'hera-fabric-1.21.11' }
 repositories { mavenCentral() }

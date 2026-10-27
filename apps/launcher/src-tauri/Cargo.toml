@@ -1,6 +1,6 @@
 [package]
 name = "hera-launcher"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 [features]
@@ -30,3 +30,6 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 [lib]
 name = "hera_launcher_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62.2", features = ["Media_Control", "Foundation", "Win32_System_WinRT"] }

@@ -22,6 +22,6 @@ public class HeraButton extends ClickableWidget {
         HeraTheme.round(c,getX(),getY(),width,height,6,accent?(hover?0xFFFFBC8D:0xFFF0A46E):(hover?0xFF343D4D:HeraTheme.RAISED));
         if(isFocused()) { c.fill(getX()+7,getY()+height-2,getX()+width-7,getY()+height-1,HeraTheme.ACCENT); }
         var renderer=MinecraftClient.getInstance().textRenderer;
-        c.drawText(renderer,getMessage(),getX()+(width-renderer.getWidth(getMessage()))/2,getY()+(height-9)/2,active?(accent?0xFF261A12:HeraTheme.TEXT):HeraTheme.MUTED,false);
+        HeraTheme.hudText(c,getMessage(),getX()+(width-HeraTheme.measure(getMessage(),false))/2,getY()+(height-10)/2,active?(accent?0xFF261A12:HeraTheme.TEXT):HeraTheme.MUTED,false,false);
     }
 }

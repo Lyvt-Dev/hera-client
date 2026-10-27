@@ -2,8 +2,9 @@ package gg.hera.hud;
 /** Per-profile appearance and anchor-relative placement. Existing schema-2 fields remain valid. */
 public final class HudModule {
     public String id;public boolean enabled=false;public float x,y,scale=1,opacity=1;
-    public int color=0xFFF5F6F8,background=0xC0111318,accent=0xFFF49B63;
-    public int padding=5,radius=3,anchorX,anchorY,alignment,precision=1,cpsInterval=1;
+    public int color=0xFFF5F6F8,background=0xD414171D,accent=0xFFF49B63;
+    public int padding=6,radius=5,anchorX,anchorY,alignment,precision=1,cpsInterval=1;
+    public boolean textShadow,mediaBrowser=true;
     public boolean vanillaFont,vertical,expanded,showGraph,showFrameTime,latencyColor=true;
     public boolean showChunk,showBiome,showFacing,showDurability=true,showBars=true,showMouse=true,showSpace=true,showCps=true,showSprint=true;
     private HudModule(){}

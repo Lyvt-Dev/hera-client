@@ -32,7 +32,7 @@ public final class HeraTitleScreen extends Screen {
     @Override public void render(DrawContext c,int mx,int my,float delta){
         renderPanoramaBackground(c,delta);c.fillGradient(0,0,width,height,0x50404B62,0xDE07101D);c.fill(0,0,Math.min(width,left+buttonWidth+32),height,0x40101927);
         HeraTheme.logo(c,left-2,16,40);HeraTheme.title(c,"hera",left+46,24,2f,HeraTheme.TEXT);HeraTheme.label(c,"Deine Welt. Dein Setup.",left,67,HeraTheme.MUTED);
-        String name=client.getSession().getUsername();int pw=Math.min(200,Math.max(158,textRenderer.getWidth(HeraTheme.text(name))+64));int px=width-pw-18;
+        String name=client.getSession().getUsername();int pw=Math.min(200,Math.max(158,HeraTheme.measure(HeraTheme.text(name),false)+64));int px=width-pw-18;
         HeraTheme.round(c,px-1,19,pw+2,46,10,0x554D596A);HeraTheme.round(c,px,20,pw,44,9,0xD8111925);
         HeraTheme.round(c,px+9,29,26,26,6,0xFF354151);
         if(skin!=null)PlayerSkinDrawer.draw(c,skin.get(),px+11,31,22);

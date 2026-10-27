@@ -6,6 +6,7 @@ mod capes;
 mod java_runtime;
 mod loader_catalog;
 mod loaders;
+mod media;
 mod minecraft;
 mod mods;
 mod storage;
@@ -268,6 +269,7 @@ async fn launch(
         .map_err(|_| "Minecraft-Prozess konnte nicht gestartet werden")?;
     let pid = child.id().ok_or("Prozess-ID fehlt")?;
     s.pid.store(pid, Ordering::SeqCst);
+    media::start(s.root.clone(), p.id.clone(), s.pid.clone(), pid);
     let (tx, rx) = oneshot::channel();
     *s.game.lock().await = Some(tx);
     let running = s.pid.clone();

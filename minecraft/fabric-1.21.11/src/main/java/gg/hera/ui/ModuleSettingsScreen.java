@@ -30,6 +30,7 @@ public final class ModuleSettingsScreen extends Screen {
             if(id.equals("FPS")){flag("Gemessene Framezeit",()->module.showFrameTime,()->module.showFrameTime=!module.showFrameTime);flag("Framezeit-Graph",()->module.showGraph,()->module.showGraph=!module.showGraph);}
             if(id.equals("Ping"))flag("Latenz-Farben",()->module.latencyColor,()->module.latencyColor=!module.latencyColor);
             if(id.equals("Koordinaten")){flag("Mehrzeilig",()->module.expanded,()->module.expanded=!module.expanded);option(()->"Nachkommastellen: "+module.precision,()->module.precision=(module.precision+1)%4);flag("Chunk",()->module.showChunk,()->module.showChunk=!module.showChunk);flag("Biom",()->module.showBiome,()->module.showBiome=!module.showBiome);flag("Richtung",()->module.showFacing,()->module.showFacing=!module.showFacing);}
+            if(id.equals("Spotify"))flag("Browser-Medien anzeigen",()->module.mediaBrowser,()->module.mediaBrowser=!module.mediaBrowser);
             if(id.equals("CPS"))option(()->"Messfenster: "+module.cpsInterval+" s",()->module.cpsInterval=module.cpsInterval%5+1);
             if(id.equals("Effekte"))flag("Name & Verstärker",()->module.expanded,()->module.expanded=!module.expanded);
             if(id.equals("Keystrokes")){flag("CPS in Maustasten",()->module.showCps,()->module.showCps=!module.showCps);flag("Sprintstatus",()->module.showSprint,()->module.showSprint=!module.showSprint);}
@@ -38,11 +39,12 @@ public final class ModuleSettingsScreen extends Screen {
             option(()->"Darstellung: "+(hud.advancedSettings.contains(id)?"Weniger":"Mehr"),()->{if(!hud.advancedSettings.remove(id))hud.advancedSettings.add(id);});
             if(hud.advancedSettings.contains(id)){
             if(!id.equals("Inventar"))color("Textfarbe",()->module.color,v->module.color=v);
-            if(List.of("FPS","Armor HUD","Keystrokes").contains(id))color("Akzent",()->module.accent,v->module.accent=v);
+            if(List.of("FPS","Armor HUD","Keystrokes","Spotify").contains(id))color("Akzent",()->module.accent,v->module.accent=v);
             option(()->"Deckkraft Text / Fläche: "+Math.round(module.opacity*100)+"%",()->module.opacity=module.opacity>=1?.1f:module.opacity+.1f);
             option(()->"Innenabstand: "+module.padding+" px",()->module.padding=module.padding>=12?2:module.padding+1);
             option(()->"Eckenradius: "+module.radius+" px",()->module.radius=(module.radius+1)%9);
-            if(!id.equals("Inventar"))flag("Minecraft-Schrift",()->module.vanillaFont,()->module.vanillaFont=!module.vanillaFont);
+            if(!id.equals("Inventar"))option(()->"Schrift: "+(module.vanillaFont?"Minecraft":"Hera Smooth"),()->module.vanillaFont=!module.vanillaFont);
+            if(!id.equals("Inventar"))flag("Textschatten",()->module.textShadow,()->module.textShadow=!module.textShadow);
                 if(!List.of("Armor HUD","Inventar","Keystrokes").contains(id))option(()->"Ausrichtung: "+List.of("Links","Mitte","Rechts").get(module.alignment),()->module.alignment=(module.alignment+1)%3);
             }
             option(()->"Hintergrund: "+(module.background==0?"Aus":"An"),()->module.background=module.background==0?0xC01A202B:0);

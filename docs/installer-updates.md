@@ -44,3 +44,6 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 
 
 0.3.0 embeds mod 0.10.0 and adds optional shared-cape settings/publication. Hera.Cape.Service_0.1.0.zip is a standalone Node.js 22+ LAN test service. Shared capes default off; local capes still work without the service.
+
+
+0.4.0 embeds mod 0.11.0 with Hera Smooth font/corner rendering and an opt-in Windows Spotify/browser media HUD. Start Minecraft through Hera, enable Spotify under HUD, then save and close the menu. Browser session metadata depends on the browser and Windows media integration; no Spotify login or developer registration is required.
