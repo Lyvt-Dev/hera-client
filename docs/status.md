@@ -181,3 +181,5 @@ Implemented: move the 64 KiB checksum buffer, which survives an await, to heap s
 Automated-tested: cargo check and 29 Rust tests passed (8 opt-in integrations excluded from the regular run); npm run check, 54 tests, and production build passed. The user-reported authenticated start has not yet been repeated by the agent; actual gameplay acceptance remains outstanding.
 
 The opt-in real Fabric 1.21.11 installation/repair integration also passed with the 0.1.6 fix (57.13 seconds), including bundled Hera/Fabric API. This did not authenticate or launch gameplay.
+
+0.1.6 release verification: source 1ad076915ea9d5ee121d3eb571fbdb7a839c4849 pushed and signed Windows v0.1.6 published. Public updater verification downloaded 9,834,506 bytes, verified signatures and rejected a modified installer. No clean-machine upgrade or authenticated gameplay observation is claimed.
