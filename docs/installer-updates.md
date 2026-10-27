@@ -41,3 +41,6 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 
 
 0.2.1 embeds mod 0.9.0 (HUD Studio and visible D-Tap aiming), with aligned frontend/native version metadata. Fabric 1.21.11 install/repair upgrades the managed Hera JAR. No extra manual JAR copy is needed for that profile combination.
+
+
+0.3.0 embeds mod 0.10.0 and adds optional shared-cape settings/publication. Hera.Cape.Service_0.1.0.zip is a standalone Node.js 22+ LAN test service. Shared capes default off; local capes still work without the service.

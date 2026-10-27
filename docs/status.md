@@ -247,3 +247,12 @@ Implemented: hash-pinned Hera 0.9.0 payload replaces the managed mod on install/
 Validation: TypeScript check and 66 JavaScript tests passed after correcting the frontend bundle version. Initial parallel test run also hit an unrelated API-test timeout; the complete suite passed with one worker. The mod itself passed 67 Gradle tests in the preceding turn. Native checks, signed installer and public release verification recorded below on completion. D-Tap server acceptance remains a user-test limitation.
 
 0.2.1 published: source fc1981de09d0f801fc810976023da3524828cf69 pushed; native cargo check and 33 tests passed (8 opt-in ignored), production build passed. Public updater downloaded 10,005,376 bytes, verified the existing signing identity and rejected a tampered installer. Hera mod 0.9.0 is embedded for Fabric 1.21.11. No new game launch or multiplayer acceptance test performed.
+
+
+## Launcher 0.3.0 / mod 0.10.0 / cape service 0.1.0
+
+Implemented: standalone dependency-free Node.js service with LAN start script, opt-in per-profile origin, connection probe, explicit cape publication/removal, public UUID reads and atomic persistent PNG storage. Minecraft tokens are sent only by native Rust to Mojang's fixed join endpoint; the cape host checks a one-use 60-second challenge with Mojang hasJoined before writing. No UUID-only upload mode. PNG CRC/atlas/inflate limits, request/body deadlines, bounded challenges and rate limits are enforced. Local cape storage remains independent.
+
+Mod: background config/network reads and PNG decode, at most 64 loaded-player candidates in batches of eight, digest hints for unchanged images, bounded response bytes/deadlines and at most one texture upload per tick. Remote textures clear on errors, world changes or ten seconds without contact; local owner capes and vanilla/elytra textures remain independent. No further Minecraft launch performed per owner preference.
+
+Automated-tested: 5 Node protocol tests (test-only injected verifier), 69 Gradle tests, native cargo check and 35 tests (8 opt-in integrations ignored). TypeScript check, 66 JavaScript tests and production build passed; final packaging checks recorded below. Native tests include service opt-in/persistence/profile isolation. Real Mojang proof acceptance and two-client cape rendering remain owner-test items. No public hosting, firewall changes or game-tested multiplayer claim. See services/capes/README.md and docs/capes.md.

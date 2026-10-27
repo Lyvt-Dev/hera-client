@@ -8,5 +8,5 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractClientPlayerEntity.class)
 public abstract class LocalCapeMixin {
     @Inject(method="getSkin",at=@At("RETURN"),cancellable=true)
-    private void hera$cape(CallbackInfoReturnable<SkinTextures> ci){ci.setReturnValue(LocalCape.apply((AbstractClientPlayerEntity)(Object)this,ci.getReturnValue()));}
+    private void hera$cape(CallbackInfoReturnable<SkinTextures> ci){ci.setReturnValue(gg.hera.cosmetics.SharedCapes.apply((AbstractClientPlayerEntity)(Object)this,LocalCape.apply((AbstractClientPlayerEntity)(Object)this,ci.getReturnValue())));}
 }

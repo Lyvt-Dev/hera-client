@@ -1,4 +1,4 @@
-param([string]$Repository = 'Lyvt-Dev/hera-client', [string]$Revision = 'HEAD')
+param([string]$Repository = 'Lyvt-Dev/hera-client', [string]$Revision = 'HEAD', [string]$CapeServiceArchive = '')
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath (Split-Path $PSScriptRoot -Parent)
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') { throw 'Repository als Benutzer/Repository angeben.' }
@@ -8,6 +8,7 @@ if ($manifest.version -ne $config.version) { throw 'Installer/Manifest zuerst f�
 $tag = 'v' + $config.version
 $setup = "Hera.Client_$($config.version)_x64-setup.exe"
 $files = @($setup, "$setup.sig", 'SHA256SUMS.txt', 'latest.json')
+if ($CapeServiceArchive) { if ($CapeServiceArchive -notmatch '^Hera[.]Cape[.]Service_[0-9]+[.][0-9]+[.][0-9]+[.]zip$') { throw 'Ungültiges Cape-Dienst-Archiv' }; $files += $CapeServiceArchive }
 foreach ($name in $files) { if (!(Test-Path -LiteralPath (Join-Path 'releases' $name))) { throw "Release-Datei fehlt: $name" } }
 $hash = (Get-FileHash -LiteralPath (Join-Path 'releases' $setup) -Algorithm SHA256).Hash
 if (!(Get-Content releases/SHA256SUMS.txt -Raw).Contains($hash)) { throw 'Installer-Prüfsumme stimmt nicht.' }

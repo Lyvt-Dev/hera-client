@@ -8,6 +8,10 @@ function read<T>(key: string, schema: z.ZodType<T>, fallback: T): T {
 }
 export const api = {
   gameRunning:():Promise<boolean>=>native?invoke('game_running'):Promise.resolve(false),
+  capeService:(id:string)=>invoke<{version:number;enabled:boolean;baseUrl:string}>('cape_service_config',{id}),
+  saveCapeService:(id:string,config:{version:number;enabled:boolean;baseUrl:string})=>invoke<void>('save_cape_service',{id,config}),
+  probeCapeService:(config:{version:number;enabled:boolean;baseUrl:string})=>invoke<string>('probe_cape_service',{config}),
+  publishCape:(id:string,accountId:string,remove=false)=>invoke<void>('publish_cape',{id,accountId,remove}),
   localCape:(id:string)=>invoke<{version:number;owner:string;enabled:boolean;pngBase64:string}|null>('local_cape',{id}),
   saveLocalCape:(id:string,accountId:string,pngBase64:string)=>invoke<void>('save_local_cape',{id,accountId,pngBase64}),
   setLocalCapeEnabled:(id:string,enabled:boolean)=>invoke<void>('set_local_cape_enabled',{id,enabled}),

@@ -1,6 +1,7 @@
 mod auth;
 mod browser_login;
 mod bundled_mods;
+mod cape_service;
 mod capes;
 mod java_runtime;
 mod loader_catalog;
@@ -82,6 +83,44 @@ async fn remove_local_cape(s: State<'_, Native>, id: String) -> Result<()> {
         .try_lock()
         .map_err(|_| "Ein Vorgang läuft bereits")?;
     capes::remove(&s.root, &s.store.profile(&id)?)
+}
+#[tauri::command]
+fn cape_service_config(s: State<Native>, id: String) -> Result<cape_service::Config> {
+    cape_service::read(&s.root, &s.store.profile(&id)?)
+}
+#[tauri::command]
+async fn save_cape_service(
+    s: State<'_, Native>,
+    id: String,
+    config: cape_service::Config,
+) -> Result<()> {
+    let _guard = s
+        .operation
+        .try_lock()
+        .map_err(|_| "Ein Vorgang läuft bereits")?;
+    cape_service::save(&s.root, &s.store.profile(&id)?, config)
+}
+#[tauri::command]
+async fn probe_cape_service(config: cape_service::Config) -> Result<String> {
+    cape_service::probe(&config).await
+}
+#[tauri::command]
+async fn publish_cape(
+    s: State<'_, Native>,
+    id: String,
+    account_id: String,
+    remove: bool,
+) -> Result<()> {
+    let _guard = s
+        .operation
+        .try_lock()
+        .map_err(|_| "Ein Vorgang läuft bereits")?;
+    let p = s.store.profile(&id)?;
+    let session = s
+        .auth
+        .session(&s.http, &account_id, &s.store.client_id()?)
+        .await?;
+    cape_service::publish(&s.root, &p, &session, remove).await
 }
 #[tauri::command]
 fn profiles(s: State<Native>) -> Result<Vec<Profile>> {
@@ -320,6 +359,10 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             game_running,
+            cape_service_config,
+            save_cape_service,
+            probe_cape_service,
+            publish_cape,
             local_cape,
             save_local_cape,
             set_local_cape_enabled,
