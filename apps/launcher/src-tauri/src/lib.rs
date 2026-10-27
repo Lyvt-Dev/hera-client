@@ -1,6 +1,7 @@
 mod auth;
 mod browser_login;
 mod bundled_mods;
+mod capes;
 mod java_runtime;
 mod loader_catalog;
 mod loaders;
@@ -28,6 +29,55 @@ struct Native {
     operation: Mutex<()>,
     game: Mutex<Option<oneshot::Sender<()>>>,
     pid: Arc<AtomicU32>,
+}
+#[tauri::command]
+fn local_cape(s: State<Native>, id: String) -> Result<Option<capes::Cape>> {
+    capes::read(&s.root, &s.store.profile(&id)?)
+}
+#[tauri::command]
+async fn save_local_cape(
+    s: State<'_, Native>,
+    id: String,
+    account_id: String,
+    png_base64: String,
+) -> Result<()> {
+    let _guard = s
+        .operation
+        .try_lock()
+        .map_err(|_| "Ein Vorgang läuft bereits")?;
+    let account = auth::accounts(&s.store)?
+        .into_iter()
+        .find(|a| a.id == account_id)
+        .ok_or("Bitte ein verbundenes Minecraft-Konto auswählen")?;
+    let cape = capes::Cape {
+        version: 1,
+        owner: uuid::Uuid::parse_str(&account.id)
+            .map_err(|_| "Konto-ID ungültig")?
+            .simple()
+            .to_string(),
+        enabled: true,
+        png_base64: capes::normalize_png(&png_base64)?,
+    };
+    capes::write(&s.root, &s.store.profile(&id)?, &cape)
+}
+#[tauri::command]
+async fn set_local_cape_enabled(s: State<'_, Native>, id: String, enabled: bool) -> Result<()> {
+    let _guard = s
+        .operation
+        .try_lock()
+        .map_err(|_| "Ein Vorgang läuft bereits")?;
+    let p = s.store.profile(&id)?;
+    let mut cape = capes::read(&s.root, &p)?.ok_or("Zuerst eine Cape-PNG auswählen")?;
+    cape.enabled = enabled;
+    capes::write(&s.root, &p, &cape)
+}
+#[tauri::command]
+async fn remove_local_cape(s: State<'_, Native>, id: String) -> Result<()> {
+    let _guard = s
+        .operation
+        .try_lock()
+        .map_err(|_| "Ein Vorgang läuft bereits")?;
+    capes::remove(&s.root, &s.store.profile(&id)?)
 }
 #[tauri::command]
 fn profiles(s: State<Native>) -> Result<Vec<Profile>> {
@@ -257,6 +307,10 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            local_cape,
+            save_local_cape,
+            set_local_cape_enabled,
+            remove_local_cape,
             profiles,
             save_profile,
             delete_profile,

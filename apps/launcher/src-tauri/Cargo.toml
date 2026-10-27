@@ -1,6 +1,6 @@
 [package]
 name = "hera-launcher"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 
 [features]
@@ -23,6 +23,7 @@ uuid = { version = "1", features = ["v4", "serde"] }
 sha1 = "0.10"
 sha2 = "0.10"
 base64 = "0.22"
+png = "0.18.1"
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
 

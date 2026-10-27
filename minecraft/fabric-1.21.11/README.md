@@ -1,11 +1,11 @@
 # Hera for Minecraft Java 1.21.11
 
-Experimental standalone Fabric client mod, version 0.6.1. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. Hera launcher 0.1.7 automatically installs this mod and its matching Fabric API into Fabric 1.21.11 profiles.
+Experimental standalone Fabric client mod, version 0.7.0. The launcher app version is independent. Use a normally authenticated Minecraft launcher and a Fabric 1.21.11 profile with Java 21, Fabric Loader 0.18.1 or newer and Fabric API 0.141.6+1.21.11. Hera launcher 0.1.8 automatically installs this mod and its matching Fabric API into Fabric 1.21.11 profiles.
 
 ## Install and test
 
 1. Close Minecraft. Open the game directory of your **Fabric 1.21.11** profile and its `mods` folder.
-2. Put `hera-fabric-1.21.11-0.6.1.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
+2. Put `hera-fabric-1.21.11-0.7.0.jar` and the matching Fabric API JAR into that folder. Remove an older Hera JAR from that same profile to avoid duplicate mod IDs.
 3. Start the profile. Right Shift opens Hera's module menu. All HUD and gameplay modules start disabled. Legacy settings are migrated to disabled once; only fresh explicit choices are then persisted. The eleven HUD modules and HUD editor are included.
 4. Turn **Kristall-Totem** on and press **Schließen**. It is disabled by default.
 5. Put a Totem of Undying in hotbar slots 1–9 and select another item. Have a second player within eight blocks hold an End Crystal in their main hand or offhand. Hera selects your first hotbar totem, keeping an already-selected totem. It does not take a totem from other inventory slots or move anything to the offhand.
@@ -97,3 +97,6 @@ Experimental D-Tap requires hotbar obsidian and two crystals, a server-confirmed
 0.6.1 adds the owner's Hera pumpkin logo to the title screen, module workspace and HUD Studio, refines title-button focus/hover treatment, and renders the account's head through Minecraft's asynchronous skin provider (vanilla fallback while loading). Authenticated custom-skin acceptance is still required. D-Tap has no anti-cheat bypass or compatibility guarantee; server rules may reject automated actions.
 
 0.6.1 D-Tap: cautious mode defaults on without enabling D-Tap itself. In this mode actions have at least four ticks between them, hotbar changes wait before interaction, placement uses the actual crosshair block/face/hit vector, crystal attacks require the actual crosshair entity and full attack recovery. The player must aim throughout the sequence; otherwise it times out. The original mode remains configurable. This is not evidence of compatibility with any anti-cheat and cannot guarantee avoiding bans. The owner's private plugin/check details were not supplied; only the generic message "unfair advantage" was reported. No server integration was tested.
+
+
+0.7.0 adds local capes through the launcher (docs/capes.md) and the performance work recorded in docs/performance.md. ESP candidates update at 10 Hz while positions still interpolate every frame. At most 128 relevant entities participate in Hera overlays/glow. Container scanning and D-Tap planning are incremental; large scans may finish later. No zero-FPS-impact or anti-cheat guarantee is made.

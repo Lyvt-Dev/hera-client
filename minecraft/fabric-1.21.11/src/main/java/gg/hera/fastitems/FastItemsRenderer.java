@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 
 public final class FastItemsRenderer {
     private FastItemsRenderer() {}
+    private static final boolean STANDALONE=net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("fastitems");
 
     /**
      * Operates AFTER vanilla resolves components, model selectors, tint and foil.
@@ -20,7 +21,7 @@ public final class FastItemsRenderer {
         FastItemsState extension = (FastItemsState) state;
         extension.fastitems$setBillboard(false); // Render states can be reused: always reset.
         var config = gg.hera.features.Esp.config;
-        if (config == null || !config.fastItems || net.fabricmc.loader.api.FabricLoader.getInstance().isModLoaded("fastitems") || state.itemRenderState.isEmpty()) return;
+        if (config == null || !config.fastItems || STANDALONE || state.itemRenderState.isEmpty()) return;
 
         ItemRenderStateAccessor access = (ItemRenderStateAccessor) state.itemRenderState;
         int count = access.fastitems$activeLayerCount();
@@ -32,7 +33,7 @@ public final class FastItemsRenderer {
             // Shields, chests, skulls and other special renderers keep vanilla behavior.
             // A single special layer also excludes the rest of a composite model.
             if (layer.fastitems$specialRenderer() != null || layers[i].getQuads().isEmpty()) return;
-            flat &= isFlat(layers[i], layer);
+            if(flat && !(config.options.fastItems3d&&config.options.fastItemsSides))flat=isFlat(layers[i], layer);
         }
         if(!flat && !config.options.fastItems3d)return;
         extension.fastitems$setBillboard(true);

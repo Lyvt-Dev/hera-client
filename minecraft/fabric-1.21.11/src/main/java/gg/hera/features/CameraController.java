@@ -25,6 +25,7 @@ public final class CameraController {
         double forward=(c.options.forwardKey.isPressed()?1:0)-(c.options.backKey.isPressed()?1:0),side=(c.options.rightKey.isPressed()?1:0)-(c.options.leftKey.isPressed()?1:0),up=(c.options.jumpKey.isPressed()?1:0)-(c.options.sneakKey.isPressed()?1:0);
         double rad=Math.toRadians(yaw),speed=Esp.options().freecamSpeed*(c.options.sprintKey.isPressed()?3:1);
         var delta=new Vec3d(-Math.sin(rad)*forward+Math.cos(rad)*side,up,Math.cos(rad)*forward+Math.sin(rad)*side);
+        if(delta.lengthSquared()==0)return;
         if(delta.lengthSquared()>1)delta=delta.normalize();position=position.add(delta.multiply(speed));
     }
     public static void mouse(double dx,double dy){yaw+=(float)(dx*.15);pitch=MathHelper.clamp(pitch+(float)(dy*.15),-90,90);}

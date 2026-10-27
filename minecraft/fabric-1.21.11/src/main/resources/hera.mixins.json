@@ -15,7 +15,8 @@
     "ItemHighlightMixin",
     "FreecamInteractionMixin",
     "HideOwnArmorMixin",
-    "DTapNetworkMixin"
+    "DTapNetworkMixin",
+    "LocalCapeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

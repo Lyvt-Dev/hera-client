@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class EntityEspMixin {
     @Inject(method="isGlowing",at=@At("HEAD"),cancellable=true)
-    private void hera$glow(CallbackInfoReturnable<Boolean> cir){if(Esp.options().espGlow && Esp.marked((Entity)(Object)this))cir.setReturnValue(true);}
+    private void hera$glow(CallbackInfoReturnable<Boolean> cir){if(Esp.glowing((Entity)(Object)this))cir.setReturnValue(true);}
     @Inject(method="getTeamColorValue",at=@At("HEAD"),cancellable=true)
-    private void hera$color(CallbackInfoReturnable<Integer> cir){if(Esp.options().espGlow && Esp.marked((Entity)(Object)this))cir.setReturnValue(Esp.options().espColor & 0xFFFFFF);}
+    private void hera$color(CallbackInfoReturnable<Integer> cir){if(Esp.glowing((Entity)(Object)this))cir.setReturnValue(Esp.options().espColor & 0xFFFFFF);}
 }

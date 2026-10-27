@@ -7,6 +7,10 @@ function read<T>(key: string, schema: z.ZodType<T>, fallback: T): T {
   try { return schema.parse(JSON.parse(localStorage.getItem(key) ?? 'null')); } catch { return fallback; }
 }
 export const api = {
+  localCape:(id:string)=>invoke<{version:number;owner:string;enabled:boolean;pngBase64:string}|null>('local_cape',{id}),
+  saveLocalCape:(id:string,accountId:string,pngBase64:string)=>invoke<void>('save_local_cape',{id,accountId,pngBase64}),
+  setLocalCapeEnabled:(id:string,enabled:boolean)=>invoke<void>('set_local_cape_enabled',{id,enabled}),
+  removeLocalCape:(id:string)=>invoke<void>('remove_local_cape',{id}),
   loaderOptions:async(version:string):Promise<{fabric:string|null;forge:string|null}>=>{
     if(native)return invoke('loader_options',{version});
     const [fabric,forge]=await Promise.all([fetch(`https://meta.fabricmc.net/v2/versions/loader/${encodeURIComponent(version)}`),fetch('https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json')]);

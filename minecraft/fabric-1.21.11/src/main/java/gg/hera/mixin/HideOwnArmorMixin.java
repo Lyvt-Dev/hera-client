@@ -15,8 +15,8 @@ import net.minecraft.item.ItemStack;
 public abstract class HideOwnArmorMixin {
     @Inject(method="renderArmor",at=@At("HEAD"),cancellable=true)
     private void hera$armor(MatrixStack matrices,OrderedRenderCommandQueue queue,ItemStack stack,EquipmentSlot slot,int light,BipedEntityRenderState state,CallbackInfo ci){
-        var player=MinecraftClient.getInstance().player;
-        var o=Esp.options();boolean hidden=switch(slot){case HEAD->o.hideHelmet;case CHEST->o.hideChest;case LEGS->o.hideLegs;case FEET->o.hideBoots;default->false;};
+        var o=Esp.options();if(!o.hideOwnArmor)return;var player=MinecraftClient.getInstance().player;
+        boolean hidden=switch(slot){case HEAD->o.hideHelmet;case CHEST->o.hideChest;case LEGS->o.hideLegs;case FEET->o.hideBoots;default->false;};
         if(o.hideOwnArmor && hidden && player!=null && state instanceof PlayerEntityRenderState p && p.id==player.getId())ci.cancel();
     }
 }

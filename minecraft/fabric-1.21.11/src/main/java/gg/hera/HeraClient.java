@@ -19,6 +19,10 @@ public final class HeraClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         HudConfig config = new HudConfig(FabricLoader.getInstance().getConfigDir().resolve("hera/hud.json"));
         config.load(); HudRenderer renderer = new HudRenderer(config);
+        net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.resource.ResourceType.CLIENT_RESOURCES).registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener(){
+            public Identifier getFabricId(){return Identifier.of("hera","render_caches");}
+            public void reload(net.minecraft.resource.ResourceManager manager){renderer.invalidate();WorldOverlay.clearTextCache();}
+        });
         FeatureConfig features = new FeatureConfig(FabricLoader.getInstance().getConfigDir().resolve("hera/features.json"));
         features.load(); CrystalTotem crystalTotem = new CrystalTotem(features);
         if(FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.smokeTest"))DevelopmentSmoke.register(config,renderer,features);
@@ -29,7 +33,7 @@ public final class HeraClient implements ClientModInitializer {
         CameraController.lookKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freelook",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_LEFT_ALT,category));
         CameraController.camKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freecam",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_V,category));
         KeyBinding menu = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.modules", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { Esp.tick();WorldOverlay.tick(client);gg.hera.cosmetics.LocalCape.tick(client);CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
         ScreenEvents.AFTER_INIT.register((client,screen,w,h)->{if(screen instanceof TitleScreen && !client.isDemo())client.execute(()->{if(client.currentScreen==screen)client.setScreen(new HeraTitleScreen(config,renderer,features));});});
         // Explicit developer-only title-screen preview; never active in production or entering a world.
         if (FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.previewUi")) {
