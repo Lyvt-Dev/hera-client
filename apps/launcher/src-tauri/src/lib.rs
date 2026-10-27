@@ -131,9 +131,9 @@ async fn install(s: State<'_, Native>, app: AppHandle, id: String) -> Result<()>
         return Err("Spiel vor der Installation beenden".into());
     }
     let p = s.store.profile(&id)?;
-    loaders::install(&s.http, &s.root, &p, &|t| {
+    Box::pin(loaders::install(&s.http, &s.root, &p, &|t| {
         let _ = app.emit("transfer", t);
-    })
+    }))
     .await?;
     Ok(())
 }
@@ -157,9 +157,9 @@ async fn launch(
         .auth
         .session(&s.http, &account_id, &s.store.client_id()?)
         .await?;
-    let installed = loaders::install(&s.http, &s.root, &p, &|t| {
+    let installed = Box::pin(loaders::install(&s.http, &s.root, &p, &|t| {
         let _ = app.emit("transfer", t);
-    })
+    }))
     .await?;
     let mut child = minecraft::command(&p, &session, &installed)
         .await?

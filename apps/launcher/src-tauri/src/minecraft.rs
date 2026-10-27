@@ -127,7 +127,9 @@ pub(crate) async fn valid(path: &Path, a: &Artifact) -> bool {
         return false;
     }
     let mut h = Sha1::new();
-    let mut buf = [0u8; 65536];
+    // This buffer survives an await. Keep it on the heap so callers do not
+    // inherit a large inline future on the Windows webview command stack.
+    let mut buf = vec![0u8; 65536];
     loop {
         match f.read(&mut buf).await {
             Ok(0) => break,
@@ -650,6 +652,17 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn checksum_buffer_does_not_enlarge_async_stack() {
+        let artifact = Artifact {
+            url: String::new(),
+            sha1: String::new(),
+            size: 0,
+            path: None,
+        };
+        let future = valid(Path::new("unused"), &artifact);
+        assert!(std::mem::size_of_val(&future) < 4096);
+    }
     #[test]
     fn java_generations_are_parsed() {
         assert_eq!(java_major("java version \"1.8.0_402\""), Some(8));

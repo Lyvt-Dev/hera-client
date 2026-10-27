@@ -632,3 +632,28 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod launch_stack_tests {
+    use super::*;
+    #[test]
+    fn installation_future_fits_desktop_stack() {
+        let http = minecraft::http().unwrap();
+        let p = Profile {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "Stack test".into(),
+            version: "1.21.11".into(),
+            loader: "fabric".into(),
+            memory_mb: 4096,
+            java_path: "java".into(),
+        };
+        let progress = |_: Transfer| {};
+        let future = install(&http, Path::new("unused"), &p, &progress);
+        let size = std::mem::size_of_val(&future);
+        println!("Installation future: {size} bytes");
+        assert!(
+            size < 16 * 1024,
+            "Installation future uses {size} stack bytes"
+        );
+    }
+}

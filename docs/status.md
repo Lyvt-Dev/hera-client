@@ -171,3 +171,13 @@ Game-tested: the owner reports Microsoft approval and successful launcher login.
 Third-party review: bundled Fabric API retains Apache-2.0 and nested notices; a complete Apache license accompanies the launcher payload. Hera includes existing Nunito OFL and Fast Items CC0 notices. No reference-client code/assets copied. Java packages download directly from the official Minecraft runtime catalog, with their original legal files; older Oracle Java and newer OpenJDK packages have different terms and are not redistributed inside the installer.
 
 Publication verification, 2026-10-27: source 5ef4a62001602b85340b93c49f37d070e7b7c365 pushed to origin/main. Windows v0.1.5 and mod-0.6.0-mc1.21.11 published. Public updater verification downloaded 9,834,983 installer bytes, verified the updater signatures, and rejected a modified installer. Public mod download SHA256 EAE83D1E7E988B7CB323CC677BB17C3C6D730D8EA84C9837D07C6502D36AD0E3 matches the launcher-embedded payload. Clean-machine install/upgrade and authenticated gameplay remain unobserved.
+
+## Launcher 0.1.6 — Windows start crash hotfix
+
+Observed: owner reported an unresponsive launcher followed by process termination on Minecraft start. Windows Application Error/WER records confirm hera-launcher.exe 0.1.5 terminated with exception 0xc00000fd (stack overflow) on 2026-10-27. No account tokens were read for diagnosis.
+
+Implemented: move the 64 KiB checksum buffer, which survives an await, to heap storage. Heap-pin installation futures at both native start and repair command boundaries. The measured installation future shrank from 67,224 to 2,416 bytes. Regression coverage fails against the old implementation and bounds both checksum and installation future sizes. The fix reduces synchronous command-stack use without increasing thread stack limits or changing authentication.
+
+Automated-tested: cargo check and 29 Rust tests passed (8 opt-in integrations excluded from the regular run); npm run check, 54 tests, and production build passed. The user-reported authenticated start has not yet been repeated by the agent; actual gameplay acceptance remains outstanding.
+
+The opt-in real Fabric 1.21.11 installation/repair integration also passed with the 0.1.6 fix (57.13 seconds), including bundled Hera/Fabric API. This did not authenticate or launch gameplay.
