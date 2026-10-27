@@ -19,14 +19,14 @@ public final class ModuleScreen extends Screen {
     private HudModule hud(String id){return hud.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);}
     private boolean enabled(String id){var m=hud(id);return m==null?ModuleCatalog.enabled(features,id):m.enabled;}
     private void toggle(String id){var m=hud(id);if(m==null)ModuleCatalog.toggle(features,id);else m.enabled=!m.enabled;}
-    private String group(String id){if(hud(id)!=null)return "HUD";return switch(id){case "Kristall-Totem","Auto-Totem","Zoom","Free Look","Freecam"->"Gameplay";default->"Darstellung";};}
+    private String group(String id){if(hud(id)!=null)return "HUD";return switch(id){case "D-Tap","Kristall-Totem","Auto-Totem","Zoom","Free Look","Freecam"->"Gameplay";default->"Darstellung";};}
     private String description(String id){String d=ModuleCatalog.description(id);if(!d.isEmpty())return d;return switch(id){case "Item-ESP"->"Markiere ausgewählte Items und Blöcke.";case "Spieler-ESP"->"Behalte geladene Spieler im Blick.";case "Mob-ESP"->"Markiere Mobs mit deinem eigenen Stil.";case "Fast Items"->"Passe die Darstellung von Item-Drops an.";case "Auto-Totem"->"Fülle deine Nebenhand mit einem Totem nach.";case "Kristall-Totem"->"Wähle ein Hotbar-Totem bei Kristall-Gefahr.";case "Keystrokes"->"Deine Tasten und Mausklicks im Spiel.";case "Armor HUD"->"Rüstung und Haltbarkeit auf einen Blick.";default->"Position, Größe und Farben für dein HUD.";};}
     private List<String> ids(){var all=new ArrayList<>(ModuleCatalog.IDS);hud.modules.forEach(m->all.add(m.id));String q=search.toLowerCase(Locale.ROOT);return all.stream().filter(id->category.equals("Alle Module")||category.equals("Aktiv")&&enabled(id)||category.equals(group(id))).filter(id->id.toLowerCase(Locale.ROOT).contains(q)||description(id).toLowerCase(Locale.ROOT).contains(q)).toList();}
     private void revealSelection(){int i=ids().indexOf(selected);if(i>=0){if(i<listScroll)listScroll=i;else if(i>=listScroll+l.visibleRows())listScroll=i-l.visibleRows()+1;}}
     public void select(String id){selected=id;detailScroll=0;revealSelection();rebuild();}
     @Override protected void init(){
-        float physical=client.getWindow().getWidth()>=1600?2:1.5f;
-        uiScale=Math.min(physical/(float)client.getWindow().getScaleFactor(),Math.min(width/740f,height/460f));
+        float physical=client.getWindow().getWidth()>=1600?1.65f:1.25f;
+        uiScale=Math.min(physical/(float)client.getWindow().getScaleFactor(),Math.min(width/890f,height/550f));
         canvasWidth=Math.round(width/uiScale);canvasHeight=Math.round(height/uiScale);l=WorkspaceLayout.of(canvasWidth,canvasHeight);revealSelection();
         field=new TextFieldWidget(textRenderer,l.listX()+19,l.y()+83,l.list()-38,18,HeraTheme.text("Module suchen"));
         field.setDrawsBackground(false);field.setMaxLength(80);field.addFormatter((v,o)->HeraTheme.text(v).asOrderedText());field.setText(search);field.setPlaceholder(HeraTheme.text("Suchen …"));

@@ -24,8 +24,8 @@ public final class HeraTheme {
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,Identifier.of("hera","icons/"+id),x,y,size,size,color);
     }
     public static void panel(DrawContext c,int x,int y,int w,int h) {
-        round(c,x-3,y+5,w+6,h+1,12,0x22000000);
-        round(c,x-1,y-1,w+2,h+2,11,LINE);round(c,x,y,w,h,10,BG);
+        round(c,x-4,y+5,w+8,h+3,13,0x30000000);
+        round(c,x-1,y-1,w+2,h+2,11,0xFF394452);round(c,x,y,w,h,10,BG);
     }
     public static void label(DrawContext c,String value,int x,int y,int color) { c.drawText(MinecraftClient.getInstance().textRenderer,text(value),x,y,color,false); }
     public static void title(DrawContext c,String value,int x,int y,float scale,int color) {

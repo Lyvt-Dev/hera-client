@@ -23,3 +23,7 @@ Der Weiterleitungslink https://aka.ms/mce-reviewappid führt zum aktuell erreich
 Der auf Microsoft Q&A veröffentlichte Erfahrungsbericht eines Launcher-Entwicklers beschreibt eine Freigabe nach Einreichung der Client-ID: https://learn.microsoft.com/en-us/answers/questions/5984225/minecraft-services-http-403-invalid-app-registrati. Dies ist ein Erfahrungsbericht und keine Freigabe für Hera.
 
 Eine andere Launcher-ID oder ein fremder Anmeldedienst wird nicht als Ersatz verwendet. Nach bestätigter Freigabe denselben Hera-Login erneut mit einem Minecraft-Java-Konto testen und erst anschließend erfolgreichen Spielstart dokumentieren.
+
+## Aktueller Stand, 27.10.2026
+
+Der Besitzer meldet, dass Microsoft die App freigegeben hat und die Anmeldung im Launcher funktioniert. Die obige Anleitung dokumentiert die frühere Herausgeber-Einrichtung. Eine erneute Registrierung durch Spieler ist nicht erforderlich. Authentifiziertes Gameplay wurde vom Agenten noch nicht beobachtet.

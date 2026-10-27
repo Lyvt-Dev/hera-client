@@ -14,7 +14,8 @@
     "ZoomMixin",
     "ItemHighlightMixin",
     "FreecamInteractionMixin",
-    "HideOwnArmorMixin"
+    "HideOwnArmorMixin",
+    "DTapNetworkMixin"
   ],
   "injectors": {
     "defaultRequire": 1

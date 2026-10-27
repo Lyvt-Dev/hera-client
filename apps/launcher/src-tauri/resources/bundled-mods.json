@@ -1,0 +1,12 @@
+[
+  {
+    "size": 320949,
+    "filename": "hera-fabric-1.21.11-0.6.0.jar",
+    "sha256": "eae83d1e7e988b7cb323cc677bb17c3c6d730d8ea84c9837d07c6502d36ad0e3"
+  },
+  {
+    "size": 2426039,
+    "filename": "fabric-api-0.141.6+1.21.11.jar",
+    "sha256": "bdff7fd7e220085cfad2ff9b1f40dde6534ae0b96cf378f97a374bc54cb9ed0f"
+  }
+]

@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.14.10'; id 'maven-publish' }
-version = '0.5.0'
+version = '0.6.0'
 group = 'gg.hera'
 base { archivesName = 'hera-fabric-1.21.11' }
 repositories { mavenCentral() }
@@ -16,4 +16,4 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(21) }; withSourcesJa
 tasks.withType(JavaCompile).configureEach { options.release = 21; options.encoding = 'UTF-8' }
 test { useJUnitPlatform() }
 
-loom { runs { client { if (project.hasProperty('uiPreview')) vmArg '-Dhera.previewUi=true'; if(project.hasProperty('smokeTest')) vmArg '-Dhera.smokeTest=true' } } }
+loom { runs { client { if (project.hasProperty('uiPreview')) vmArg '-Dhera.previewUi=true'; if(project.hasProperty('smokeTest')) { vmArg '-Dhera.smokeTest=true'; programArgs '--width', '1440', '--height', '900' } } } }

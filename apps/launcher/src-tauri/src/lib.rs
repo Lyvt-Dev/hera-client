@@ -1,5 +1,8 @@
 mod auth;
 mod browser_login;
+mod bundled_mods;
+mod java_runtime;
+mod loader_catalog;
 mod loaders;
 mod minecraft;
 mod mods;
@@ -92,6 +95,10 @@ async fn versions(s: State<'_, Native>) -> Result<serde_json::Value> {
 #[tauri::command]
 fn accounts(s: State<Native>) -> Result<Vec<Account>> {
     auth::accounts(&s.store)
+}
+#[tauri::command]
+async fn loader_options(s: State<'_, Native>, version: String) -> Result<loader_catalog::Options> {
+    loader_catalog::options(&s.http, &version).await
 }
 #[tauri::command]
 async fn begin_login(s: State<'_, Native>, app: AppHandle) -> Result<()> {
@@ -257,6 +264,7 @@ pub fn run() {
             save_settings,
             runtime,
             versions,
+            loader_options,
             accounts,
             begin_login,
             cancel_login,

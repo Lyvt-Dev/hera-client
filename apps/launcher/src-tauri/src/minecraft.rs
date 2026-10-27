@@ -24,13 +24,17 @@ pub struct Artifact {
 }
 #[derive(Serialize, Clone)]
 pub struct Transfer {
-    stage: String,
-    completed: usize,
-    total: usize,
+    pub(crate) stage: String,
+    pub(crate) completed: usize,
+    pub(crate) total: usize,
 }
 pub fn http() -> Result<Client> {
     Client::builder()
-        .user_agent("HeraClient/0.1.0 (independent development build)")
+        .user_agent(concat!(
+            "HeraClient/",
+            env!("CARGO_PKG_VERSION"),
+            " (+https://github.com/Lyvt-Dev/hera-client)"
+        ))
         .https_only(true)
         .redirect(reqwest::redirect::Policy::none())
         .connect_timeout(Duration::from_secs(15))
@@ -78,6 +82,7 @@ fn allowed_url(raw: &str) -> Result<()> {
                     | "meta.fabricmc.net"
                     | "maven.fabricmc.net"
                     | "maven.minecraftforge.net"
+                    | "files.minecraftforge.net"
                     | "libraries.minecraftforge.net"
             )
         )
@@ -245,6 +250,7 @@ fn check_host() -> Result<()> {
 }
 #[derive(Clone)]
 pub struct Installation {
+    pub java: String,
     pub manifest: Value,
     pub classpath: Vec<PathBuf>,
     pub game: PathBuf,
@@ -448,6 +454,7 @@ pub async fn install(
         total,
     });
     Ok(Installation {
+        java: profile.java_path.clone(),
         manifest,
         classpath,
         game,
@@ -513,9 +520,6 @@ fn arguments(v: &Value, vars: &HashMap<String, String>) -> Result<Vec<String>> {
     }
     Ok(result)
 }
-pub(crate) async fn check_java(path: &str) -> Result<()> {
-    check_java_major(path, 21).await
-}
 fn java_major(output: &str) -> Option<u64> {
     let version = output.split('"').nth(1)?;
     let mut parts = version.split('.');
@@ -526,11 +530,17 @@ fn java_major(output: &str) -> Option<u64> {
         Some(first)
     }
 }
-async fn check_java_major(path: &str, required: u64) -> Result<()> {
-    let output = Command::new(path)
+pub(crate) async fn check_java_major(path: &str, required: u64) -> Result<()> {
+    let mut command = Command::new(path);
+    command
         .arg("-version")
-        .output()
+        .stdin(std::process::Stdio::null())
+        .kill_on_drop(true);
+    #[cfg(target_os = "windows")]
+    command.creation_flags(0x08000000);
+    let output = tokio::time::timeout(Duration::from_secs(15), command.output())
         .await
+        .map_err(|_| "Java-Prüfung hat zu lange gedauert")?
         .map_err(|_| format!("Java nicht gefunden. Dieses Profil benötigt Java {required}."))?;
     let combined = format!(
         "{} {}",
@@ -544,7 +554,7 @@ async fn check_java_major(path: &str, required: u64) -> Result<()> {
 }
 pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> Result<Command> {
     check_java_major(
-        &profile.java_path,
+        &i.java,
         i.manifest["javaVersion"]["majorVersion"]
             .as_u64()
             .ok_or("Java-Anforderung fehlt")?,
@@ -570,7 +580,7 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
         ("version_type", "release".into()),
         ("natives_directory", i.natives.to_string_lossy().into()),
         ("launcher_name", "Hera".into()),
-        ("launcher_version", "0.1.0".into()),
+        ("launcher_version", env!("CARGO_PKG_VERSION").into()),
         ("classpath", cp),
         ("library_directory", i.libraries.to_string_lossy().into()),
         (
@@ -599,7 +609,7 @@ pub async fn command(profile: &Profile, session: &Session, i: &Installation) -> 
     ] {
         vars.insert(k.to_string(), v);
     }
-    let mut c = Command::new(&profile.java_path);
+    let mut c = Command::new(&i.java);
     c.current_dir(&i.game)
         .arg(format!("-Xmx{}M", profile.memory_mb))
         .arg("-Xms512M");

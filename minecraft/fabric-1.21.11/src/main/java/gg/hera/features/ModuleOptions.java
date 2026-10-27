@@ -2,6 +2,8 @@ package gg.hera.features;
 
 /** Persisted, client-only module settings. No gameplay module starts enabled. */
 public final class ModuleOptions {
+    public boolean dTap,dTapFeedback=true;
+    public int dTapDelay=2;public float dTapTarget=6,dTapSelf=10,dTapReserve=8;
     public boolean hideOwnArmor;
     public boolean hideHelmet=true,hideChest=true,hideLegs=true,hideBoots=true;
     public boolean hitboxes,tntTimer,itemHighlighter,noFog,timeChanger,weatherChanger,zoom,freeLook,fullBright,freecam;
@@ -15,6 +17,7 @@ public final class ModuleOptions {
     public boolean fogWater=true,fogLava=true;
     public static final int[] COLORS={0xFFF0A46E,0xFF79D8FF,0xFFB7F58A,0xFFC4A3FF,0xFFFF7D9C,0xFFFFFFFF};
     public void normalize(){
+        dTapDelay=Math.clamp(dTapDelay,1,10);dTapTarget=finite(dTapTarget,2,30,6);dTapSelf=finite(dTapSelf,2,30,10);dTapReserve=finite(dTapReserve,2,20,8);
         lineWidth=Math.clamp(lineWidth,1,4);hitboxWidth=Math.clamp(hitboxWidth,1,4);
         worldTime=Math.floorMod(worldTime,24000);weather=Math.clamp(weather,0,2);totemDelay=Math.clamp(totemDelay,2,40);
         zoomFactor=finite(zoomFactor,2,12,4);freecamSpeed=finite(freecamSpeed,.1f,3,.5f);crystalRange=finite(crystalRange,2,16,8);

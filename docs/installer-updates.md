@@ -27,3 +27,7 @@ The Windows workflow also publishes tagged releases after tests/build. GitHub Ac
 Release QA: install PyNaCl 1.6.2 into ignored .local/release-tools, then run `python scripts/verify-release.py`. It downloads the public Windows asset and verifies the trusted-comment and binary signatures, including a tamper rejection check, without installing anything. GitHub-normalized asset names use `Hera.Client_VERSION_x64-setup.exe`.
 
 When the workspace contains unrelated local commits, publish only the verified Hera commit from the release branch/reference: `./scripts/publish-release.ps1 -Revision SOURCE_COMMIT`. The script verifies that this exact revision is on origin/main before creating the release; it does not push unrelated local commits.
+
+## 0.1.5 setup
+
+New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabric API are embedded and hash-checked during install/repair. Other loader/game combinations do not receive this version-specific payload. Native loader catalogs choose releases actually published for the selected Minecraft version. Windows x64 Java setup uses verified Mojang runtime downloads; custom Java paths remain available. Installation tests do not establish gameplay support. Installer updater signatures are distinct from Windows Authenticode certification.

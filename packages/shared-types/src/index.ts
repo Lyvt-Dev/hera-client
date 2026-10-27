@@ -11,6 +11,7 @@ export interface Account { id: string; name: string }
 export interface Transfer { stage: string; completed: number; total: number }
 export interface Runtime { java: string | null; platform: string; authConfigured: boolean }
 export interface Version { id: string; type: string; releaseTime: string }
+export interface LoaderOptions {fabric:string|null;forge:string|null}
 export const defaultSettings: Settings = { reducedMotion: false, accent: 'orange', scale: 1 };
 export const modSourceSchema = z.enum(['modrinth','curseforge']);
 export type ModSource = z.infer<typeof modSourceSchema>;

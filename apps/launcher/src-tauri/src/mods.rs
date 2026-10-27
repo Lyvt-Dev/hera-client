@@ -296,6 +296,7 @@ pub async fn install(
         return Err("Vanilla-Profile können keine Mods laden".into());
     }
     let existing = installed(root, p).await?;
+    crate::bundled_mods::install(root, p, &|_| {}).await?;
     let mut q = params(source, p, version_id);
     q.insert("projectId".into(), project_id.into());
     let first: Version = serde_json::from_value(catalog(http, "version", &q).await?)
@@ -325,6 +326,13 @@ pub async fn install(
             .as_ref()
             .ok_or("Autor erlaubt keinen automatischen Dateidownload")?;
         filename(&file.filename)?;
+        if crate::bundled_mods::satisfies_api(p, &file.filename, &file.sha1) {
+            chosen.insert(v.project_id.clone(), v);
+            continue;
+        }
+        if crate::bundled_mods::includes(p) && file.filename.starts_with("fabric-api-") {
+            return Err("Fabric API wird von Hera verwaltet. Bitte eine Mod-Version wählen, die zur integrierten Fabric API 0.141.6 passt.".into());
+        }
         let u = reqwest::Url::parse(&file.url).map_err(|_| "Ungültige Mod-URL")?;
         if (source == "modrinth" && u.host_str() != Some("cdn.modrinth.com"))
             || (source == "curseforge"
@@ -374,7 +382,12 @@ pub async fn install(
                 )
                 .map_err(|_| "Ungültige Abhängigkeiten")?;
                 list.iter()
-                    .find(|v| v.release == "release")
+                    .find(|v| {
+                        v.file.as_ref().is_some_and(|f| {
+                            crate::bundled_mods::satisfies_api(p, &f.filename, &f.sha1)
+                        })
+                    })
+                    .or_else(|| list.iter().find(|v| v.release == "release"))
                     .or_else(|| list.first())
                     .cloned()
                     .ok_or("Keine passende Abhängigkeit verfügbar")?
@@ -394,7 +407,10 @@ pub async fn install(
     let all = existing.iter().chain(records.iter()).collect::<Vec<_>>();
     for v in chosen.values() {
         for d in v.dependencies.iter().filter(|d| d.kind == "incompatible") {
-            if all.iter().any(|m| {
+            if chosen.values().any(|m| {
+                d.project_id.as_ref().is_none_or(|id| id == &m.project_id)
+                    && d.version_id.as_ref().is_none_or(|id| id == &m.id)
+            }) || all.iter().any(|m| {
                 m.source == source
                     && d.project_id.as_ref().is_none_or(|id| id == &m.project_id)
                     && d.version_id.as_ref().is_none_or(|id| id == &m.version_id)

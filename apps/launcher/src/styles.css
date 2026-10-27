@@ -27,3 +27,10 @@ dialog{margin:auto;position:fixed;inset:0;padding:28px;background:#1b1f28;border
 .loader-choices{grid-template-columns:repeat(3,minmax(0,1fr))}.loader-choice{flex-direction:column;align-items:flex-start;gap:8px;position:relative;min-height:112px}.loader-choice span{flex:0}.loader-choice>svg:last-child:not(:first-child){position:absolute;right:10px;top:12px}.loader-choice small{font-size:.7rem}.catalog-search{min-width:0}.catalog-search input{width:100%}.version-row .version-name{white-space:normal}
 @media(max-width:450px){.loader-choices{grid-template-columns:1fr}.loader-choice{flex-direction:row;min-height:64px}.dialog-actions{position:sticky;bottom:-28px;background:var(--surface);padding:14px 0}}
 dialog{max-height:calc(100vh - 32px)}.dialog-intro{margin-bottom:14px}dialog form>label{margin:12px 0}.loader-choices{margin:14px 0}.loader-choice{min-height:90px}.profile-advanced{margin:12px 0}.dialog-actions{margin-top:14px}
+
+.launch-journey{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 24px}
+.launch-journey button{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--border,#303039);border-radius:16px;background:rgba(255,255,255,.025);padding:16px;color:inherit;min-width:0}
+.launch-journey button>span{display:grid;place-items:center;flex:0 0 32px;height:32px;border-radius:11px;background:rgba(255,171,112,.12);color:#ffb27c;font-weight:800}
+.launch-journey strong,.launch-journey small{display:block}.launch-journey strong{font-size:.9rem}.launch-journey small{font-size:.76rem;opacity:.62;margin-top:5px;overflow-wrap:anywhere}.launch-journey .complete>span{background:rgba(132,207,166,.13);color:#a3dfb8}.launch-journey button:disabled{cursor:default;opacity:.6}
+.hero-progress{margin-top:20px;max-width:360px;font-size:.8rem}.hero-progress span{display:block;margin-bottom:8px}.hero-progress progress{width:100%;height:6px;accent-color:#ffb27c}
+@media(max-width:1000px){.launch-journey{gap:8px}.launch-journey button{padding:12px;gap:8px}.launch-journey button>span{flex-basis:26px;height:26px}}

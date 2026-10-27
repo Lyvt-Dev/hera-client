@@ -10,29 +10,30 @@ use std::{
     time::Duration,
 };
 
-const FABRIC: &str = "0.16.14";
-const FORGE: &str = "52.1.20";
 pub async fn install(
     http: &Client,
     root: &Path,
     p: &Profile,
     progress: &impl Fn(Transfer),
 ) -> Result<Installation> {
-    if p.loader != "vanilla" && p.version != "1.21.1" {
-        return Err("Fabric und Forge sind derzeit für Minecraft 1.21.1 eingerichtet. Für diese Version bitte Vanilla auswählen.".into());
-    }
     let mut base = minecraft::install(http, root, p, progress).await?;
+    let mut effective = p.clone();
+    effective.java_path =
+        crate::java_runtime::resolve(http, root, p, &base.manifest, progress).await?;
+    base.java = effective.java_path.clone();
+    let p = &effective;
     match p.loader.as_str() {
         "vanilla" => {}
         "fabric" => fabric(http, root, p, &mut base).await?,
         "forge" => forge(http, root, p, &mut base).await?,
         _ => return Err("Unbekannter Loader".into()),
     }
+    crate::bundled_mods::install(root, p, progress).await?;
     Ok(base)
 }
 fn maven_path(name: &str) -> Result<String> {
     let parts = name.split(':').collect::<Vec<_>>();
-    if parts.len() != 3
+    if !(3..=4).contains(&parts.len())
         || parts.iter().any(|p| {
             p.is_empty()
                 || !p
@@ -43,12 +44,13 @@ fn maven_path(name: &str) -> Result<String> {
         return Err("Nicht unterstützte Maven-Koordinate".into());
     }
     Ok(format!(
-        "{}/{}/{}/{}-{}.jar",
+        "{}/{}/{}/{}-{}{}.jar",
         parts[0].replace('.', "/"),
         parts[1],
         parts[2],
         parts[1],
-        parts[2]
+        parts[2],
+        parts.get(3).map(|v| format!("-{v}")).unwrap_or_default()
     ))
 }
 fn merge(
@@ -56,8 +58,9 @@ fn merge(
     overlay: &Value,
     paths: Vec<PathBuf>,
     library_root: PathBuf,
+    expected_version: &str,
 ) -> Result<()> {
-    if overlay["inheritsFrom"] != "1.21.1" {
+    if overlay["inheritsFrom"] != expected_version && overlay["jar"] != expected_version {
         return Err("Loader erbt von einer nicht unterstützten Version".into());
     }
     let main = overlay["mainClass"]
@@ -87,6 +90,9 @@ fn merge(
     }
     base.classpath.extend(paths);
     base.manifest["mainClass"] = Value::String(main.into());
+    if let Some(legacy) = overlay["minecraftArguments"].as_str() {
+        base.manifest["minecraftArguments"] = Value::String(legacy.into());
+    }
     for kind in ["jvm", "game"] {
         if let Some(args) = overlay["arguments"][kind].as_array() {
             base.manifest["arguments"][kind]
@@ -99,10 +105,13 @@ fn merge(
     Ok(())
 }
 async fn fabric(http: &Client, root: &Path, p: &Profile, base: &mut Installation) -> Result<()> {
+    let loader = crate::loader_catalog::fabric(http, &p.version)
+        .await?
+        .ok_or("Für diese Minecraft-Version wurde kein Fabric-Loader veröffentlicht")?;
     let meta = minecraft::json(
         http,
         &format!(
-            "https://meta.fabricmc.net/v2/versions/loader/{}/{FABRIC}/profile/json",
+            "https://meta.fabricmc.net/v2/versions/loader/{}/{loader}/profile/json",
             p.version
         ),
     )
@@ -145,7 +154,7 @@ async fn fabric(http: &Client, root: &Path, p: &Profile, base: &mut Installation
         .await?;
         paths.push(path);
     }
-    merge(base, &meta, paths, lib)
+    merge(base, &meta, paths, lib, &p.version)
 }
 async fn checksum(http: &Client, url: &str) -> Result<String> {
     let r = http
@@ -179,8 +188,148 @@ async fn content_length(http: &Client, url: &str) -> Result<u64> {
         .and_then(|v| v.parse().ok())
         .ok_or("Loader-Dateigröße fehlt".into())
 }
+fn installer_metadata(path: &Path, game: &str) -> Result<(String, Value)> {
+    use std::io::Read;
+    fn read(zip: &mut zip::ZipArchive<std::fs::File>, name: &str) -> Result<Value> {
+        let mut file = zip
+            .by_name(name)
+            .map_err(|_| "Forge-Installer enthält keine Versionsmetadaten")?;
+        if file.size() > 4 * 1024 * 1024 {
+            return Err("Forge-Metadaten zu groß".into());
+        }
+        let mut data = vec![];
+        file.read_to_end(&mut data).map_err(|e| e.to_string())?;
+        serde_json::from_slice(&data).map_err(|_| "Forge-Installer-Metadaten beschädigt".into())
+    }
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(path).map_err(|e| e.to_string())?)
+        .map_err(|_| "Forge-Installer beschädigt")?;
+    let install = read(&mut zip, "install_profile.json")?;
+    let mut meta = if install["versionInfo"].is_object() {
+        install["versionInfo"].clone()
+    } else {
+        let entry = install["json"]
+            .as_str()
+            .unwrap_or("version.json")
+            .trim_start_matches('/');
+        if entry.contains("..") {
+            return Err("Unsichere Forge-Metadaten".into());
+        }
+        read(&mut zip, entry)?
+    };
+    let expected = install["minecraft"]
+        .as_str()
+        .or_else(|| meta["inheritsFrom"].as_str())
+        .or_else(|| meta["jar"].as_str())
+        .ok_or("Forge-Spielversion fehlt")?;
+    if expected != game {
+        return Err("Forge-Installer gehört zu einer anderen Minecraft-Version".into());
+    }
+    if meta["inheritsFrom"].is_null() {
+        meta["inheritsFrom"] = Value::String(game.into());
+    }
+    let id = meta["id"]
+        .as_str()
+        .ok_or("Forge-Versions-ID fehlt")?
+        .to_string();
+    if !crate::storage::valid_version_id(&id) {
+        return Err("Unsichere Forge-Versions-ID".into());
+    }
+    Ok((id, meta))
+}
+fn legacy_embedded_artifact(installer: &Path, coordinate: &str) -> Result<Option<Artifact>> {
+    use sha1::Digest;
+    use std::io::Read;
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(installer).map_err(|e| e.to_string())?)
+        .map_err(|_| "Forge-Archiv beschädigt")?;
+    let data = {
+        let mut entry = zip
+            .by_name("install_profile.json")
+            .map_err(|_| "Forge-Installationsdaten fehlen")?;
+        if entry.size() > 4 * 1024 * 1024 {
+            return Err("Forge-Installationsdaten zu groß".into());
+        }
+        let mut data = vec![];
+        entry.read_to_end(&mut data).map_err(|e| e.to_string())?;
+        data
+    };
+    let profile: Value =
+        serde_json::from_slice(&data).map_err(|_| "Forge-Installationsdaten beschädigt")?;
+    if profile["install"]["path"] != coordinate {
+        return Ok(None);
+    }
+    let name = profile["install"]["filePath"]
+        .as_str()
+        .ok_or("Eingebettete Forge-Datei fehlt")?;
+    let mut file = zip
+        .by_name(name)
+        .map_err(|_| "Eingebettete Forge-Datei fehlt")?;
+    if file.size() > 128 * 1024 * 1024 {
+        return Err("Forge-Datei zu groß".into());
+    }
+    let mut data = vec![];
+    file.read_to_end(&mut data).map_err(|e| e.to_string())?;
+    Ok(Some(Artifact {
+        url: String::new(),
+        sha1: format!("{:x}", sha1::Sha1::digest(&data)),
+        size: data.len() as u64,
+        path: None,
+    }))
+}
+fn extract_legacy_install(
+    installer: &Path,
+    runtime: &Path,
+    version_file: &Path,
+    meta: &Value,
+) -> Result<bool> {
+    use std::io::Read;
+    let mut zip = zip::ZipArchive::new(std::fs::File::open(installer).map_err(|e| e.to_string())?)
+        .map_err(|_| "Forge-Archiv beschädigt")?;
+    let profile: Value = {
+        let mut file = zip
+            .by_name("install_profile.json")
+            .map_err(|_| "Forge-Metadaten fehlen")?;
+        if file.size() > 4 * 1024 * 1024 {
+            return Err("Forge-Metadaten zu groß".into());
+        }
+        let mut bytes = vec![];
+        file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        serde_json::from_slice(&bytes).map_err(|_| "Forge-Metadaten beschädigt")?
+    };
+    if !profile["versionInfo"].is_object() {
+        return Ok(false);
+    }
+    let coordinate = profile["install"]["path"]
+        .as_str()
+        .ok_or("Legacy-Forge-Koordinate fehlt")?;
+    let source = profile["install"]["filePath"]
+        .as_str()
+        .ok_or("Legacy-Forge-Datei fehlt")?;
+    let target = minecraft::safe_join(&runtime.join("libraries"), &maven_path(coordinate)?)?;
+    crate::bundled_mods::reject_link(&target)?;
+    let mut file = zip
+        .by_name(source)
+        .map_err(|_| "Legacy-Forge-Datei fehlt im geprüften Archiv")?;
+    if file.size() > 128 * 1024 * 1024 {
+        return Err("Legacy-Forge-Datei zu groß".into());
+    }
+    let mut bytes = vec![];
+    file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(target.parent().ok_or("Forge-Ziel fehlt")?)
+        .map_err(|e| e.to_string())?;
+    std::fs::write(target, bytes).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(version_file.parent().ok_or("Forge-Version fehlt")?)
+        .map_err(|e| e.to_string())?;
+    std::fs::write(
+        version_file,
+        serde_json::to_vec(meta).map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(true)
+}
 async fn forge(http: &Client, root: &Path, p: &Profile, base: &mut Installation) -> Result<()> {
-    let release = format!("{}-{FORGE}", p.version);
+    let release = crate::loader_catalog::forge(http, &p.version)
+        .await?
+        .ok_or("Für diese Minecraft-Version ist kein offizieller Forge-Installer verfügbar")?;
     let runtime = root.join("runtimes").join(format!("forge-{release}"));
     let installer = root
         .join("installers")
@@ -221,13 +370,14 @@ async fn forge(http: &Client, root: &Path, p: &Profile, base: &mut Installation)
             .await
             .map_err(|e| e.to_string())?;
     }
-    let version_id = format!("{}-forge-{FORGE}", p.version);
+    let (version_id, installer_meta) = installer_metadata(&installer, &p.version)?;
     let version_file = runtime
         .join("versions")
         .join(&version_id)
         .join(format!("{version_id}.json"));
-    if !version_file.exists() {
-        minecraft::check_java(&p.java_path).await?;
+    if !version_file.exists()
+        && !extract_legacy_install(&installer, &runtime, &version_file, &installer_meta)?
+    {
         let mut command = tokio::process::Command::new(&p.java_path);
         command
             .current_dir(&runtime)
@@ -255,9 +405,21 @@ async fn forge(http: &Client, root: &Path, p: &Profile, base: &mut Installation)
     if bytes.len() > 4 * 1024 * 1024 {
         return Err("Forge-Metadaten zu groß".into());
     }
-    let meta: Value = serde_json::from_slice(&bytes).map_err(|_| "Ungültige Forge-Metadaten")?;
+    let mut meta: Value =
+        serde_json::from_slice(&bytes).map_err(|_| "Ungültige Forge-Metadaten")?;
+    if meta["inheritsFrom"].is_null() {
+        meta["inheritsFrom"] = installer_meta["inheritsFrom"].clone();
+    }
     if meta["id"] != version_id
-        || meta["mainClass"] != "net.minecraftforge.bootstrap.ForgeBootstrap"
+        || !matches!(
+            meta["mainClass"].as_str(),
+            Some(
+                "net.minecraftforge.bootstrap.ForgeBootstrap"
+                    | "cpw.mods.bootstraplauncher.BootstrapLauncher"
+                    | "cpw.mods.modlauncher.Launcher"
+                    | "net.minecraft.launchwrapper.Launch"
+            )
+        )
     {
         return Err("Nicht unterstützte Forge-Startkonfiguration".into());
     }
@@ -277,8 +439,57 @@ async fn forge(http: &Client, root: &Path, p: &Profile, base: &mut Installation)
             maven_path(item["name"].as_str().ok_or("Forge-Koordinate fehlt")?)?
         };
         let path = minecraft::safe_join(&lib, &rel)?;
-        let artifact: Artifact =
-            serde_json::from_value(a.clone()).map_err(|_| "Forge-Dateiintegritätsdaten fehlen")?;
+        let embedded = if !a.is_object() {
+            legacy_embedded_artifact(&installer, item["name"].as_str().unwrap_or(""))?
+        } else {
+            None
+        };
+        let artifact: Artifact = if let Some(artifact) = embedded {
+            artifact
+        } else if a.is_object() {
+            serde_json::from_value(a.clone()).map_err(|_| "Forge-Dateiintegritätsdaten fehlen")?
+        } else {
+            let repository = item["url"].as_str().unwrap_or(
+                if item["name"]
+                    .as_str()
+                    .unwrap_or("")
+                    .starts_with("net.minecraftforge:")
+                {
+                    "https://maven.minecraftforge.net/"
+                } else {
+                    "https://libraries.minecraft.net/"
+                },
+            );
+            let repository = repository
+                .replace(
+                    "http://files.minecraftforge.net/maven/",
+                    "https://maven.minecraftforge.net/",
+                )
+                .replace(
+                    "http://libraries.minecraft.net/",
+                    "https://libraries.minecraft.net/",
+                );
+            let url = format!("{}/{rel}", repository.trim_end_matches('/'));
+            let hash = match checksum(http, &format!("{url}.sha1")).await {
+                Ok(hash) => hash,
+                Err(_) => item["checksums"]
+                    .as_array()
+                    .and_then(|values| {
+                        values.iter().filter_map(Value::as_str).find(|hash| {
+                            hash.len() == 40 && hash.bytes().all(|b| b.is_ascii_hexdigit())
+                        })
+                    })
+                    .map(str::to_lowercase)
+                    .ok_or("Veröffentlichte Prüfsumme für eine Legacy-Forge-Bibliothek fehlt")?,
+            };
+            let size = content_length(http, &url).await?;
+            Artifact {
+                url,
+                sha1: hash,
+                size,
+                path: Some(rel.clone()),
+            }
+        };
         if !minecraft::valid(&path, &artifact).await {
             if artifact.url.is_empty() {
                 return Err("Generierte Forge-Datei fehlt oder ist beschädigt. Forge-Runtime muss neu installiert werden.".into());
@@ -287,11 +498,98 @@ async fn forge(http: &Client, root: &Path, p: &Profile, base: &mut Installation)
         }
         paths.push(path);
     }
-    merge(base, &meta, paths, lib)
+    merge(base, &meta, paths, lib, &p.version)
 }
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    #[ignore = "Installs official legacy Forge 1.8.9; does not start gameplay"]
+    async fn forge_189_install() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.local/install-smoke");
+        let p = Profile {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: "Forge 1.8.9 integration".into(),
+            version: "1.8.9".into(),
+            loader: "forge".into(),
+            memory_mb: 4096,
+            java_path: "java".into(),
+        };
+        let i = install(&minecraft::http().unwrap(), &root, &p, &|_| {})
+            .await
+            .unwrap();
+        assert_eq!(
+            i.manifest["mainClass"],
+            "net.minecraft.launchwrapper.Launch"
+        );
+        println!(
+            "Legacy Forge 1.8.9 installed with {} verified classpath entries",
+            i.classpath.len()
+        );
+    }
+    #[tokio::test]
+    #[ignore = "Downloads and installs multiple official loaders; does not enter authenticated gameplay"]
+    async fn loader_version_matrix() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.local/install-smoke");
+        let http = minecraft::http().unwrap();
+        for (loader, game) in [
+            ("fabric", "1.16.5"),
+            ("forge", "1.12.2"),
+            ("forge", "1.20.1"),
+            ("forge", "1.21.11"),
+        ] {
+            println!("Installing {loader} {game}");
+            let p = Profile {
+                id: uuid::Uuid::new_v4().to_string(),
+                name: "Loader matrix".into(),
+                version: game.into(),
+                loader: loader.into(),
+                memory_mb: 4096,
+                java_path: "java".into(),
+            };
+            let installed = install(&http, &root, &p, &|_| {})
+                .await
+                .unwrap_or_else(|error| panic!("{loader} {game}: {error}"));
+            assert!(installed.classpath.iter().all(|path| path.exists()));
+            println!(
+                "Installed {loader} {game} with {} verified classpath entries",
+                installed.classpath.len()
+            );
+        }
+    }
+    #[tokio::test]
+    #[ignore = "Downloads official Minecraft/Fabric files; does not authenticate or launch gameplay"]
+    async fn fabric_1211_bundled_install() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.local/install-smoke");
+        let p = Profile {
+            id: "b631051d-0a9a-435e-a957-62415106e711".into(),
+            name: "Hera 1.21.11 integration".into(),
+            version: "1.21.11".into(),
+            loader: "fabric".into(),
+            memory_mb: 4096,
+            java_path: "java".into(),
+        };
+        let http = minecraft::http().unwrap();
+        let installation = install(&http, &root, &p, &|_| {}).await.unwrap();
+        assert_eq!(
+            installation.manifest["mainClass"],
+            "net.fabricmc.loader.impl.launch.knot.KnotClient"
+        );
+        assert!(installation.classpath.iter().all(|path| path.exists()));
+        assert!(installation
+            .game
+            .join("mods")
+            .join(format!(
+                "hera-fabric-1.21.11-{}.jar",
+                crate::bundled_mods::MOD_VERSION
+            ))
+            .exists());
+        assert!(installation
+            .game
+            .join("mods/fabric-api-0.141.6+1.21.11.jar")
+            .exists());
+        println!("Fabric 1.21.11 plus bundled Hera and Fabric API installed; authenticated gameplay not exercised.");
+    }
     #[tokio::test]
     #[ignore = "Installs official Fabric/Forge loaders and executes the verified Forge installer"]
     async fn official_loaders_smoke() {
@@ -329,7 +627,7 @@ mod tests {
             maven_path("net.fabricmc:fabric-loader:0.16.14").unwrap(),
             "net/fabricmc/fabric-loader/0.16.14/fabric-loader-0.16.14.jar"
         );
-        for n in ["x:../escape:v", "x:y:v:extra", "https://bad"] {
+        for n in ["x:../escape:v", "x:y:v:extra:bad", "https://bad"] {
             assert!(maven_path(n).is_err());
         }
     }
