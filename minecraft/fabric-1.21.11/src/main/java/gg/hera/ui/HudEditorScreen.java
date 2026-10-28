@@ -24,8 +24,14 @@ public final class HudEditorScreen extends Screen {
         Runnable[] actions={()->{grid=!grid;rebuild();},()->{snap=!snap;rebuild();},()->history(false),()->history(true),()->{remember();client.setScreen(new HudPresetScreen(this,config,renderer));},this::reset,this::close};
         addDrawableChild(new HeraButton(x+w-60,8,52,17,"Akzent",false,()->client.setScreen(new ColorPickerScreen(this,config.accent,v->config.accent=v))));
         for(int i=0;i<7;i++){var b=new HeraButton(x+8+i*button,29,button-3,22,labels[i],i==6,actions[i]);b.active=i!=2||!undo.isEmpty();if(i==3)b.active=!redo.isEmpty();addDrawableChild(b);}
-        int paletteRows=Math.max(1,(height-146)/22);paletteScroll=Math.clamp(paletteScroll,0,Math.max(0,config.modules.size()-paletteRows));
-        for(int i=paletteScroll;i<Math.min(config.modules.size(),paletteScroll+paletteRows);i++){var m=config.modules.get(i);int row=i-paletteScroll;addDrawableChild(new HeraButton(width-108,78+row*22,96,20,HeraTheme.fit(m.id,85),m==selected,()->{selected=m;rebuild();}));}
+        int paletteRows=Math.max(1,(height-154)/24);paletteScroll=Math.clamp(paletteScroll,0,Math.max(0,config.modules.size()-paletteRows));
+        for(int i=paletteScroll;i<Math.min(config.modules.size(),paletteScroll+paletteRows);i++){var m=config.modules.get(i);int row=i-paletteScroll;addDrawableChild(new HeraButton(width-152,82+row*24,140,22,m.id,false,()->{selected=m;rebuild();}){
+                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){
+                    if(m==selected||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,4,m==selected?HeraTheme.SELECTED:HeraTheme.RAISED);
+                    HeraTheme.round(c,getX()+8,getY()+9,4,4,2,m.enabled?config.accent:HeraTheme.LINE);
+                    HeraTheme.label(c,HeraTheme.fit(m.id,width-30),getX()+20,getY()+7,m==selected?HeraTheme.TEXT:HeraTheme.MUTED);
+                }
+            });}
         if(selected!=null){int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;
             addDrawableChild(new HeraButton(ix+8,iy+29,48,22,selected.enabled?"An":"Aus",selected.enabled,()->mutate(()->selected.enabled=!selected.enabled)));
             addDrawableChild(new HeraButton(ix+60,iy+29,24,22,"−",false,()->resize(-.1f)));addDrawableChild(new HeraButton(ix+88,iy+29,24,22,"+",false,()->resize(.1f)));
@@ -46,17 +52,17 @@ public final class HudEditorScreen extends Screen {
         c.fill(0,0,width,height,0x440A0C10);if(grid){for(int x=0;x<width;x+=8)c.fill(x,0,x+1,height,0x06FFFFFF);for(int y=0;y<height;y+=8)c.fill(0,y,width,y+1,0x06FFFFFF);}
         renderer.render(c,true,selected==null?"":selected.id);if(selected!=null){int x=px(selected),y=py(selected),w=pw(selected),h=ph(selected),color=config.accent;
             c.fill(x-1,y-1,x+w+1,y,color);c.fill(x-1,y+h,x+w+1,y+h+1,color);c.fill(x-1,y,x,y+h,color);c.fill(x+w,y,x+w+1,y+h,color);HeraTheme.round(c,x+w-3,y+h-3,6,6,1,color);
-            if(guideX>=0)c.fill(guideX,57,guideX+1,height-70,0x6670CBA4);if(guideY>=0)c.fill(0,guideY,width,guideY+1,0x6670CBA4);
+            if(guideX>=0)c.fill(guideX,57,guideX+1,height-70,(config.accent&0xFFFFFF)|0x66000000);if(guideY>=0)c.fill(0,guideY,width,guideY+1,(config.accent&0xFFFFFF)|0x66000000);
         }
-        HeraTheme.round(c,width-112,60,104,Math.max(1,(height-146)/22)*22+20,4,0xEB111318);HeraTheme.label(c,"ELEMENTE",width-104,66,HeraTheme.MUTED);
-        int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx,6,tw,50,5,0xF0111318);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD STUDIO · Vorschau",tx+28,13,HeraTheme.TEXT);
-        int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix,iy,iw,59,5,0xF0111318);
+        HeraTheme.round(c,width-156,60,148,Math.max(1,(height-154)/24)*24+26,5,0xF0101216);HeraTheme.label(c,"HUD-ELEMENTE",width-144,69,HeraTheme.MUTED);
+        int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx,6,tw,50,5,0xF0101216);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD Studio",tx+28,13,HeraTheme.TEXT);
+        int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix,iy,iw,59,5,0xF0101216);
         if(selected==null){HeraTheme.label(c,"Element wählen · ziehen · Ecke zum Skalieren",ix+10,iy+12,HeraTheme.TEXT);HeraTheme.label(c,"Tab: Auswahl · Pfeile: Position · Strg+Z / Y",ix+10,iy+32,HeraTheme.MUTED);}
         else{String label=selected.id+" · "+Math.round(selected.scale*100)+"% · "+List.of("Oben links","Unten rechts","Zentriert").get(selected.anchorX);HeraTheme.label(c,HeraTheme.fit(label,iw-20),ix+10,iy+10,HeraTheme.TEXT);}
         if(!error.isEmpty()||overlap())HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?"Mögliche Überlappung mit Chat / Hotbar":error,width-24),12,60,0xFFF1B66B);
         super.render(c,mx,my,delta);
     }
-    @Override public boolean mouseClicked(Click click,boolean doubled){if(super.mouseClicked(click,doubled))return true;if(click.y()<57||click.y()>height-70)return true;
+    @Override public boolean mouseClicked(Click click,boolean doubled){if(super.mouseClicked(click,doubled))return true;if(click.y()<57||click.y()>height-70||click.x()>=width-156&&click.y()>=60)return true;
         for(int i=config.modules.size()-1;i>=0;i--){var m=config.modules.get(i);if(!m.enabled&&m!=selected)continue;int x=px(m),y=py(m),w=pw(m),h=ph(m);if(click.x()>=x-2&&click.x()<=x+w+4&&click.y()>=y-2&&click.y()<=y+h+4){selected=m;gesture=config.snapshot();offsetX=click.x()-x;offsetY=click.y()-y;startScale=m.scale;resizing=click.button()==0&&click.x()>=x+w-6&&click.y()>=y+h-6;dragging=click.button()==0&&!resizing;if(click.button()==1)mutate(()->selected.enabled=!selected.enabled);resetArmed=false;error="";rebuild();return true;}}
         selected=null;dragging=false;resizing=false;rebuild();return false;
     }
@@ -66,7 +72,7 @@ public final class HudEditorScreen extends Screen {
         place(selected,x,y);return true;
     }
     @Override public boolean mouseReleased(Click click){if((dragging||resizing)&&!gesture.equals(config.snapshot())){undo.addLast(gesture);while(undo.size()>40)undo.removeFirst();redo.clear();}dragging=false;resizing=false;guideX=-1;guideY=-1;rebuild();return super.mouseReleased(click);}
-    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(x>=width-112&&y>=60&&y<height-70){paletteScroll+=(int)-Math.signum(vertical);rebuild();return true;}if(selected==null)return false;resize((float)vertical*.1f);return true;}
+    @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){if(x>=width-156&&y>=60&&y<height-70){paletteScroll+=(int)-Math.signum(vertical);rebuild();return true;}if(selected==null)return false;resize((float)vertical*.1f);return true;}
     @Override public boolean keyPressed(KeyInput input){if(input.hasCtrl()&&input.key()==GLFW.GLFW_KEY_Z){history(input.hasShift());return true;}if(input.hasCtrl()&&input.key()==GLFW.GLFW_KEY_Y){history(true);return true;}
         if(input.key()==GLFW.GLFW_KEY_TAB){int i=selected==null?-1:config.modules.indexOf(selected);selected=config.modules.get(Math.floorMod(i+(input.hasShift()?-1:1),config.modules.size()));rebuild();return true;}
         if(selected!=null){int step=input.hasShift()?8:1;int x=px(selected),y=py(selected);switch(input.key()){case GLFW.GLFW_KEY_LEFT->x-=step;case GLFW.GLFW_KEY_RIGHT->x+=step;case GLFW.GLFW_KEY_UP->y-=step;case GLFW.GLFW_KEY_DOWN->y+=step;case GLFW.GLFW_KEY_SPACE->{mutate(()->selected.enabled=!selected.enabled);return true;}case GLFW.GLFW_KEY_ENTER->{client.setScreen(new ModuleSettingsScreen(this,features,selected.id,config,renderer));return true;}default->{return super.keyPressed(input);}}remember();place(selected,x,y);return true;}

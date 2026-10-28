@@ -9,5 +9,5 @@ public record WorkspaceLayout(int x,int y,int width,int height,int rail,int list
     public int listX(){return x+rail;}
     public int listY(){return y+118;}
     public int bottom(){return y+height-48;}
-    public int visibleRows(){return Math.max(1,(bottom()-listY())/54);}
+    public int visibleRows(){return Math.max(1,(bottom()-listY())/60);}
 }

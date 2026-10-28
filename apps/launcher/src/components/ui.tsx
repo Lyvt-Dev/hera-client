@@ -1,5 +1,5 @@
 import { useEffect, useRef, useId, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { Inbox, X } from 'lucide-react';
 import { fileProgress } from '../lib/launch-state';
 export function Modal({ title, close, children }: { title:string; close:()=>void; children:ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -11,7 +11,7 @@ export function Toggle({ checked, onChange, label, disabled=false }: { checked:b
   return <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} className={`toggle ${checked?'on':''}`} onClick={()=>onChange(!checked)}><span/></button>;
 }
 export function Empty({ title, children }: { title:string; children:ReactNode }) {
-  return <div className="empty"><h3>{title}</h3><p>{children}</p></div>;
+  return <div className="empty"><span className="empty-symbol" aria-hidden="true"><Inbox size={20}/></span><h3>{title}</h3><p>{children}</p></div>;
 }
 export function PageHeader({title,description,actions}:{title:string;description?:string;actions?:ReactNode}){return <div className="page-heading"><div><h1>{title}</h1>{description&&<p>{description}</p>}</div>{actions&&<div className="button-row">{actions}</div>}</div>;}
 export function ProgressBar({completed,total,label}:{completed:number;total:number;label:string}){const progress=fileProgress({stage:label,completed,total});return <div className="progress-block"><div><span>{label}</span>{progress.total>0&&<small>{progress.completed.toLocaleString('de-DE')} / {progress.total.toLocaleString('de-DE')} Dateien</small>}</div>{progress.total>0?<progress aria-label={label} max={progress.total} value={progress.completed}/>:<progress aria-label={label}/>}</div>;}

@@ -6,6 +6,9 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Click;
+import net.minecraft.client.input.KeyInput;
+import org.lwjgl.glfw.GLFW;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import java.io.IOException;
 import java.util.*;
 
@@ -15,6 +18,7 @@ public final class ModuleScreen extends Screen {
     private int listScroll,detailScroll,canvasWidth,canvasHeight;private float uiScale;
     private TextFieldWidget field;private WorkspaceLayout l;
     private List<ModuleSettingsScreen.Setting> controls=List.of();
+    private List<String> visibleIds=List.of();private int activeCount,totalCount;
     public ModuleScreen(HudConfig hud,HudRenderer renderer,FeatureConfig features){super(HeraTheme.text("Hera · Dein Setup"));this.hud=hud;this.renderer=renderer;this.features=features;}
     private HudModule hud(String id){return hud.modules.stream().filter(m->m.id.equals(id)).findFirst().orElse(null);}
     private boolean enabled(String id){var m=hud(id);return m==null?ModuleCatalog.enabled(features,id):m.enabled;}
@@ -33,61 +37,77 @@ public final class ModuleScreen extends Screen {
         field.setChangedListener(v->{search=v;listScroll=0;rebuild();});rebuild();
     }
     private void rebuild(){
-        if(l==null)return;boolean searchFocused=field.isFocused();clearChildren();addDrawableChild(field);if(searchFocused)setFocused(field);
+        if(l==null)return;
+        int focus=children().indexOf(getFocused());boolean searchFocused=field.isFocused();
+        visibleIds=ids();totalCount=ModuleCatalog.IDS.size()+hud.modules.size();activeCount=(int)(ModuleCatalog.IDS.stream().filter(this::enabled).count()+hud.modules.stream().filter(m->m.enabled).count());
+        if(!visibleIds.contains(selected)&&!visibleIds.isEmpty()){selected=visibleIds.getFirst();detailScroll=0;}
+        clearChildren();addDrawableChild(field);if(searchFocused)setFocused(field);
         int nav=l.y()+96;for(String name:List.of("Alle Module","Aktiv","HUD","Gameplay","Darstellung")){
             addDrawableChild(new HeraButton(l.x()+12,nav,l.rail()-24,30,name,false,()->{category=name;listScroll=0;detailScroll=0;if(!ids().isEmpty()&&!ids().contains(selected))selected=ids().getFirst();rebuild();}){
-                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean current=category.equals(name);if(current||isHovered())HeraTheme.round(c,getX(),getY(),width,height,6,current?0xFF302B29:0xFF202630);HeraTheme.label(c,name,getX()+11,getY()+11,current?HeraTheme.ACCENT:HeraTheme.MUTED);if(current)HeraTheme.round(c,getX(),getY()+8,2,14,1,HeraTheme.ACCENT);}
+                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean current=category.equals(name);if(current||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,6,current?HeraTheme.SELECTED:HeraTheme.RAISED);HeraTheme.icon(c,name,getX()+10,getY()+9,12,current?HeraTheme.ACCENT:HeraTheme.MUTED);HeraTheme.label(c,name,getX()+29,getY()+11,current?HeraTheme.TEXT:HeraTheme.MUTED);if(current)HeraTheme.round(c,getX(),getY()+8,2,14,1,HeraTheme.ACCENT);}
             });nav+=38;
         }
         addDrawableChild(new HeraButton(l.x()+12,l.bottom()-37,l.rail()-24,27,"HUD anordnen",false,()->client.setScreen(new HudEditorScreen(hud,renderer,features))));
-        var ids=ids();listScroll=Math.clamp(listScroll,0,Math.max(0,ids.size()-l.visibleRows()));
+        var ids=visibleIds;listScroll=Math.clamp(listScroll,0,Math.max(0,ids.size()-l.visibleRows()));
         for(int row=0;row<l.visibleRows()&&listScroll+row<ids.size();row++){
-            String id=ids.get(listScroll+row);int ry=l.listY()+row*54;
-            addDrawableChild(new HeraButton(l.listX()+9,ry,l.list()-18,49,id,false,()->select(id)){
+            String id=ids.get(listScroll+row);int ry=l.listY()+row*60;
+            addDrawableChild(new HeraButton(l.listX()+9,ry,l.list()-18,55,id,false,()->select(id)){
+                @Override public boolean keyPressed(KeyInput input){if(isFocused()&&input.key()==GLFW.GLFW_KEY_SPACE){toggle(id);rebuild();return true;}return super.keyPressed(input);}
                 @Override public void onClick(Click click,boolean doubled){if(click.x()>getX()+width-39){toggle(id);rebuild();}else select(id);}
-                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean on=enabled(id),chosen=selected.equals(id);setMessage(HeraTheme.text(id+" · "+(on?"An":"Aus")));
-                    if(chosen||isHovered())HeraTheme.round(c,getX(),getY(),width,height,7,chosen?0xFF2C2A2C:0xFF202631);
+                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean on=enabled(id),chosen=selected.equals(id);
+                    if(chosen||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,7,chosen?HeraTheme.SELECTED:HeraTheme.RAISED);
                     if(chosen)HeraTheme.round(c,getX(),getY()+10,2,height-20,1,HeraTheme.ACCENT);
-                    HeraTheme.icon(c,id,getX()+12,getY()+16,16,chosen?HeraTheme.ACCENT:HeraTheme.MUTED);
-                    HeraTheme.label(c,HeraTheme.fit(id,width-83),getX()+39,getY()+12,HeraTheme.TEXT);HeraTheme.label(c,group(id),getX()+39,getY()+29,HeraTheme.MUTED);HeraTheme.toggle(c,getX()+width-34,getY()+18,on);
+                    HeraTheme.icon(c,id,getX()+12,getY()+11,16,chosen?HeraTheme.ACCENT:HeraTheme.MUTED);
+                    HeraTheme.label(c,HeraTheme.fit(id,width-83),getX()+39,getY()+12,HeraTheme.TEXT);HeraTheme.label(c,HeraTheme.fit(description(id),width-56),getX()+12,getY()+36,HeraTheme.MUTED);HeraTheme.toggle(c,getX()+width-34,getY()+12,on);
                 }
-            });
+            }).setTooltip(Tooltip.of(HeraTheme.text(description(id)+" · Leertaste: An / Aus")));
         }
-        controls=new ModuleSettingsScreen(this,features,selected,hud,renderer).embedded().stream().filter(s->!s.label().get().startsWith("Modul:")).sorted(Comparator.comparingInt(s->s.label().get().contains("auswählen")?-1:0)).toList();
-        int available=Math.max(1,(l.bottom()-(l.y()+133))/44);detailScroll=Math.clamp(detailScroll,0,Math.max(0,controls.size()-available));
+        controls=visibleIds.isEmpty()?List.of():new ModuleSettingsScreen(this,features,selected,hud,renderer).embedded().stream().filter(s->!s.label().get().startsWith("Modul:")).sorted(Comparator.comparingInt(s->s.label().get().contains("auswählen")?-1:0)).toList();
+        int available=Math.max(1,(l.bottom()-14-(l.y()+133))/48);detailScroll=Math.clamp(detailScroll,0,Math.max(0,controls.size()-available));
         for(int row=0;row<available&&detailScroll+row<controls.size();row++){
-            var setting=controls.get(detailScroll+row);int ry=l.y()+133+row*44;
-            addDrawableChild(new HeraButton(l.detailX()+22,ry,l.detailWidth()-44,39,"",false,()->{setting.change().run();features.options.normalize();if(client.currentScreen==this)rebuild();}){
-                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){String full=setting.label().get();setMessage(HeraTheme.text(full));int split=full.indexOf(": ");String title=split<0?full.replace(" →",""):full.substring(0,split),value=split<0?"→":full.substring(split+2);
-                    if(isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,5,0xFF202630);
-                    c.fill(getX()+2,getY()+height-1,getX()+width-2,getY()+height,0xFF252C37);
-                    HeraTheme.label(c,HeraTheme.fit(title,width-90),getX()+8,getY()+15,HeraTheme.TEXT);
-                    if(value.equals("An")||value.equals("Aus"))HeraTheme.toggle(c,getX()+width-35,getY()+13,value.equals("An"));else {int tw=HeraTheme.measure(HeraTheme.text(value),false);HeraTheme.label(c,value,getX()+width-tw-9,getY()+15,HeraTheme.ACCENT);}
+            var setting=controls.get(detailScroll+row);int ry=l.y()+133+row*48;
+            if(setting.numeric()!=null){var n=setting.numeric();addDrawableChild(new HeraSlider(l.detailX()+22,ry,l.detailWidth()-44,43,setting.label(),n.value().getAsDouble(),n.min(),n.max(),n.step(),v->{n.change().accept(v);renderer.invalidate();}));continue;}
+            addDrawableChild(new HeraButton(l.detailX()+22,ry,l.detailWidth()-44,43,setting.label().get(),false,()->{setting.change().run();features.options.normalize();renderer.invalidate();if(client.currentScreen==this)rebuild();}){
+                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){String full=setting.label().get();int split=full.indexOf(": ");String title=split<0?full.replace(" →",""):full.substring(0,split),value=split<0?"→":full.substring(split+2);
+                    if(isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,5,HeraTheme.RAISED);
+                    HeraTheme.label(c,HeraTheme.fit(title,width-51),getX()+8,getY()+(value.equals("An")||value.equals("Aus")?15:5),HeraTheme.TEXT);
+                    if(value.equals("An")||value.equals("Aus"))HeraTheme.toggle(c,getX()+width-35,getY()+13,value.equals("An"));else {HeraTheme.label(c,HeraTheme.fit(value,width-16),getX()+8,getY()+23,HeraTheme.ACCENT);}
                 }
             });
         }
-        addDrawableChild(new HeraButton(l.detailX()+l.detailWidth()-91,l.y()+30,65,23,enabled(selected)?"Aktiv":"Inaktiv",enabled(selected),()->{toggle(selected);rebuild();}));
+        if(!visibleIds.isEmpty())addDrawableChild(new HeraButton(l.detailX()+l.detailWidth()-91,l.y()+30,65,23,enabled(selected)?"Aktiv":"Inaktiv",enabled(selected),()->{toggle(selected);rebuild();}));
+        if(visibleIds.isEmpty())controls=List.of();
         addDrawableChild(new HeraButton(l.x()+l.width()-154,l.bottom()+12,136,25,"Speichern & schließen",true,this::close));
+        if(!searchFocused&&focus>=0&&focus<children().size())setFocused(children().get(focus));
     }
     @Override public void render(DrawContext c,int mx,int my,float delta){
         c.getMatrices().pushMatrix();c.getMatrices().scale(uiScale,uiScale);mx=Math.round(mx/uiScale);my=Math.round(my/uiScale);
         c.fill(0,0,canvasWidth,canvasHeight,0x55080B10);HeraTheme.panel(c,l.x(),l.y(),l.width(),l.height());
-        HeraTheme.round(c,l.x()+1,l.y()+1,l.rail()-1,l.height()-2,10,0xFF11151C);
-        c.fill(l.listX(),l.y()+1,l.detailX(),l.bottom(),0xFF171C25);c.fill(l.detailX(),l.y()+1,l.x()+l.width()-10,l.bottom(),0xFF131820);
+        HeraTheme.round(c,l.x()+1,l.y()+1,l.rail()-1,l.height()-2,10,HeraTheme.BG);
+        c.fill(l.listX(),l.y()+1,l.detailX(),l.bottom(),HeraTheme.PANEL);c.fill(l.detailX(),l.y()+1,l.x()+l.width()-10,l.bottom(),HeraTheme.BG);
         c.fill(l.listX(),l.y()+1,l.listX()+1,l.bottom(),HeraTheme.LINE);c.fill(l.detailX(),l.y()+1,l.detailX()+1,l.bottom(),HeraTheme.LINE);
         HeraTheme.logo(c,l.x()+15,l.y()+17,29);HeraTheme.title(c,"hera",l.x()+46,l.y()+23,1.6f,HeraTheme.TEXT);HeraTheme.label(c,"DEIN SETUP",l.x()+17,l.y()+61,HeraTheme.MUTED);
-        HeraTheme.title(c,category,l.listX()+18,l.y()+26,1.35f,HeraTheme.TEXT);HeraTheme.label(c,ids().size()+" Module",l.listX()+19,l.y()+49,HeraTheme.MUTED);
-        HeraTheme.round(c,l.listX()+12,l.y()+75,l.list()-24,31,6,0xFF222A35);
-        HeraTheme.label(c,group(selected).toUpperCase(Locale.ROOT),l.detailX()+24,l.y()+25,HeraTheme.MUTED);HeraTheme.title(c,HeraTheme.fit(selected,(int)((l.detailWidth()-45)/1.55f)),l.detailX()+24,l.y()+49,1.55f,HeraTheme.TEXT);
+        HeraTheme.title(c,category,l.listX()+18,l.y()+26,1.35f,HeraTheme.TEXT);HeraTheme.label(c,visibleIds.size()+" Module",l.listX()+19,l.y()+49,HeraTheme.MUTED);
+        HeraTheme.round(c,l.listX()+12,l.y()+75,l.list()-24,31,5,field.isFocused()?HeraTheme.LINE:HeraTheme.RAISED);
+        if(!visibleIds.isEmpty()){HeraTheme.label(c,group(selected).toUpperCase(Locale.ROOT),l.detailX()+24,l.y()+25,HeraTheme.MUTED);HeraTheme.title(c,HeraTheme.fit(selected,(int)((l.detailWidth()-45)/1.55f)),l.detailX()+24,l.y()+49,1.55f,HeraTheme.TEXT);
         HeraTheme.label(c,HeraTheme.fit(description(selected),l.detailWidth()-48),l.detailX()+24,l.y()+80,HeraTheme.MUTED);
-        HeraTheme.label(c,"EINSTELLUNGEN",l.detailX()+26,l.y()+112,HeraTheme.MUTED);
-        if(ids().isEmpty())HeraTheme.label(c,"Keine Treffer",l.listX()+22,l.listY()+20,HeraTheme.MUTED);
+        HeraTheme.label(c,"EINSTELLUNGEN",l.detailX()+26,l.y()+112,HeraTheme.MUTED);}
+        if(visibleIds.isEmpty()){HeraTheme.label(c,"Keine passenden Module",l.listX()+22,l.listY()+20,HeraTheme.TEXT);HeraTheme.label(c,"Suche oder Kategorie ändern.",l.listX()+22,l.listY()+40,HeraTheme.MUTED);}
         super.render(c,mx,my,delta);
-        int total=ModuleCatalog.IDS.size()+hud.modules.size();long active=ModuleCatalog.IDS.stream().filter(this::enabled).count()+hud.modules.stream().filter(m->m.enabled).count();
-        c.fill(l.x()+12,l.bottom(),l.x()+l.width()-12,l.bottom()+1,HeraTheme.LINE);HeraTheme.label(c,error.isEmpty()?active+" von "+total+" aktiv · Minecraft 1.21.11":error,l.listX()+18,l.bottom()+21,error.isEmpty()?HeraTheme.MUTED:0xFFFF8099);
-        if(ids().size()>l.visibleRows())HeraTheme.label(c,"↕",l.detailX()-12,l.bottom()-14,HeraTheme.MUTED);
-        if(controls.size()>Math.max(1,(l.bottom()-(l.y()+133))/44))HeraTheme.label(c,"↕ Scrollen für mehr",l.detailX()+24,l.bottom()-12,HeraTheme.MUTED);
+        c.fill(l.x()+12,l.bottom(),l.x()+l.width()-12,l.bottom()+1,HeraTheme.LINE);HeraTheme.label(c,error.isEmpty()?activeCount+" von "+totalCount+" aktiv · Esc zum Speichern":error,l.listX()+18,l.bottom()+21,error.isEmpty()?HeraTheme.MUTED:0xFFFF8099);
+        scrollbar(c,l.detailX()-5,l.listY(),l.bottom()-l.listY(),visibleIds.size(),l.visibleRows(),listScroll);
+        int rows=Math.max(1,(l.bottom()-14-(l.y()+133))/48);
+        scrollbar(c,l.detailX()+l.detailWidth()-7,l.y()+133,l.bottom()-14-(l.y()+133),controls.size(),rows,detailScroll);
         c.getMatrices().popMatrix();
+    }
+    private void scrollbar(DrawContext c,int x,int y,int h,int count,int rows,int offset){
+        if(count<=rows)return;int thumb=Math.max(16,h*rows/count),top=y+(h-thumb)*offset/(count-rows);
+        HeraTheme.round(c,x,top,3,thumb,1,0xFF67707D);
+    }
+    @Override public boolean keyPressed(KeyInput input){
+        if(input.hasCtrl()&&input.key()==GLFW.GLFW_KEY_F){setFocused(field);field.setFocused(true);return true;}
+        if(input.key()==GLFW.GLFW_KEY_ESCAPE&&field.isFocused()&&!search.isEmpty()){field.setText("");return true;}
+        return super.keyPressed(input);
     }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){x/=uiScale;y/=uiScale;if(x>=l.detailX())detailScroll-=(int)Math.signum(vertical);else if(x>=l.listX())listScroll-=(int)Math.signum(vertical);rebuild();return true;}
     private Click unscale(Click click){return new Click(click.x()/uiScale,click.y()/uiScale,click.buttonInfo());}

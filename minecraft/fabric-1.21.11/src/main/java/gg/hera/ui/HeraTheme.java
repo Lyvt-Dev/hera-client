@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.gl.RenderPipelines;
 
 public final class HeraTheme {
-    public static final int BG=0xFF111318, PANEL=0xFF1B1E25, RAISED=0xFF242830, LINE=0xFF30353D;
-    public static final int TEXT=0xFFF5F6F8, MUTED=0xFFA4ACB9, ACCENT=0xFFF49B63;
+    public static final int BG=0xFF101216, PANEL=0xFF171A20, RAISED=0xFF20242B, LINE=0xFF2C313A, SELECTED=0xFF30271F;
+    public static final int TEXT=0xFFF4F2EF, MUTED=0xFFA9ADB5, ACCENT=0xFFF49B63;
     private static final Style FONT=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","medium")));
     private static final Style BOLD=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","bold")));
     private static final Identifier LOGO=Identifier.of("hera","brand/hera");
@@ -31,7 +31,7 @@ public final class HeraTheme {
     }
     public static void invalidate(){SmoothFont.clear();SmoothShapes.clear();}
     public static void icon(DrawContext c,String name,int x,int y,int size,int color){
-        String id=switch(name){case "FPS","Zoom"->"fps";case "Koordinaten","Hitboxes","Item Highlighter"->"coords";case "Ping"->"ping";case "Speicher","Full Bright"->"memory";case "Uhr","TNT Timer","Time Changer"->"clock";case "Richtung","Free Look"->"direction";case "Geschwindigkeit","Freecam","Keystrokes"->"speed";case "Biome","Weather Changer","No Fog"->"biome";case "Kristall-Totem","Auto-Totem","Armor HUD","Rüstung ausblenden"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
+        String id=switch(name){case "Alle Module","FPS","Zoom"->"fps";case "Darstellung","Koordinaten","Hitboxes","Item Highlighter"->"coords";case "Ping"->"ping";case "Speicher","Full Bright"->"memory";case "Uhr","TNT Timer","Time Changer"->"clock";case "Richtung","Free Look"->"direction";case "Gameplay","Geschwindigkeit","Freecam","Keystrokes"->"speed";case "Biome","Weather Changer","No Fog"->"biome";case "Aktiv","HUD","Kristall-Totem","Auto-Totem","Armor HUD","Rüstung ausblenden"->"totem";case "Item-ESP","Spieler-ESP","Mob-ESP"->"coords";case "Fast Items"->"speed";default->"server";};
         c.drawGuiTexture(RenderPipelines.GUI_TEXTURED,ICONS.get(id),x,y,size,size,color);
     }
     public static void panel(DrawContext c,int x,int y,int w,int h) {

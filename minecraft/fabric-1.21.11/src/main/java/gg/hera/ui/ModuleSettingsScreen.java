@@ -7,17 +7,19 @@ import java.util.function.*;
 import java.io.IOException;
 import gg.hera.hud.*;
 public final class ModuleSettingsScreen extends Screen {
-    public record Setting(Supplier<String> label,Runnable change){}
+    public record Numeric(DoubleSupplier value,double min,double max,double step,DoubleConsumer change){}
+    public record Setting(Supplier<String> label,Runnable change,Numeric numeric){public Setting(Supplier<String> label,Runnable change){this(label,change,null);}}
     private final Screen parent;private final FeatureConfig f;private final String id;private final List<Setting> settings=new ArrayList<>();
     private int x,y,w,h,page,rows;private String error="";
     private HudConfig hud;private HudRenderer renderer;private boolean embedded;
     public ModuleSettingsScreen(Screen parent,FeatureConfig f,String id){super(HeraTheme.text(id));this.parent=parent;this.f=f;this.id=id;}
     public ModuleSettingsScreen(Screen parent,FeatureConfig f,String id,HudConfig hud,HudRenderer renderer){this(parent,f,id);this.hud=hud;this.renderer=renderer;}
     private void option(Supplier<String> label,Runnable action){settings.add(new Setting(label,action));}
+    private void slider(Supplier<String> label,DoubleSupplier value,double min,double max,double step,DoubleConsumer change){settings.add(new Setting(label,()->{},new Numeric(value,min,max,step,change)));}
     private void flag(String label,BooleanSupplier value,Runnable action){option(()->label+": "+(value.getAsBoolean()?"An":"Aus"),action);}
     private void color(String label,IntSupplier value,IntConsumer change){option(()->label+" →",()->client.setScreen(new ColorPickerScreen(returnTarget(),value.getAsInt(),change)));}
     @Override protected void init(){
-        w=Math.min(380,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-110)/29);collectSettings();rebuild();
+        w=Math.min(380,width-20);h=Math.min(340,height-20);x=(width-w)/2;y=(height-h)/2;rows=Math.max(1,(h-110)/40);collectSettings();rebuild();
     }
     public List<Setting> embedded(){embedded=true;collectSettings();return List.copyOf(settings);}
     private Screen returnTarget(){return embedded?parent:this;}
@@ -26,7 +28,7 @@ public final class ModuleSettingsScreen extends Screen {
         if(module==null)flag("Modul",()->ModuleCatalog.enabled(f,id),()->ModuleCatalog.toggle(f,id));
         else {
             flag("Modul",()->module.enabled,()->module.enabled=!module.enabled);
-            option(()->String.format(Locale.ROOT,"Größe: %.1f×",module.scale),()->{module.scale=module.scale>=3?.5f:module.scale+.1f;module.normalize();});
+            slider(()->String.format(Locale.ROOT,"Größe: %.1f×",module.scale),()->module.scale,.5,3,.1,v->{module.scale=(float)v;module.normalize();});
             if(id.equals("FPS")){flag("Gemessene Framezeit",()->module.showFrameTime,()->module.showFrameTime=!module.showFrameTime);flag("Framezeit-Graph",()->module.showGraph,()->module.showGraph=!module.showGraph);}
             if(id.equals("Ping"))flag("Latenz-Farben",()->module.latencyColor,()->module.latencyColor=!module.latencyColor);
             if(id.equals("Koordinaten")){flag("Mehrzeilig",()->module.expanded,()->module.expanded=!module.expanded);option(()->"Nachkommastellen: "+module.precision,()->module.precision=(module.precision+1)%4);flag("Chunk",()->module.showChunk,()->module.showChunk=!module.showChunk);flag("Biom",()->module.showBiome,()->module.showBiome=!module.showBiome);flag("Richtung",()->module.showFacing,()->module.showFacing=!module.showFacing);}
@@ -39,10 +41,10 @@ public final class ModuleSettingsScreen extends Screen {
             option(()->"Darstellung: "+(hud.advancedSettings.contains(id)?"Weniger":"Mehr"),()->{if(!hud.advancedSettings.remove(id))hud.advancedSettings.add(id);});
             if(hud.advancedSettings.contains(id)){
             if(!id.equals("Inventar"))color("Textfarbe",()->module.color,v->module.color=v);
-            if(List.of("FPS","Armor HUD","Keystrokes","Spotify").contains(id))color("Akzent",()->module.accent,v->module.accent=v);
-            option(()->"Deckkraft Text / Fläche: "+Math.round(module.opacity*100)+"%",()->module.opacity=module.opacity>=1?.1f:module.opacity+.1f);
-            option(()->"Innenabstand: "+module.padding+" px",()->module.padding=module.padding>=12?2:module.padding+1);
-            option(()->"Eckenradius: "+module.radius+" px",()->module.radius=(module.radius+1)%9);
+            if(List.of("FPS","Armor HUD","Keystrokes","Spotify").contains(id)){flag("Hera-Akzent übernehmen",()->module.useGlobalAccent,()->module.useGlobalAccent=!module.useGlobalAccent);color("Eigener Akzent",()->module.accent,v->{module.accent=v;module.useGlobalAccent=false;});}
+            slider(()->"Deckkraft: "+Math.round(module.opacity*100)+"%",()->module.opacity,.1,1,.05,v->module.opacity=(float)v);
+            slider(()->"Innenabstand: "+module.padding+" px",()->module.padding,2,12,1,v->module.padding=(int)v);
+            slider(()->"Eckenradius: "+module.radius+" px",()->module.radius,0,8,1,v->module.radius=(int)v);
             if(!id.equals("Inventar"))option(()->"Schrift: "+(module.vanillaFont?"Minecraft":"Hera Smooth"),()->module.vanillaFont=!module.vanillaFont);
             if(!id.equals("Inventar"))flag("Textschatten",()->module.textShadow,()->module.textShadow=!module.textShadow);
                 if(!List.of("Armor HUD","Inventar","Keystrokes").contains(id))option(()->"Ausrichtung: "+List.of("Links","Mitte","Rechts").get(module.alignment),()->module.alignment=(module.alignment+1)%3);
@@ -91,8 +93,17 @@ public final class ModuleSettingsScreen extends Screen {
             default->{}
         }
     }
-    private void rebuild(){collectSettings();clearChildren();page=Math.clamp(page,0,Math.max(0,(settings.size()-1)/rows));for(int i=0;i<rows && page*rows+i<settings.size();i++){var s=settings.get(page*rows+i);addDrawableChild(new HeraButton(x+14,y+46+i*29,w-28,25,s.label.get(),false,()->{s.change.run();f.options.normalize();if(client.currentScreen==this)rebuild();}));}
-        addDrawableChild(new HeraButton(x+14,y+h-30,26,20,"‹",false,()->{page--;rebuild();}));addDrawableChild(new HeraButton(x+44,y+h-30,26,20,"›",false,()->{page++;rebuild();}));addDrawableChild(new HeraButton(x+w-90,y+h-30,76,20,"Fertig",true,this::close));}
+    private void rebuild(){
+        collectSettings();clearChildren();page=Math.clamp(page,0,Math.max(0,(settings.size()-1)/rows));
+        for(int i=0;i<rows&&page*rows+i<settings.size();i++){
+            var s=settings.get(page*rows+i);int yy=y+46+i*40;
+            if(s.numeric()!=null){var n=s.numeric();addDrawableChild(new HeraSlider(x+14,yy,w-28,36,s.label(),n.value().getAsDouble(),n.min(),n.max(),n.step(),v->{n.change().accept(v);if(renderer!=null)renderer.invalidate();}));}
+            else addDrawableChild(new HeraButton(x+14,yy,w-28,36,s.label().get(),false,()->{s.change().run();f.options.normalize();if(renderer!=null)renderer.invalidate();if(client.currentScreen==this)rebuild();}));
+        }
+        var previous=new HeraButton(x+14,y+h-30,26,20,"‹",false,()->{page--;rebuild();});previous.active=page>0;addDrawableChild(previous);
+        var next=new HeraButton(x+44,y+h-30,26,20,"›",false,()->{page++;rebuild();});next.active=(page+1)*rows<settings.size();addDrawableChild(next);
+        addDrawableChild(new HeraButton(x+w-90,y+h-30,76,20,"Fertig",true,this::close));
+    }
     @Override public void render(DrawContext c,int mx,int my,float d){c.fill(0,0,width,height,0x88080B11);HeraTheme.panel(c,x,y,w,h);HeraTheme.title(c,id,x+14,y+15,1.2f,HeraTheme.TEXT);super.render(c,mx,my,d);HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?hint():error,w-28),x+14,y+h-48,HeraTheme.MUTED);HeraTheme.label(c,(page+1)+" / "+(Math.max(0,(settings.size()-1)/rows)+1),x+82,y+h-23,HeraTheme.MUTED);}
     private String hint(){return switch(id){case "Freecam"->"WASD · Leertaste/Shift · V zum Zurückkehren";case "Free Look"->"Linkes Alt halten · Bewegung bleibt unverändert";case "Zoom"->"C halten · Tasten in Minecraft neu belegbar";case "No Fog","Full Bright","Time Changer","Weather Changer"->"Lokale Darstellung · Server bleibt unverändert";default->"Einstellungen werden mit Fertig gespeichert.";};}
     @Override public void close(){try{f.save();if(hud!=null)hud.save();if(renderer!=null)renderer.invalidate();client.setScreen(parent);}catch(IOException e){error="Speichern fehlgeschlagen.";}}

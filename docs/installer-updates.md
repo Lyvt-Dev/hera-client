@@ -47,3 +47,6 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 
 
 0.4.0 embeds mod 0.11.0 with Hera Smooth font/corner rendering and an opt-in Windows Spotify/browser media HUD. Start Minecraft through Hera, enable Spotify under HUD, then save and close the menu. Browser session metadata depends on the browser and Windows media integration; no Spotify login or developer registration is required.
+
+
+0.5.0 embeds mod 0.12.0: unified Hera/Nunito foundations, richer module navigation, bounded labels, numeric HUD sliders and clearer HUD Studio selection. Existing appearance and enabled states remain preserved. See design-system.md for architecture, migration and verification boundaries.
