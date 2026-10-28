@@ -18,7 +18,22 @@
     "DTapNetworkMixin",
     "LocalCapeMixin",
     "CrosshairMixin",
-    "OwnNametagMixin"
+    "OwnNametagMixin",
+    "HudPresentationMixin",
+    "PresentationNetworkMixin",
+    "NoHurtCamMixin",
+    "FireOverlayMixin",
+    "PresentationParticleMixin",
+    "AdvancementToastMixin",
+    "ClearGuiMixin",
+    "ItemModelMixin",
+    "HitColorMixin",
+    "WeavyCapeMixin",
+    "GroundedItemStateMixin",
+    "ShulkerPreviewMixin",
+    "ChatHeadsMixin",
+    "ItemPhysicsMixin",
+    "ShieldStatusMixin"
   ],
   "injectors": {
     "defaultRequire": 1

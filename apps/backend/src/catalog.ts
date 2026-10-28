@@ -20,11 +20,12 @@ export function createCatalog(key:string|undefined, request:Fetch=fetch) {
    const q=parsed.data,cf=q.source==='curseforge';
    const url=new URL(cf?'https://api.curseforge.com/v1/':'https://api.modrinth.com/v2/');
    if(action==='search'){
+    if(cf&&q.offset>9980)throw new CatalogError(400,'CurseForge-Seitenlimit erreicht.');
     if(cf){url.pathname+='mods/search';url.search=new URLSearchParams({gameId:'432',classId:'6',searchFilter:q.query,gameVersion:q.version,modLoaderType:q.loader==='forge'?'1':'4',pageSize:'20',index:String(q.offset),sortField:'6',sortOrder:'desc'}).toString();}
     else{url.pathname+='search';url.search=new URLSearchParams({query:q.query,facets:JSON.stringify([['project_type:mod'],[`versions:${q.version}`],[`categories:${q.loader}`],['client_side:optional','client_side:required']]),limit:'20',offset:String(q.offset),index:'downloads'}).toString();}
     const body=await upstream(url,cf);
-    const result=z.object(cf?{data:z.array(z.unknown())}:{hits:z.array(z.unknown()),total_hits:z.number()}).parse(body) as {data?:unknown[];hits?:unknown[];total_hits?:number};
-    return {projects:(result.data??result.hits??[]).map(v=>project(v,cf)),hasMore:cf?(result.data?.length===20):(q.offset+20<(result.total_hits??0))};
+    const result=z.object(cf?{data:z.array(z.unknown()),pagination:z.object({index:z.number(),resultCount:z.number(),totalCount:z.number()}).optional()}:{hits:z.array(z.unknown()),total_hits:z.number()}).parse(body) as {data?:unknown[];hits?:unknown[];total_hits?:number;pagination?:{index:number;resultCount:number;totalCount:number}};
+    return {projects:(result.data??result.hits??[]).map(v=>project(v,cf)),hasMore:cf?(result.pagination?result.pagination.index+result.pagination.resultCount<result.pagination.totalCount:result.data?.length===20):(q.offset+20<(result.total_hits??0))};
    }
    if(!q.id)throw new CatalogError(400,'Projekt- oder Versions-ID fehlt.');
    if(cf&&!/^\d+$/.test(q.id))throw new CatalogError(400,'Ungültige CurseForge-ID.');
@@ -42,7 +43,7 @@ export function createCatalog(key:string|undefined, request:Fetch=fetch) {
     url.pathname+=cf?`mods/${q.id}/files`:`project/${q.id}/version`;
     url.search=cf?new URLSearchParams({gameVersion:q.version,modLoaderType:q.loader==='forge'?'1':'4',pageSize:'50',index:'0'}).toString():new URLSearchParams({game_versions:JSON.stringify([q.version]),loaders:JSON.stringify([q.loader])}).toString();
     const body=await upstream(url,cf);const list=cf?z.object({data:z.array(z.unknown())}).parse(body).data:z.array(z.unknown()).parse(body);
-    return list.map(v=>version(v,cf,q.id!));
+    return list.map(v=>version(v,cf,q.id!)).filter(v=>(!cf||v.projectId===q.id)&&v.gameVersions.includes(q.version)&&v.loaders.includes(q.loader));
    }
    if(action==='version'||action==='download'){
     if(cf&&(!q.projectId||!/^\d+$/.test(q.projectId)))throw new CatalogError(400,'CurseForge-Projekt-ID fehlt.');

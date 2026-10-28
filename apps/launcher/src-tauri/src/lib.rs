@@ -3,6 +3,7 @@ mod browser_login;
 mod bundled_mods;
 mod cape_service;
 mod capes;
+mod catalog_config;
 mod java_runtime;
 mod loader_catalog;
 mod loaders;
@@ -31,6 +32,26 @@ struct Native {
     operation: Mutex<()>,
     game: Mutex<Option<oneshot::Sender<()>>>,
     pid: Arc<AtomicU32>,
+}
+#[tauri::command]
+fn catalog_config(s: State<Native>) -> Result<catalog_config::Config> {
+    catalog_config::read(&s.root)
+}
+#[tauri::command]
+fn save_catalog_config(s: State<Native>, config: catalog_config::Config) -> Result<()> {
+    catalog_config::write(&s.root, config)
+}
+#[tauri::command]
+async fn probe_catalog_config(s: State<'_, Native>, gateway_url: String) -> Result<bool> {
+    let url = catalog_config::normalize(&gateway_url)?;
+    if url.is_empty() {
+        return Err("Gateway-Adresse fehlt".into());
+    }
+    let p = std::collections::HashMap::from([("source".into(), "curseforge".into())]);
+    let value = mods::catalog_with_gateway(&s.http, "status", &p, Some(&url)).await?;
+    value["curseforgeConfigured"]
+        .as_bool()
+        .ok_or_else(|| "Ungültige Gateway-Antwort".into())
 }
 #[tauri::command]
 fn game_running(s: State<Native>) -> bool {
@@ -295,7 +316,8 @@ async fn catalog(
     action: String,
     params: std::collections::HashMap<String, String>,
 ) -> Result<serde_json::Value> {
-    mods::catalog(&s.http, &action, &params).await
+    let config = catalog_config::read(&s.root)?;
+    mods::catalog_with_gateway(&s.http, &action, &params, Some(&config.gateway_url)).await
 }
 #[tauri::command]
 async fn installed_mods(s: State<'_, Native>, id: String) -> Result<Vec<mods::Installed>> {
@@ -386,6 +408,9 @@ pub fn run() {
             launch,
             stop,
             catalog,
+            catalog_config,
+            save_catalog_config,
+            probe_catalog_config,
             installed_mods,
             install_mod,
             client_id,

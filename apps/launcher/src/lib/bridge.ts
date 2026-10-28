@@ -7,6 +7,9 @@ function read<T>(key: string, schema: z.ZodType<T>, fallback: T): T {
   try { return schema.parse(JSON.parse(localStorage.getItem(key) ?? 'null')); } catch { return fallback; }
 }
 export const api = {
+  probeCatalogConfig:(gatewayUrl:string)=>invoke<boolean>('probe_catalog_config',{gatewayUrl}),
+  catalogConfig:()=>invoke<{gatewayUrl:string}>('catalog_config'),
+  saveCatalogConfig:(gatewayUrl:string)=>invoke<void>('save_catalog_config',{config:{gatewayUrl}}),
   gameRunning:():Promise<boolean>=>native?invoke('game_running'):Promise.resolve(false),
   capeService:(id:string)=>invoke<{version:number;enabled:boolean;baseUrl:string}>('cape_service_config',{id}),
   saveCapeService:(id:string,config:{version:number;enabled:boolean;baseUrl:string})=>invoke<void>('save_cape_service',{id,config}),

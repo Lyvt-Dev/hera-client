@@ -1,0 +1,17 @@
+package gg.hera.ui;
+import org.junit.jupiter.api.Test;
+import org.objectweb.asm.*;
+import org.objectweb.asm.tree.*;
+import java.util.*;
+import static org.junit.jupiter.api.Assertions.*;
+/** Checks target names/descriptors in the actual mapped game JAR, without starting Minecraft. */
+class PresentationMixinTargetsTest {
+ private static ClassNode read(String name)throws Exception{try(var in=PresentationMixinTargetsTest.class.getClassLoader().getResourceAsStream(name+".class")){assertNotNull(in,name);var node=new ClassNode();new ClassReader(in).accept(node,0);return node;}}
+ private static Object value(AnnotationNode a,String key){if(a.values!=null)for(int i=0;i<a.values.size();i+=2)if(a.values.get(i).equals(key))return a.values.get(i+1);return null;}
+ @Test void everyNewMixinTargetsAnExistingMethod()throws Exception{
+  for(String name:List.of("HudPresentationMixin","PresentationNetworkMixin","NoHurtCamMixin","FireOverlayMixin","PresentationParticleMixin","AdvancementToastMixin","ClearGuiMixin","ItemModelMixin","HitColorMixin","WeavyCapeMixin","GroundedItemStateMixin","ShulkerPreviewMixin","ChatHeadsMixin","ItemPhysicsMixin","ShieldStatusMixin")){
+   var mixin=read("gg/hera/mixin/"+name);var annotations=new ArrayList<AnnotationNode>();if(mixin.visibleAnnotations!=null)annotations.addAll(mixin.visibleAnnotations);if(mixin.invisibleAnnotations!=null)annotations.addAll(mixin.invisibleAnnotations);var marker=annotations.stream().filter(a->a.desc.equals("Lorg/spongepowered/asm/mixin/Mixin;")).findFirst().orElseThrow();var targets=(List<?>)value(marker,"value");assertNotNull(targets);
+   for(Object target:targets){var game=read(((Type)target).getInternalName());for(var method:mixin.methods){var injects=new ArrayList<AnnotationNode>();if(method.visibleAnnotations!=null)injects.addAll(method.visibleAnnotations);if(method.invisibleAnnotations!=null)injects.addAll(method.invisibleAnnotations);for(var annotation:injects){var selectors=value(annotation,"method");if(selectors==null)continue;for(Object raw:(List<?>)selectors){String selector=raw.toString();int split=selector.indexOf('(');String methodName=split<0?selector:selector.substring(0,split),descriptor=split<0?null:selector.substring(split);assertTrue(game.methods.stream().anyMatch(m->m.name.equals(methodName)&&(descriptor==null||m.desc.equals(descriptor))),name+" -> "+selector);var at=value(annotation,"at");var points=at instanceof List<?> list?list:at instanceof AnnotationNode point?List.of(point):List.of();for(Object rawPoint:points){var point=(AnnotationNode)rawPoint;var invocation=value(point,"target");if(!"INVOKE".equals(value(point,"value"))||invocation==null)continue;String ref=invocation.toString();int ownerEnd=ref.indexOf(';'),arguments=ref.indexOf('(');String owner=ref.substring(1,ownerEnd),called=ref.substring(ownerEnd+1,arguments),signature=ref.substring(arguments);boolean found=false;for(var targetMethod:game.methods)if(targetMethod.name.equals(methodName)&&(descriptor==null||targetMethod.desc.equals(descriptor)))for(var instruction:targetMethod.instructions)if(instruction instanceof MethodInsnNode call&&call.owner.equals(owner)&&call.name.equals(called)&&call.desc.equals(signature))found=true;assertTrue(found,name+" invocation -> "+ref);if(annotation.desc.endsWith("/ModifyArg;")){var index=(Integer)value(annotation,"index");assertEquals(Type.getArgumentTypes(signature)[index],Type.getArgumentTypes(method.desc)[0],name+" modified argument type");}}}}}}
+  }
+ }
+}

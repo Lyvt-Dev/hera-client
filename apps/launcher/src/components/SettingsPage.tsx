@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, Monitor, SlidersHorizontal } from 'lucide-react';
 import type { Settings } from '../../../../packages/shared-types/src';
 import { AccountSetup } from './AccountSetup';
+import { CatalogSetup } from './CatalogSetup';
 import { PageHeader, Toggle } from './ui';
 export function SettingsPage({settings,save,profiles,updates}:{settings:Settings;save:(s:Settings)=>Promise<void>;profiles:()=>void;updates:()=>void}){
  const [pending,setPending]=useState(false),[error,setError]=useState(''),[scale,setScale]=useState<number|null>(null);
@@ -14,6 +15,7 @@ export function SettingsPage({settings,save,profiles,updates}:{settings:Settings
  </div></section>
  <section className="settings-section"><div className="settings-heading"><SlidersHorizontal size={19}/><div><h2>Spiel & Launcher</h2><p>Versionen, Java und Speicher bleiben pro Profil getrennt.</p></div></div><div className="panel settings-links"><button onClick={profiles}><div><strong>Java & Arbeitsspeicher</strong><small>In den Einstellungen deines Spielprofils ändern</small></div><ArrowRight size={17}/></button><button onClick={updates}><div><strong>Launcher-Updates</strong><small>Neue Versionen prüfen und herunterladen</small></div><ArrowRight size={17}/></button></div></section>
  <details className="panel advanced-settings"><summary>Erweiterte Kontoeinstellungen</summary><AccountSetup/></details>
+ <details className="panel advanced-settings"><summary>Erweiterte Katalogeinstellungen</summary><CatalogSetup/></details>
  {pending&&<p role="status" className="hint">Einstellungen werden gespeichert …</p>}{error&&<p role="alert" className="error">{error}</p>}
  </>;
 }

@@ -48,7 +48,7 @@ public final class WorldOverlay {
         for(int i=0;i<8;i++)for(int bit=1;bit<=4;bit<<=1)if((i&bit)==0)lineClip(ctx,corners[i],corners[i|bit],color,thickness);
     }
     public void tracer(DrawContext ctx,Vec3d p,int color,int thickness){var target=point(p);if(target==null)return;if(OverlayPolicy.clipInto(w/2f,Esp.options().tracerCenter?h/2f:h-2,target[0],target[1],w,h,segment))line2(ctx,segment[0],segment[1],segment[2],segment[3],color,thickness);}
-    public void label(DrawContext ctx,Vec3d pos,String label,int color){var p=point(pos);if(p==null || p[0]<0 || p[0]>w || p[1]<0 || p[1]>h)return;var value=labels.computeIfAbsent(label,s->{var text=HeraTheme.text(s);return new Label(text,c.textRenderer.getWidth(text));});int tw=value.width,x=Math.clamp(Math.round(p[0])-tw/2,4,Math.max(4,w-tw-8)),y=Math.clamp(Math.round(p[1]),4,Math.max(4,h-20));HeraTheme.round(ctx,x-4,y-3,tw+8,15,4,0xDD171C27);ctx.drawText(c.textRenderer,value.text,x,y,color,false);}
+    public void label(DrawContext ctx,Vec3d pos,String label,int color){var p=point(pos);if(p==null || p[0]<0 || p[0]>w || p[1]<0 || p[1]>h)return;var value=labels.computeIfAbsent(label,s->{var text=HeraTheme.text(s);return new Label(text,HeraTheme.measure(text,false));});int tw=value.width,x=Math.clamp(Math.round(p[0])-tw/2,4,Math.max(4,w-tw-8)),y=Math.clamp(Math.round(p[1]),4,Math.max(4,h-20));HeraTheme.round(ctx,x-4,y-3,tw+8,15,4,0xDD171C27);HeraTheme.hudText(ctx,value.text,x,y,color,false,false);}
     public static void clearTextCache(){SHARED.labels.clear();}
     public static void render(DrawContext ctx){
         var c=MinecraftClient.getInstance();var f=Esp.config;var o=Esp.options();
@@ -73,5 +73,5 @@ public final class WorldOverlay {
         for(var e:c.world.getEntities())if(e!=c.player&&!e.isRemoved()&&e.squaredDistanceTo(c.player)<=(double)f.espRange*f.espRange&&(Esp.marked(e)||o.hitboxes&&hitboxTarget(e)||o.tntTimer&&(e instanceof TntEntity||e instanceof net.minecraft.entity.vehicle.TntMinecartEntity)))nearest.offer(e);
         targets=nearest.snapshot();targetSet.clear();targetSet.addAll(targets);
     }
-    private static boolean hitboxTarget(Entity e){var o=Esp.options();return o.hitboxPlayers && e instanceof PlayerEntity || o.hitboxMobs && e instanceof MobEntity || o.hitboxItems && e instanceof ItemEntity;}
+    private static boolean hitboxTarget(Entity e){var o=Esp.options();return (o.invisibleHitboxes||!e.isInvisible())&&(o.hitboxPlayers && e instanceof PlayerEntity || o.hitboxMobs && e instanceof MobEntity || o.hitboxItems && e instanceof ItemEntity);}
 }

@@ -1,1 +1,9 @@
-{"key.category.hera.client":"Hera","key.hera.modules":"Hera menu","key.hera.zoom":"Hold zoom","key.hera.freelook":"Hold freelook","key.hera.freecam":"Toggle freecam"}
+{
+  "key.category.hera.client": "Hera",
+  "key.hera.modules": "Hera menu",
+  "key.hera.zoom": "Hold zoom",
+  "key.hera.freelook": "Hold freelook",
+  "key.hera.freecam": "Toggle freecam",
+  "key.hera.togglesprint": "Toggle sprint mode",
+  "key.hera.waypoint": "Hera waypoints"
+}

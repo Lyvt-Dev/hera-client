@@ -20,6 +20,10 @@ public final class CustomCrosshair {
         try(var input=Files.newInputStream(path)){byte[] bytes=input.readNBytes(CrosshairImage.MAX_BYTES+1);
             if(!CrosshairImage.valid(bytes))throw new IllegalArgumentException("PNG: max. 256 × 256 px und 256 KiB.");return bytes;}
     }
+    public static CompletableFuture<String> saveCanvas(int[] pixels){
+        var result=new CompletableFuture<String>();
+        CompletableFuture.supplyAsync(()->{try{if(pixels.length!=1024)throw new IllegalArgumentException();var image=new java.awt.image.BufferedImage(32,32,java.awt.image.BufferedImage.TYPE_INT_ARGB);image.setRGB(0,0,32,32,pixels,0,32);var output=new java.io.ByteArrayOutputStream();javax.imageio.ImageIO.write(image,"png",output);byte[] bytes=output.toByteArray();Files.createDirectories(FILE.getParent());var temporary=Files.createTempFile(FILE.getParent(),"crosshair-",".tmp");try{Files.write(temporary,bytes);Files.move(temporary,FILE,StandardCopyOption.REPLACE_EXISTING);}finally{Files.deleteIfExists(temporary);}return bytes;}catch(Exception e){throw new java.util.concurrent.CompletionException(e);}}).whenComplete((bytes,error)->MinecraftClient.getInstance().execute(()->{try{if(error!=null)throw new IllegalStateException();upload(bytes);result.complete("");}catch(Exception e){result.complete("Fadenkreuz konnte nicht gespeichert werden");}}));return result;
+    }
     public static void load(){
         CompletableFuture.supplyAsync(()->{try{return read(FILE);}catch(Exception e){return null;}})
             .thenAccept(bytes->{if(bytes!=null)MinecraftClient.getInstance().execute(()->{try{upload(bytes);}catch(Exception ignored){}});});

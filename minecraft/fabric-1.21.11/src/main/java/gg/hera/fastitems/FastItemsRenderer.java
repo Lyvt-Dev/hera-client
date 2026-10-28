@@ -21,6 +21,7 @@ public final class FastItemsRenderer {
         FastItemsState extension = (FastItemsState) state;
         extension.fastitems$setBillboard(false); // Render states can be reused: always reset.
         var config = gg.hera.features.Esp.config;
+        if (gg.hera.features.Presentation.enabled("Item Physics"))return;
         if (config == null || !config.fastItems || STANDALONE || state.itemRenderState.isEmpty()) return;
 
         ItemRenderStateAccessor access = (ItemRenderStateAccessor) state.itemRenderState;

@@ -11,7 +11,8 @@ public final class CrosshairScreen extends Screen {
     @Override protected void init(){
         addDrawableChild(new HeraButton(width/2-130,height/2+54,126,24,"Fadenkreuz",false,()->config.options.crosshairImage=false));
         addDrawableChild(new HeraButton(width/2+4,height/2+54,126,24,"Eigenes PNG",false,()->{if(CustomCrosshair.hasImage())config.options.crosshairImage=true;else status="Ziehe zuerst ein PNG ins Fenster.";}));
-        addDrawableChild(new HeraButton(width/2-55,height/2+86,110,24,"Fertig",true,this::close));
+        addDrawableChild(new HeraButton(width/2-130,height/2+86,126,24,"Selbst malen",false,()->{if(!importing)client.setScreen(new CrosshairPaintScreen(this,config));}));
+        addDrawableChild(new HeraButton(width/2+4,height/2+86,126,24,"Fertig",true,this::close));
     }
     @Override public void onFilesDropped(List<Path> paths){
         if(importing)return;if(paths.size()!=1){status="Bitte genau ein PNG auswählen.";return;}importing=true;status="PNG wird importiert …";

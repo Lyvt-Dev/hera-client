@@ -149,19 +149,31 @@ fn version(v: &Value) -> Result<Version> {
         dependencies,
     })
 }
+#[cfg(test)]
 pub async fn catalog(http: &Client, action: &str, p: &HashMap<String, String>) -> Result<Value> {
+    catalog_with_gateway(http, action, p, None).await
+}
+pub async fn catalog_with_gateway(
+    http: &Client,
+    action: &str,
+    p: &HashMap<String, String>,
+    gateway: Option<&str>,
+) -> Result<Value> {
+    if !["search", "project", "versions", "version", "status"].contains(&action) {
+        return Err("Unbekannte Katalogfunktion".into());
+    }
     let source = p.get("source").map(String::as_str).unwrap_or("modrinth");
     if !["modrinth", "curseforge"].contains(&source) {
         return Err("Unbekannte Mod-Plattform".into());
     }
     if source == "curseforge" {
-        let configured=std::env::var("HERA_CATALOG_URL").ok().or_else(||option_env!("HERA_CATALOG_URL").map(String::from)).filter(|v|!v.is_empty()).ok_or("CurseForge-Gateway nicht konfiguriert. HERA_CATALOG_URL und serverseitigen API-Schlüssel einrichten.")?;
+        let configured=gateway.filter(|u|!u.is_empty()).map(String::from).or_else(||std::env::var("HERA_CATALOG_URL").ok()).or_else(||option_env!("HERA_CATALOG_URL").map(String::from)).filter(|v|!v.is_empty()).ok_or("CurseForge-Gateway nicht konfiguriert. In den erweiterten Einstellungen einrichten.")?;
         let mut url =
             reqwest::Url::parse(&format!("{}/{action}", configured.trim_end_matches('/')))
                 .map_err(|_| "Ungültige Gateway-URL")?;
         if !(url.scheme() == "https"
             || (url.scheme() == "http"
-                && matches!(url.host_str(), Some("127.0.0.1" | "localhost"))))
+                && matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"))))
             || !url.username().is_empty()
             || url.password().is_some()
         {
@@ -292,6 +304,7 @@ pub async fn install(
     project_id: &str,
     version_id: &str,
 ) -> Result<()> {
+    let gateway = crate::catalog_config::read(root)?.gateway_url;
     p.validate()?;
     id(project_id)?;
     id(version_id)?;
@@ -302,8 +315,9 @@ pub async fn install(
     crate::bundled_mods::install(root, p, &|_| {}).await?;
     let mut q = params(source, p, version_id);
     q.insert("projectId".into(), project_id.into());
-    let first: Version = serde_json::from_value(catalog(http, "version", &q).await?)
-        .map_err(|_| "Ungültige Mod-Version")?;
+    let first: Version =
+        serde_json::from_value(catalog_with_gateway(http, "version", &q, Some(&gateway)).await?)
+            .map_err(|_| "Ungültige Mod-Version")?;
     if first.project_id != project_id {
         return Err("Version gehört nicht zum gewählten Projekt".into());
     }
@@ -360,7 +374,13 @@ pub async fn install(
                 ));
             }
         } else {
-            let project = catalog(http, "project", &params(source, p, &v.project_id)).await?;
+            let project = catalog_with_gateway(
+                http,
+                "project",
+                &params(source, p, &v.project_id),
+                Some(&gateway),
+            )
+            .await?;
             records.push(Installed {
                 source: source.into(),
                 project_id: v.project_id.clone(),
@@ -377,11 +397,19 @@ pub async fn install(
             let dep = if let Some(version_id) = &d.version_id {
                 let mut q = params(source, p, version_id);
                 q.insert("projectId".into(), d.project_id.clone().unwrap_or_default());
-                serde_json::from_value::<Version>(catalog(http, "version", &q).await?)
-                    .map_err(|_| "Ungültige Abhängigkeitsversion")?
+                serde_json::from_value::<Version>(
+                    catalog_with_gateway(http, "version", &q, Some(&gateway)).await?,
+                )
+                .map_err(|_| "Ungültige Abhängigkeitsversion")?
             } else if let Some(project_id) = &d.project_id {
                 let list: Vec<Version> = serde_json::from_value(
-                    catalog(http, "versions", &params(source, p, project_id)).await?,
+                    catalog_with_gateway(
+                        http,
+                        "versions",
+                        &params(source, p, project_id),
+                        Some(&gateway),
+                    )
+                    .await?,
                 )
                 .map_err(|_| "Ungültige Abhängigkeiten")?;
                 list.iter()

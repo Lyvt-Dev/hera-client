@@ -39,7 +39,8 @@ public final class FeatureConfig {
             data.autoTotem=autoTotem;data.fastItems=fastItems;data.itemEsp=itemEsp;data.playerEsp=playerEsp;data.mobEsp=mobEsp;
             data.espRange=Math.clamp(espRange,16,128);data.markedItems=ItemSelection.clean(markedItems);
             options.normalize();data.options=options;
-            Files.writeString(temporary, GSON.toJson(data));
+            String encoded=GSON.toJson(data);if(encoded.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>65536)throw new IOException("Zu viele Einträge in der Konfiguration. Auswahl verkleinern.");
+            Files.writeString(temporary, encoded);
             try { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE); }
             catch (AtomicMoveNotSupportedException e) { Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING); }
         } finally { Files.deleteIfExists(temporary); }

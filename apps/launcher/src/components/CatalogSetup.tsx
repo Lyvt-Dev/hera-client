@@ -1,0 +1,9 @@
+import { useEffect, useState } from 'react';
+import { api, native } from '../lib/bridge';
+export function CatalogSetup(){
+ const [url,setUrl]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{if(native)void api.catalogConfig().then(c=>setUrl(c.gatewayUrl)).catch(()=>setMessage('Katalogkonfiguration nicht lesbar.'));},[]);
+ async function probe(){setBusy(true);setMessage('');try{const ready=await api.probeCatalogConfig(url);setMessage(ready?'Gateway erreichbar; API-Key auf dem Dienst konfiguriert.':'Gateway erreichbar, aber der Herausgeber-API-Key fehlt noch.');}catch(e){setMessage(String(e));}finally{setBusy(false);}}
+ async function save(){setBusy(true);setMessage('');try{await api.saveCatalogConfig(url);setMessage('Gateway gespeichert. CurseForge im Mod-Katalog erneut laden.');}catch(e){setMessage(String(e));}finally{setBusy(false);}}
+ return <div className="catalog-setup"><h3>CurseForge-Gateway</h3><p>Hera verwendet die offizielle CurseForge-API über deinen Katalogdienst. Der Herausgeber-Schlüssel bleibt ausschließlich auf diesem Dienst.</p><label className="cape-service-field">Gateway-Adresse<input aria-label="CurseForge-Gateway-Adresse" placeholder="https://catalog.example/api/catalog" value={url} disabled={!native||busy} onChange={e=>setUrl(e.target.value)}/></label><p className="hint">Lokaler Testdienst: http://127.0.0.1:3101/api/catalog. Ein API-Key muss serverseitig als CURSEFORGE_API_KEY gesetzt sein.</p><button className="secondary" disabled={!native||busy} onClick={()=>void save()}>{busy?'Speichern …':'Gateway speichern'}</button> <button className="secondary" disabled={!native||busy||!url.trim()} onClick={()=>void probe()}>Verbindung testen</button>{message&&<p role="status" className="hint">{message}</p>}</div>;
+}

@@ -17,9 +17,9 @@ public final class HudConfig {
     public final java.util.Set<String> advancedSettings=new java.util.HashSet<>();
     public int accent=0xFFF49B63;public boolean animations;public final Map<String,String> presets=new LinkedHashMap<>();
     public final List<HudModule> modules = new ArrayList<>();
-    public static final List<String> IDS = List.of("FPS", "Koordinaten", "Ping", "Speicher", "Uhr", "Richtung", "Geschwindigkeit", "Biome", "Server", "Keystrokes", "Armor HUD", "CPS", "Effekte", "Sprint", "Session", "Inventar", "Spotify");
+    public static final List<String> IDS = List.of("FPS", "Koordinaten", "Ping", "Speicher", "Uhr", "Richtung", "Geschwindigkeit", "Biome", "Server", "Keystrokes", "Armor HUD", "CPS", "Potion Status", "Sprint", "Uptime", "Inventar", "Spotify", "Combo Counter", "Item Counter", "Day Counter", "TPS", "Resource Pack Display", "Saturation HUD", "Paperdoll", "Helditem", "Item Changes", "Scoreboard", "Action Bar", "Titles", "Shield Status", "Jump Reset");
     public HudConfig(Path file) { this.file = file; reset(); }
-    public void reset() { modules.clear(); for (int i = 0; i < IDS.size(); i++) modules.add(new HudModule(IDS.get(i), i>=11?.55f:i>=9?.78f:.025f, i>=11?.1f+(i-11)*.12f:i>=9?.35f+(i-9)*.3f:.10f+i*.09f)); }
+    public void reset() { modules.clear(); for (int i = 0; i < IDS.size(); i++){var m=new HudModule(IDS.get(i),i>=17?.52f+(i-17)/7*.23f:i>=11?.55f:i>=9?.78f:.025f,i>=17?.08f+(i-17)%7*.12f:i>=11?.1f+(i-11)*.12f:i>=9?.35f+(i-9)*.3f:.10f+i*.09f);if(m.id.equals("Titles")||m.id.equals("Action Bar")){m.anchorX=2;m.x=.5f;m.y=m.id.equals("Titles")?.4f:.78f;m.background=0;m.scale=m.id.equals("Titles")?2:1;}if(m.id.equals("Scoreboard")){m.anchorX=1;m.x=.02f;m.y=.25f;}modules.add(m);} }
     public void load() {
         if (!Files.exists(file)) return;
         try {
@@ -31,6 +31,7 @@ public final class HudConfig {
             if(data!=null){accent=data.accent|0xFF000000;animations=data.animations;if(data.presets!=null)data.presets.entrySet().stream().filter(e->e.getKey()!=null&&e.getKey().length()<=32&&e.getValue()!=null&&e.getValue().length()<=32768).limit(8).forEach(e->presets.put(e.getKey(),e.getValue()));}
             HudModule[] loaded = legacy ? GSON.fromJson(json, HudModule[].class) : data.modules;
             if (loaded == null) throw new IOException("Empty config");
+            if(loaded!=null)for(var m:loaded)if(m!=null){if("Effekte".equals(m.id))m.id="Potion Status";if("Session".equals(m.id))m.id="Uptime";}
             for (HudModule original : modules) {
                 for (HudModule candidate : loaded) {
                     if (candidate != null && original.id.equals(candidate.id)) {
@@ -45,7 +46,7 @@ public final class HudConfig {
         } catch (IOException | RuntimeException e) { LOGGER.warn("Could not load Hera HUD config; defaults retained", e); }
     }
     public String snapshot(){Data d=new Data();d.schemaVersion=2;d.modules=modules.toArray(HudModule[]::new);d.accent=accent;d.animations=animations;return GSON.toJson(d);}
-    public void restore(String snapshot){Data d=GSON.fromJson(snapshot,Data.class);if(d==null||d.modules==null||d.schemaVersion!=2)throw new IllegalArgumentException("Invalid layout");for(var current:List.copyOf(modules))for(var m:d.modules)if(m!=null&&current.id.equals(m.id)){m.normalize();modules.set(modules.indexOf(current),m);break;}accent=d.accent|0xFF000000;animations=d.animations;}
+    public void restore(String snapshot){Data d=GSON.fromJson(snapshot,Data.class);if(d==null||d.modules==null||d.schemaVersion!=2)throw new IllegalArgumentException("Invalid layout");for(var m:d.modules)if(m!=null){if("Effekte".equals(m.id))m.id="Potion Status";if("Session".equals(m.id))m.id="Uptime";}for(var current:List.copyOf(modules))for(var m:d.modules)if(m!=null&&current.id.equals(m.id)){m.normalize();modules.set(modules.indexOf(current),m);break;}accent=d.accent|0xFF000000;animations=d.animations;}
     public void savePreset(String name){String n=name.strip();if(List.of("Hera Default","Competitive","Minimal").contains(n)||n.isEmpty()||n.length()>32||(!presets.containsKey(n)&&presets.size()>=8))throw new IllegalArgumentException("Max. 8 Presets, Name 1–32 Zeichen.");presets.put(n,snapshot());}
     public void applyPreset(String name){
         if(presets.containsKey(name)){restore(presets.get(name));return;}

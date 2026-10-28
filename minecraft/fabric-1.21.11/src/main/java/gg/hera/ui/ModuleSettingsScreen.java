@@ -34,7 +34,7 @@ public final class ModuleSettingsScreen extends Screen {
             if(id.equals("Koordinaten")){flag("Mehrzeilig",()->module.expanded,()->module.expanded=!module.expanded);option(()->"Nachkommastellen: "+module.precision,()->module.precision=(module.precision+1)%4);flag("Chunk",()->module.showChunk,()->module.showChunk=!module.showChunk);flag("Biom",()->module.showBiome,()->module.showBiome=!module.showBiome);flag("Richtung",()->module.showFacing,()->module.showFacing=!module.showFacing);}
             if(id.equals("Spotify"))flag("Browser-Medien anzeigen",()->module.mediaBrowser,()->module.mediaBrowser=!module.mediaBrowser);
             if(id.equals("CPS"))option(()->"Messfenster: "+module.cpsInterval+" s",()->module.cpsInterval=module.cpsInterval%5+1);
-            if(id.equals("Effekte"))flag("Name & Verstärker",()->module.expanded,()->module.expanded=!module.expanded);
+            if(id.equals("Potion Status"))flag("Name & Verstärker",()->module.expanded,()->module.expanded=!module.expanded);
             if(id.equals("Keystrokes")){flag("CPS in Maustasten",()->module.showCps,()->module.showCps=!module.showCps);flag("Sprintstatus",()->module.showSprint,()->module.showSprint=!module.showSprint);}
             if(id.equals("Armor HUD")){flag("Vertikal",()->module.vertical,()->module.vertical=!module.vertical);flag("Haltbarkeitsbalken",()->module.showBars,()->module.showBars=!module.showBars);}
 
@@ -55,8 +55,19 @@ public final class ModuleSettingsScreen extends Screen {
             if(id.equals("Armor HUD"))flag("Haltbarkeit in Prozent",()->o.armorDurability,()->o.armorDurability=!o.armorDurability);
         }
         switch(id){
+            case "Shield Status"->{color("Bereit",()->o.shieldReady,v->o.shieldReady=v);color("Blockieren",()->o.shieldBlocking,v->o.shieldBlocking=v);color("Abklingzeit",()->o.shieldCooldown,v->o.shieldCooldown=v);}
+            case "Weavy Capes"->slider(()->String.format(Locale.ROOT,"Bewegung: %.1f×",o.capeStrength),()->o.capeStrength,.1,2,.1,v->o.capeStrength=(float)v);
+            case "Item Model"->{slider(()->String.format(Locale.ROOT,"Größe: %.1f×",o.itemScale),()->o.itemScale,.3,2,.1,v->o.itemScale=(float)v);slider(()->String.format(Locale.ROOT,"Position X: %.2f",o.itemX),()->o.itemX,-1,1,.05,v->o.itemX=(float)v);slider(()->String.format(Locale.ROOT,"Position Y: %.2f",o.itemY),()->o.itemY,-1,1,.05,v->o.itemY=(float)v);slider(()->String.format(Locale.ROOT,"Position Z: %.2f",o.itemZ),()->o.itemZ,-1,1,.05,v->o.itemZ=(float)v);}
+            case "Low Fire"->slider(()->String.format(Locale.ROOT,"Absenkung: %.2f",o.fireHeight),()->o.fireHeight,.1,.9,.05,v->o.fireHeight=(float)v);
+            case "Block Outlines"->{color("Farbe",()->o.blockColor,v->o.blockColor=v);option(()->"Linienstärke: "+o.blockWidth+" px",()->o.blockWidth=o.blockWidth%4+1);}
+            case "Hit Color"->color("Trefferfarbe",()->o.hitColor,v->o.hitColor=v);
+            case "Particle Settings"->option(()->"Partikel auswählen →",()->client.setScreen(new RegistrySelectionScreen(returnTarget(),f,true)));
+            case "Item Counter"->option(()->"Gezählte Items auswählen →",()->client.setScreen(new RegistrySelectionScreen(returnTarget(),f,false)));
+            case "Way Points"->option(()->"Wegpunkte verwalten →",()->client.setScreen(new WaypointScreen(returnTarget(),f)));
+            case "Scoreboard"->flag("Punktzahlen",()->o.scoreNumbers,()->o.scoreNumbers=!o.scoreNumbers);
             case "Custom Crosshair"->{
                 option(()->"Stil: "+(o.crosshairImage?"Eigenes PNG":"Fadenkreuz"),()->o.crosshairImage=!o.crosshairImage);
+                option(()->"Fadenkreuz selbst malen →",()->client.setScreen(new CrosshairPaintScreen(returnTarget(),f)));
                 option(()->"Eigenes PNG importieren & Vorschau →",()->client.setScreen(new CrosshairScreen(returnTarget(),f)));
                 color("Farbe",()->o.crosshairColor,v->o.crosshairColor=v);
                 option(()->"Länge: "+o.crosshairLength,()->o.crosshairLength=o.crosshairLength%16+1);
@@ -77,7 +88,7 @@ public final class ModuleSettingsScreen extends Screen {
                 option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);
                 option(()->"Items & Container auswählen →",()->client.setScreen(new ItemSelectionScreen(returnTarget(),f)));
             }
-            case "Hitboxes"->{flag("Spieler",()->o.hitboxPlayers,()->o.hitboxPlayers=!o.hitboxPlayers);flag("Mobs",()->o.hitboxMobs,()->o.hitboxMobs=!o.hitboxMobs);flag("Item-Drops",()->o.hitboxItems,()->o.hitboxItems=!o.hitboxItems);color("Farbe",()->o.hitboxColor,v->o.hitboxColor=v);option(()->"Linienstärke: "+o.hitboxWidth+" px",()->o.hitboxWidth=o.hitboxWidth%4+1);option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);}
+            case "Hitboxes"->{flag("Unsichtbare geladene Spieler",()->o.invisibleHitboxes,()->o.invisibleHitboxes=!o.invisibleHitboxes);flag("Spieler",()->o.hitboxPlayers,()->o.hitboxPlayers=!o.hitboxPlayers);flag("Mobs",()->o.hitboxMobs,()->o.hitboxMobs=!o.hitboxMobs);flag("Item-Drops",()->o.hitboxItems,()->o.hitboxItems=!o.hitboxItems);color("Farbe",()->o.hitboxColor,v->o.hitboxColor=v);option(()->"Linienstärke: "+o.hitboxWidth+" px",()->o.hitboxWidth=o.hitboxWidth%4+1);option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);}
             case "TNT Timer"->{color("Timer-Farbe",()->o.tntColor,v->o.tntColor=v);option(()->"Reichweite: "+f.espRange+" m",()->f.espRange=f.espRange>=128?16:f.espRange*2);}
             case "Item Highlighter"->{color("Markierungsfarbe",()->o.highlightColor,v->o.highlightColor=v);option(()->"Items auswählen →",()->client.setScreen(new ItemSelectionScreen(returnTarget(),f,false)));}
             case "Time Changer"->option(()->"Tageszeit: "+o.worldTime+" Ticks",()->o.worldTime=(o.worldTime+1000)%24000);

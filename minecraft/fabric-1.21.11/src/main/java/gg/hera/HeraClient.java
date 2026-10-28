@@ -27,14 +27,17 @@ public final class HeraClient implements ClientModInitializer {
         features.load(); CustomCrosshair.load(); CrystalTotem crystalTotem = new CrystalTotem(features);
         if(FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.smokeTest"))DevelopmentSmoke.register(config,renderer,features);
         if(FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.hudWorldTest"))HudWorldTest.register(config,renderer,features);
-        Esp.config=features; AutoTotem autoTotem=new AutoTotem(features); ContainerMarkers containers=new ContainerMarkers(features);DTap dTap=new DTap(features);
+        Esp.config=features;Presentation.hud=config; AutoTotem autoTotem=new AutoTotem(features); ContainerMarkers containers=new ContainerMarkers(features);DTap dTap=new DTap(features);
         net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player,world,hand,entity,hit)->{if(world.isClient() && player==net.minecraft.client.MinecraftClient.getInstance().player && entity instanceof net.minecraft.entity.player.PlayerEntity target)dTap.hit(target);return net.minecraft.util.ActionResult.PASS;});
         var category=KeyBinding.Category.create(Identifier.of("hera", "client"));
         CameraController.zoomKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.zoom",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_C,category));
         CameraController.lookKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freelook",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_LEFT_ALT,category));
         CameraController.camKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.freecam",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_V,category));
+        Presentation.sprintKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.togglesprint",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_UNKNOWN,category));
+        Presentation.waypointKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.waypoint",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_UNKNOWN,category));
+        net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.ALLOW_CHAT.register((message,signed,sender,params,time)->{if(sender!=null)ChatHeads.remember(message,sender);return true;});
         KeyBinding menu = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.modules", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { renderer.tick(client);MediaState.tick(config);Esp.tick();WorldOverlay.tick(client);gg.hera.cosmetics.LocalCape.tick(client);gg.hera.cosmetics.SharedCapes.tick(client);CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { renderer.tick(client);Presentation.tick(client);MediaState.tick(config);Esp.tick();WorldOverlay.tick(client);gg.hera.cosmetics.LocalCape.tick(client);gg.hera.cosmetics.SharedCapes.tick(client);CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
         ScreenEvents.AFTER_INIT.register((client,screen,w,h)->{if(screen instanceof TitleScreen && !client.isDemo())client.execute(()->{if(client.currentScreen==screen)client.setScreen(new HeraTitleScreen(config,renderer,features));});});
         // Explicit developer-only title-screen preview; never active in production or entering a world.
         if (FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.previewUi")) {
@@ -47,7 +50,7 @@ public final class HeraClient implements ClientModInitializer {
             });
         }
         HudElementRegistry.addLast(Identifier.of("hera", "hud"), (ctx, tickCounter) -> {
-            WorldOverlay.render(ctx);containers.render(ctx);ItemHighlights.render(ctx);
+            WorldOverlay.render(ctx);PresentationOverlay.render(ctx);containers.render(ctx);ItemHighlights.render(ctx);
             if (!(net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof HudEditorScreen)) renderer.render(ctx, false);
         });
     }
