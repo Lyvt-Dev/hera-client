@@ -50,3 +50,5 @@ New profiles default to Hera / Fabric 1.21.11. Hera 0.6.0 and the matching Fabri
 
 
 0.5.0 embeds mod 0.12.0: unified Hera/Nunito foundations, richer module navigation, bounded labels, numeric HUD sliders and clearer HUD Studio selection. Existing appearance and enabled states remain preserved. See design-system.md for architecture, migration and verification boundaries.
+
+0.5.0 release-channel limitation: the repository is currently private. Release assets are published and verified through owner authentication, but the launcher's anonymous GitHub latest endpoint returns 404. Use the local Windows installer or an authenticated GitHub browser download for testing. A separate public asset channel (or an appropriately authorized publication/hosting change) is required before general automatic updates work. Never ship a GitHub credential in React, the native binary or latest.json to work around this.

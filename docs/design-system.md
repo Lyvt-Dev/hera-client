@@ -83,3 +83,24 @@ or a running Minecraft instance. Native-only cape/account actions cannot be
 certified from that preview. No new game launch or multiplayer test is claimed.
 Existing custom HUD positions, colors and scales are preserved, so an old layout
 may intentionally look different from the new defaults.
+
+## Changed file map
+
+- Launcher appearance: `apps/launcher/src/design-system.css`, `src/main.tsx`,
+  `src/components/HomePage.tsx`, `src/components/ui.tsx`.
+- Ingame primitives under `minecraft/fabric-1.21.11/src/main/java/gg/hera/ui/`:
+  `HeraTheme.java`, `HeraButton.java`, new `HeraSlider.java`.
+- Ingame workspaces in that same directory: `ModuleScreen.java`,
+  `ModuleSettingsScreen.java`, `WorkspaceLayout.java`, `HudEditorScreen.java`.
+- HUD rendering and migration under `src/main/java/gg/hera/hud/`:
+  `HudModule.java`, `HudRenderer.java`.
+- Mod tests under `src/test/java/gg/hera/`: `ui/HeraSliderTest.java`,
+  `ui/WorkspaceLayoutTest.java`, `hud/HudModuleTest.java`.
+- Bundle integration: `apps/launcher/src/lib/hera-profile.ts`,
+  `apps/launcher/src-tauri/src/bundled_mods.rs`,
+  `apps/launcher/src-tauri/resources/bundled-mods.json`,
+  `apps/launcher/src-tauri/resources/hera-fabric-1.21.11-0.12.0.jar`.
+- Release versions: root `package.json` / `package-lock.json`,
+  `apps/launcher/package.json`, native `Cargo.toml` / `Cargo.lock` /
+  `tauri.conf.json`, `minecraft/fabric-1.21.11/build.gradle`.
+- Documentation: this file, `docs/status.md`, `docs/installer-updates.md`.
