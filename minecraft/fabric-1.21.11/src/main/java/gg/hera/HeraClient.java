@@ -37,7 +37,7 @@ public final class HeraClient implements ClientModInitializer {
         Presentation.waypointKey=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.waypoint",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_UNKNOWN,category));
         net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents.ALLOW_CHAT.register((message,signed,sender,params,time)->{if(sender!=null)ChatHeads.remember(message,sender);return true;});
         KeyBinding menu = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.hera.modules", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, category));
-        ClientTickEvents.END_CLIENT_TICK.register(client -> { renderer.tick(client);Presentation.tick(client);MediaState.tick(config);Esp.tick();WorldOverlay.tick(client);gg.hera.cosmetics.LocalCape.tick(client);gg.hera.cosmetics.SharedCapes.tick(client);CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> { renderer.tick(client);Presentation.tick(client);HeraCompanion.tick(client);MediaState.tick(config);Esp.tick();WorldOverlay.tick(client);gg.hera.cosmetics.LocalCape.tick(client);gg.hera.cosmetics.SharedCapes.tick(client);CameraController.tick(client);dTap.tick(client);if(!dTap.busy()){crystalTotem.tick(client);autoTotem.tick(client);}containers.tick(client); while (menu.wasPressed()) client.setScreen(new ModuleScreen(config, renderer, features)); });
         ScreenEvents.AFTER_INIT.register((client,screen,w,h)->{if(screen instanceof TitleScreen && !client.isDemo())client.execute(()->{if(client.currentScreen==screen)client.setScreen(new HeraTitleScreen(config,renderer,features));});});
         // Explicit developer-only title-screen preview; never active in production or entering a world.
         if (FabricLoader.getInstance().isDevelopmentEnvironment() && Boolean.getBoolean("hera.previewUi")) {
@@ -50,7 +50,7 @@ public final class HeraClient implements ClientModInitializer {
             });
         }
         HudElementRegistry.addLast(Identifier.of("hera", "hud"), (ctx, tickCounter) -> {
-            WorldOverlay.render(ctx);PresentationOverlay.render(ctx);containers.render(ctx);ItemHighlights.render(ctx);
+            WorldOverlay.render(ctx);PresentationOverlay.render(ctx);HeraCompanion.render(ctx);containers.render(ctx);ItemHighlights.render(ctx);
             if (!(net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof HudEditorScreen)) renderer.render(ctx, false);
         });
     }

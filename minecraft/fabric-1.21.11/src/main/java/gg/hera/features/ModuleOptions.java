@@ -8,6 +8,7 @@ public final class ModuleOptions {
     public java.util.List<Waypoint> waypoints=new java.util.ArrayList<>();
     public int shieldReady=0xFF9CCDB3,shieldBlocking=0xFFF49B63,shieldCooldown=0xFFFF7777;
     public int trailColor=0xFFF49B63,blockColor=0xFFF49B63,hitColor=0xFFFF8866,blockWidth=2;
+    public int companionMode=0; public boolean companionVoice; public float companionVolume=.5f;
     public boolean invisibleHitboxes=true,scoreNumbers=true;
     public float itemScale=1,itemX,itemY,itemZ,fireHeight=.45f,capeStrength=1;
     public static final class Waypoint {public String name="",world="";public double x,y,z;public int color=0xFFF49B63;}
@@ -29,6 +30,7 @@ public final class ModuleOptions {
     public boolean fogWater=true,fogLava=true;
     public static final int[] COLORS={0xFFF0A46E,0xFF79D8FF,0xFFB7F58A,0xFFC4A3FF,0xFFFF7D9C,0xFFFFFFFF};
     public void normalize(){
+        companionMode=Math.clamp(companionMode,0,2);companionVolume=finite(companionVolume,0,1,.5f);
         if(presentation==null)presentation=new java.util.LinkedHashMap<>();presentation.keySet().retainAll(Presentation.IDS);
         countedItems=new java.util.LinkedHashSet<>(ItemSelection.clean(countedItems).stream().limit(8).toList());hiddenParticles=new java.util.LinkedHashSet<>(ItemSelection.clean(hiddenParticles).stream().limit(128).toList());
         if(waypoints==null)waypoints=new java.util.ArrayList<>();waypoints=new java.util.ArrayList<>(waypoints.stream().filter(w->w!=null&&w.name!=null&&w.name.length()<=32&&w.world!=null&&w.world.length()<=512&&Double.isFinite(w.x)&&Double.isFinite(w.y)&&Double.isFinite(w.z)&&Math.abs(w.x)<=30_000_000&&Math.abs(w.z)<=30_000_000&&Math.abs(w.y)<4096).limit(32).toList());

@@ -9,7 +9,7 @@ import java.util.*;
 
 /** Client-only presentation state. All potentially expensive sampling is opt-in and tick-bound. */
 public final class Presentation {
-    public static final List<String> IDS=List.of("Weavy Capes","Chat Heads","Clear Lava","Arrow Trail","Item Model","Block Outlines","Hit Color","Toggle Sprint","Old Animations","No Hurt Cam","Low Fire","No Advancement","Particle Settings","Item Physics","Clear GUI","Way Points","Shulker Preview");
+    public static final List<String> IDS=List.of("Hera Companion","Weavy Capes","Chat Heads","Clear Lava","Arrow Trail","Item Model","Block Outlines","Hit Color","Toggle Sprint","Old Animations","No Hurt Cam","Low Fire","No Advancement","Particle Settings","Item Physics","Clear GUI","Way Points","Shulker Preview");
     public static HudConfig hud;
     public static net.minecraft.client.option.KeyBinding sprintKey,waypointKey;
     private static Object world,connection;private static int ticks,combo,lastTarget=-1,lastOwnHurt;private static long lastHit;

@@ -56,6 +56,7 @@ public final class ModuleSettingsScreen extends Screen {
         }
         switch(id){
             case "Shield Status"->{color("Bereit",()->o.shieldReady,v->o.shieldReady=v);color("Blockieren",()->o.shieldBlocking,v->o.shieldBlocking=v);color("Abklingzeit",()->o.shieldCooldown,v->o.shieldCooldown=v);}
+            case "Hera Companion"->{option(()->"Verhalten: "+List.of("Automatisch","Folgen","Schulter").get(o.companionMode),()->o.companionMode=(o.companionMode+1)%3);flag("Voice-Lines",()->o.companionVoice,()->o.companionVoice=!o.companionVoice);slider(()->"Stimme: "+Math.round(o.companionVolume*100)+"%",()->o.companionVolume,0,1,.05,v->o.companionVolume=(float)v);option(()->"Hera begrüßen",()->HeraCompanion.greet());}
             case "Weavy Capes"->slider(()->String.format(Locale.ROOT,"Bewegung: %.1f×",o.capeStrength),()->o.capeStrength,.1,2,.1,v->o.capeStrength=(float)v);
             case "Item Model"->{slider(()->String.format(Locale.ROOT,"Größe: %.1f×",o.itemScale),()->o.itemScale,.3,2,.1,v->o.itemScale=(float)v);slider(()->String.format(Locale.ROOT,"Position X: %.2f",o.itemX),()->o.itemX,-1,1,.05,v->o.itemX=(float)v);slider(()->String.format(Locale.ROOT,"Position Y: %.2f",o.itemY),()->o.itemY,-1,1,.05,v->o.itemY=(float)v);slider(()->String.format(Locale.ROOT,"Position Z: %.2f",o.itemZ),()->o.itemZ,-1,1,.05,v->o.itemZ=(float)v);}
             case "Low Fire"->slider(()->String.format(Locale.ROOT,"Absenkung: %.2f",o.fireHeight),()->o.fireHeight,.1,.9,.05,v->o.fireHeight=(float)v);
