@@ -55,7 +55,7 @@ public final class Presentation {
         case "Jump Reset"->List.of(player.hurtTime>0&&player.isOnGround()?"JETZT SPRINGEN":player.hurtTime>0?"In der Luft":"Warte auf Treffer");
         case "Scoreboard"->{var board=c.world.getScoreboard();var teamOfPlayer=board.getScoreHolderTeam(player.getNameForScoreboard());var colored=teamOfPlayer==null?null:net.minecraft.scoreboard.ScoreboardDisplaySlot.fromFormatting(teamOfPlayer.getColor());var objective=colored==null?null:board.getObjectiveForSlot(colored);if(objective==null)objective=board.getObjectiveForSlot(net.minecraft.scoreboard.ScoreboardDisplaySlot.SIDEBAR);if(objective==null)yield List.of();var list=new ArrayList<String>();list.add(objective.getDisplayName().getString());board.getScoreboardEntries(objective).stream().filter(e->!e.hidden()).sorted(Comparator.comparingInt(net.minecraft.scoreboard.ScoreboardEntry::value).reversed().thenComparing(net.minecraft.scoreboard.ScoreboardEntry::owner)).limit(15).forEach(e->{var team=board.getScoreHolderTeam(e.owner());list.add(net.minecraft.scoreboard.Team.decorateName(team,e.name()).getString()+(Esp.options().scoreNumbers?"  "+e.value():""));});yield list;}
         case "Action Bar"->actionTicks>0?List.of(action.getString()):List.of();
-        case "Titles"->titleTicks>0?List.of(title.getString(),subtitle.getString()):List.of();
+        case "Titles"->titleTicks>0?java.util.stream.Stream.of(title.getString(),subtitle.getString()).filter(s->!s.isEmpty()).toList():List.of();
         default->List.of(id);
     };}
 }

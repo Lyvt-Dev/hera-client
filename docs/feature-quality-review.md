@@ -4,41 +4,43 @@ The 0.6.2 release completes the implementation and automated packaging of the ow
 
 Scope below is derived from the actual HudConfig, Presentation and ModuleCatalog registries, not a shortened subset. For each feature review actual behavior and controls, settings persistence/defaults, disable/world-change cleanup, per-tick/per-frame work and relevant interoperability. Improve concrete behavior or quality issues found; add meaningful regression coverage and ship validated changes through the launcher. Distinguish implemented, automated-tested and game-tested results in status.md. Never equate a test or audit row with runtime proof, invent unsupported controls, claim zero FPS impact, or bypass server-side restrictions.
 
+The next quality pass adds viewport-aware geometry shared by all 31 HUD elements, matching editor bounds, bounded Unicode-safe text fitting and a per-text-module maximum-width control. Titles and Action Bar additionally invalidate cached text immediately on content/visibility changes and apply the actual Vanilla fade timings. Spotify text uses the selected font for fitting and invalidates on resource/config refresh. Automated math and string tests cover geometry, fade curves and bounded fitting work; no runtime screenshot or FPS claim. This is a concrete shared HUD improvement, not completion of all module-specific behavior review.
+
 Initial code inspection checked the companion render and caption paths, ESP selection caching, incremental block scanning, AutoTotem guards and camera world/focus handling. Only the companion has implementation changes in 0.6.2; these observations do not mark the other features improved. Broad runtime/FPS acceptance is pending. No Minecraft was launched.
 
 | Group | Feature | Current evidence / next work |
 |---|---|---|
-| HUD | FPS | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Koordinaten | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Ping | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Speicher | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Uhr | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Richtung | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Geschwindigkeit | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Biome | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Server | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Keystrokes | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Armor HUD | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | CPS | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Potion Status | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Sprint | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Uptime | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Inventar | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Spotify | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Combo Counter | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Item Counter | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Day Counter | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | TPS | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Resource Pack Display | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Saturation HUD | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Paperdoll | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Helditem | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Item Changes | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Scoreboard | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Action Bar | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Titles | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Shield Status | Review and improvement pending; existing implementation is not treated as completed quality work |
-| HUD | Jump Reset | Review and improvement pending; existing implementation is not treated as completed quality work |
+| HUD | FPS | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Koordinaten | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Ping | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Speicher | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Uhr | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Richtung | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Geschwindigkeit | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Biome | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Server | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Keystrokes | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Armor HUD | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | CPS | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Potion Status | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Sprint | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Uptime | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Inventar | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Spotify | Implemented shared viewport fitting / editor bounds; selected-font text fitting and cache invalidation; module-specific and in-game acceptance still pending |
+| HUD | Combo Counter | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Item Counter | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Day Counter | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | TPS | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Resource Pack Display | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Saturation HUD | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Paperdoll | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Helditem | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Item Changes | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Scoreboard | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Action Bar | Implemented shared viewport fitting / editor bounds; immediate content/expiry invalidation and fade timing; module-specific and in-game acceptance still pending |
+| HUD | Titles | Implemented shared viewport fitting / editor bounds; immediate content/expiry invalidation and fade timing; module-specific and in-game acceptance still pending |
+| HUD | Shield Status | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Jump Reset | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
 | Presentation | Hera Companion | Owner-model implementation, 84-test mod build and importer tests; in-game acceptance pending |
 | Presentation | Weavy Capes | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Chat Heads | Review and improvement pending; existing implementation is not treated as completed quality work |
@@ -74,6 +76,6 @@ Initial code inspection checked the companion render and caption paths, ESP sele
 | Other modules | Time Changer | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | Weather Changer | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | Zoom | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Free Look | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Other modules | Free Look | Confirmed source issue: raw player tick position overrides interpolated camera position in CameraMixin; fix and validation pending |
 | Other modules | Full Bright | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Freecam | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Other modules | Freecam | Confirmed source issue: tick-position assigned directly in CameraMixin, without render interpolation; fix and validation pending |

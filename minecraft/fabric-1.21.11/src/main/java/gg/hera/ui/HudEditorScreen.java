@@ -44,7 +44,7 @@ public final class HudEditorScreen extends Screen {
     private void anchor(){mutate(()->{int x=px(selected),y=py(selected);selected.anchorX=(selected.anchorX+1)%3;selected.anchorY=selected.anchorX;place(selected,x,y);});}
     private void reset(){if(!resetArmed){resetArmed=true;error="Reset erneut wählen: Positionen werden zurückgesetzt.";rebuild();return;}mutate(()->{for(int i=0;i<config.modules.size();i++){var m=config.modules.get(i);m.x=.025f+(i/8)*.35f;m.y=.15f+(i%8)*.07f;m.anchorX=0;m.anchorY=0;m.scale=1;}selected=null;});resetArmed=false;error="";}
     private void resize(float amount){if(selected!=null)mutate(()->{selected.scale=Math.clamp(selected.scale+amount,.5f,3);selected.normalize();});}
-    private int pw(HudModule m){return Math.round(renderer.width(m,client)*m.scale);}private int ph(HudModule m){return Math.round(renderer.height(m)*m.scale);}
+    private int pw(HudModule m){return renderer.bounds(m,width,height,client).width();}private int ph(HudModule m){return renderer.bounds(m,width,height,client).height();}
     private int px(HudModule m){return renderer.x(m,width,client);}private int py(HudModule m){return renderer.y(m,height);}
     private void place(HudModule m,double x,double y){m.x=HudGeometry.offset(x,m.anchorX,width,pw(m));m.y=HudGeometry.offset(y,m.anchorY,height,ph(m));m.normalize();}
     private boolean overlap(){if(selected==null)return false;int x=px(selected),y=py(selected),w=pw(selected),h=ph(selected);return y+h>height-46&&x<width/2+100&&x+w>width/2-100||y+h>height-130&&x<Math.min(300,width/2);}
@@ -58,7 +58,7 @@ public final class HudEditorScreen extends Screen {
         int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx,6,tw,50,5,0xF0101216);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD Studio",tx+28,13,HeraTheme.TEXT);
         int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix,iy,iw,59,5,0xF0101216);
         if(selected==null){HeraTheme.label(c,"Element wählen · ziehen · Ecke zum Skalieren",ix+10,iy+12,HeraTheme.TEXT);HeraTheme.label(c,"Tab: Auswahl · Pfeile: Position · Strg+Z / Y",ix+10,iy+32,HeraTheme.MUTED);}
-        else{String label=selected.id+" · "+Math.round(selected.scale*100)+"% · "+List.of("Oben links","Unten rechts","Zentriert").get(selected.anchorX);HeraTheme.label(c,HeraTheme.fit(label,iw-20),ix+10,iy+10,HeraTheme.TEXT);}
+        else{String label=selected.id+" · "+Math.round(selected.scale*100)+"%"+(renderer.bounds(selected,width,height,client).scale()<selected.scale?" (angepasst)":"")+" · "+List.of("Oben links","Unten rechts","Zentriert").get(selected.anchorX);HeraTheme.label(c,HeraTheme.fit(label,iw-20),ix+10,iy+10,HeraTheme.TEXT);}
         if(!error.isEmpty()||overlap())HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?"Mögliche Überlappung mit Chat / Hotbar":error,width-24),12,60,0xFFF1B66B);
         super.render(c,mx,my,delta);
     }

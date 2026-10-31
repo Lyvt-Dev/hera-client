@@ -12,6 +12,7 @@ import java.util.*;
 
 /** Shared measurement/render geometry. Values sampled at 4 Hz; input stays immediate. */
 public final class HudRenderer {
+    private float renderFade=1;private Text lastAction,lastTitle,lastSubtitle;private boolean actionVisible,titleVisible;
     private final HudConfig config;private final Map<String,Sample> samples=new HashMap<>();
     private record Sample(Text[] lines,int[] widths,int width){}
     private static final EquipmentSlot[] ARMOR={EquipmentSlot.HEAD,EquipmentSlot.CHEST,EquipmentSlot.LEGS,EquipmentSlot.FEET};
@@ -26,10 +27,10 @@ public final class HudRenderer {
     private final float[] frameMs=new float[120];private int frameCursor,frameCount;private long lastFrame,lastSample,sessionStart;private Object world,connection;
     static {for(int i=0;i<=100;i++){PERCENT[i]=HeraTheme.text(i+"%");VANILLA_PERCENT[i]=Text.literal(i+"%");}}
     public HudRenderer(HudConfig config){this.config=config;}
-    public void invalidate(){samples.clear();lastSample=0;}
+    public void invalidate(){samples.clear();lastSample=0;musicTrack=null;}
     private Text text(HudModule m,String s){return m.vanillaFont?Text.literal(s):HeraTheme.text(s);}
     private int accent(HudModule m){return m.useGlobalAccent?config.accent:m.accent;}
-    private int alpha(HudModule m,int color){return HudGeometry.alpha(color,m.opacity);}
+    private int alpha(HudModule m,int color){return HudGeometry.alpha(color,m.opacity*renderFade);}
     public void tick(MinecraftClient c){var handler=c.getNetworkHandler();if(connection!=handler){connection=handler;sessionStart=System.nanoTime();}if(world!=c.world){world=c.world;frameCount=0;frameCursor=0;lastFrame=0;invalidate();}}
     private void refresh(MinecraftClient c){tick(c);long now=System.nanoTime();if(now-lastSample>250_000_000L){lastSample=now;samples.clear();}}
     public String value(HudModule m,MinecraftClient c){return String.join(" / ",values(m,c));}
@@ -55,21 +56,28 @@ public final class HudRenderer {
     }
     private static String biome(MinecraftClient c){return c.world.getBiome(c.player.getBlockPos()).getKey().map(k->k.getValue().getPath().replace('_',' ')).orElse("Biom —");}
     private static String duration(long seconds){return seconds>=3600?String.format(Locale.ROOT,"%d:%02d:%02d",seconds/3600,seconds/60%60,seconds%60):String.format(Locale.ROOT,"%d:%02d",seconds/60,seconds%60);}
-    private Sample sample(HudModule m,MinecraftClient c){refresh(c);return samples.computeIfAbsent(m.id,id->{if(id.equals("Potion Status")&&c.player!=null){var icons=new ArrayList<net.minecraft.util.Identifier>();for(var effect:c.player.getStatusEffects()){if(icons.size()>=16)break;var effectId=net.minecraft.registry.Registries.STATUS_EFFECT.getId(effect.getEffectType().value());icons.add(net.minecraft.util.Identifier.of(effectId.getNamespace(),"mob_effect/"+effectId.getPath()));}effectIcons=List.copyOf(icons);}
-        var lines=values(m,c).stream().map(s->text(m,s)).toArray(Text[]::new);int w=0;int[] measured=new int[lines.length];for(int i=0;i<lines.length;i++){measured[i]=HeraTheme.measure(lines[i],m.vanillaFont);w=Math.max(w,measured[i]);}return new Sample(lines,measured,w);});}
+    private void messageChanges(){boolean action=gg.hera.features.Presentation.actionTicks>0,title=gg.hera.features.Presentation.titleTicks>0;
+        if(lastAction!=gg.hera.features.Presentation.action||actionVisible!=action){lastAction=gg.hera.features.Presentation.action;actionVisible=action;samples.remove("Action Bar");}
+        if(lastTitle!=gg.hera.features.Presentation.title||lastSubtitle!=gg.hera.features.Presentation.subtitle||titleVisible!=title){lastTitle=gg.hera.features.Presentation.title;lastSubtitle=gg.hera.features.Presentation.subtitle;titleVisible=title;samples.remove("Titles");}
+    }
+    private Sample sample(HudModule m,MinecraftClient c){refresh(c);messageChanges();return samples.computeIfAbsent(m.id,id->{if(id.equals("Potion Status")&&c.player!=null){var icons=new ArrayList<net.minecraft.util.Identifier>();for(var effect:c.player.getStatusEffects()){if(icons.size()>=16)break;var effectId=net.minecraft.registry.Registries.STATUS_EFFECT.getId(effect.getEffectType().value());icons.add(net.minecraft.util.Identifier.of(effectId.getNamespace(),"mob_effect/"+effectId.getPath()));}effectIcons=List.copyOf(icons);}
+        var lines=values(m,c).stream().map(s->text(m,HeraTheme.fit(s,m.maxWidth,m.vanillaFont))).toArray(Text[]::new);int w=0;int[] measured=new int[lines.length];for(int i=0;i<lines.length;i++){measured[i]=HeraTheme.measure(lines[i],m.vanillaFont);w=Math.max(w,measured[i]);}return new Sample(lines,measured,w);});}
     private boolean mouse(HudModule m){return m.showMouse&&gg.hera.features.Esp.options().keyMouse;}
     private boolean space(HudModule m){return m.showSpace&&gg.hera.features.Esp.options().keySpace;}
     public int width(HudModule m,MinecraftClient c){return switch(m.id){case "Paperdoll"->40+2*m.padding;case "Spotify"->200;case "Keystrokes"->76+2*m.padding;case "Armor HUD"->(m.vertical?m.showDurability?52:20:4*30)+2*m.padding;case "Inventar"->9*18+2*m.padding;default->sample(m,c).width+2*m.padding+(m.id.equals("Potion Status")?20:0);};}
     public int height(HudModule m){return switch(m.id){case "Paperdoll"->68+2*m.padding;case "Spotify"->52+2*m.padding;case "Keystrokes"->40+(mouse(m)?m.showCps?30:20:0)+(space(m)?20:0)+(m.showSprint?16:0)+2*m.padding;case "Armor HUD"->(m.vertical?4*24:m.showDurability?36:22)+2*m.padding;case "Inventar"->3*18+2*m.padding;default->{var s=sample(m,MinecraftClient.getInstance());yield s.lines.length*(m.id.equals("Potion Status")?20:12)+2*m.padding+(m.id.equals("FPS")&&m.showGraph?24:0);}};}
-    public int x(HudModule m,int screen,MinecraftClient c){return HudGeometry.position(m.x,m.anchorX,screen,Math.round(width(m,c)*m.scale));}
-    public int y(HudModule m,int screen){return HudGeometry.position(m.y,m.anchorY,screen,Math.round(height(m)*m.scale));}
+    public HudGeometry.Bounds bounds(HudModule m,int screenWidth,int screenHeight,MinecraftClient c){return HudGeometry.layout(m,width(m,c),height(m),screenWidth,screenHeight);}
+    public int x(HudModule m,int screen,MinecraftClient c){return bounds(m,screen,c.getWindow().getScaledHeight(),c).x();}
+    public int y(HudModule m,int screen){var c=MinecraftClient.getInstance();return bounds(m,c.getWindow().getScaledWidth(),screen,c).y();}
     public void render(DrawContext ctx,boolean editing){long start=HudTiming.enabled?System.nanoTime():0;render(ctx,editing,null);if(HudTiming.enabled&&!editing)HudTiming.record(System.nanoTime()-start);}
     public void render(DrawContext ctx,boolean editing,String selected){var c=MinecraftClient.getInstance();if((c.player==null||c.options.hudHidden)&&!editing)return;
         boolean frames=false;for(var module:config.modules)if(module.enabled&&module.id.equals("FPS")&&(module.showFrameTime||module.showGraph)){frames=true;break;}long now=System.nanoTime();
         if(frames&&!editing){if(lastFrame>0){frameMs[frameCursor++%frameMs.length]=(now-lastFrame)/1_000_000f;frameCount=Math.min(frameCount+1,frameMs.length);}lastFrame=now;}else lastFrame=0;
-        for(var m:config.modules){if(!m.enabled&&(!editing||selected!=null&&!m.id.equals(selected)))continue;if(!editing&&java.util.List.of("Scoreboard","Action Bar","Titles").contains(m.id)&&sample(m,c).lines.length==0)continue;int w=width(m,c),h=height(m);ctx.getMatrices().pushMatrix();ctx.getMatrices().translate(x(m,ctx.getScaledWindowWidth(),c),y(m,ctx.getScaledWindowHeight()));ctx.getMatrices().scale(m.scale,m.scale);
+        for(var m:config.modules){if(!m.enabled&&(!editing||selected!=null&&!m.id.equals(selected)))continue;if(!editing&&java.util.List.of("Scoreboard","Action Bar","Titles").contains(m.id)&&sample(m,c).lines.length==0)continue;int w=width(m,c),h=height(m);var layout=HudGeometry.layout(m,w,h,ctx.getScaledWindowWidth(),ctx.getScaledWindowHeight());
+            float partial=c.gameRenderer.getCamera().getLastTickProgress();renderFade=editing?1:m.id.equals("Titles")?HudMessageTiming.title(gg.hera.features.Presentation.titleTicks,gg.hera.features.Presentation.fadeIn,gg.hera.features.Presentation.stay,gg.hera.features.Presentation.fadeOut,partial):m.id.equals("Action Bar")?HudMessageTiming.action(gg.hera.features.Presentation.actionTicks,partial):1;
+            if(renderFade<=0){renderFade=1;continue;}ctx.getMatrices().pushMatrix();try{ctx.getMatrices().translate(layout.x(),layout.y());ctx.getMatrices().scale(layout.scale(),layout.scale());
             if(m.id.equals("Keystrokes"))keys(ctx,c,m);else{if(m.background!=0)HeraTheme.round(ctx,0,0,w,h,m.radius,alpha(m,m.background));switch(m.id){case "Paperdoll"->{if(c.player!=null)net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity(ctx,m.padding,m.padding,m.padding+40,m.padding+68,28,.0625f,0,0,c.player);}case "Spotify"->music(ctx,c,m);case "Armor HUD"->armor(ctx,c,m,editing);case "Inventar"->inventory(ctx,c,m);default->lines(ctx,c,m);}}
-            ctx.getMatrices().popMatrix();}
+            }finally{ctx.getMatrices().popMatrix();renderFade=1;}}
     }
     private void lines(DrawContext ctx,MinecraftClient c,HudModule m){var s=sample(m,c);int color=m.color;if(m.id.equals("Ping")&&m.latencyColor&&c.player!=null&&c.getNetworkHandler()!=null&&!c.isInSingleplayer()){var e=c.getNetworkHandler().getPlayerListEntry(c.player.getUuid());if(e!=null)color=e.getLatency()<80?0xFF70CBA4:e.getLatency()<180?0xFFF1B66B:0xFFE97676;}
         if(m.id.equals("Shield Status"))color=gg.hera.features.Presentation.shieldColor();
@@ -86,7 +94,7 @@ public final class HudRenderer {
     }
     private void armor(DrawContext ctx,MinecraftClient c,HudModule m,boolean editing){for(int i=0;i<ARMOR.length;i++){var stack=c.player==null?editing?PREVIEW_ARMOR[i].getDefaultStack():net.minecraft.item.ItemStack.EMPTY:c.player.getEquippedStack(ARMOR[i]);int x=m.padding+(m.vertical?0:i*30),y=m.padding+(m.vertical?i*24:0);ctx.drawItem(stack,x,y);if(stack.isEmpty())continue;if(stack.isDamageable()){int percent=Math.clamp(Math.round(100f*(stack.getMaxDamage()-stack.getDamage())/stack.getMaxDamage()),0,100),col=percent<20?0xFFE97676:percent<40?0xFFF1B66B:m.color;if(m.showDurability&&gg.hera.features.Esp.options().armorDurability)HeraTheme.hudText(ctx,(m.vanillaFont?VANILLA_PERCENT:PERCENT)[percent],x+(m.vertical?22:0),y+(m.vertical?4:23),alpha(m,col),m.vanillaFont,false);if(m.showBars){int by=y+18;ctx.fill(x,by,x+20,by+2,alpha(m,0xFF373B44));ctx.fill(x,by,x+Math.round(percent*.2f),by+2,alpha(m,percent<20?0xFFE97676:accent(m)));}}}}
     private void music(DrawContext ctx,MinecraftClient c,HudModule m){var track=MediaState.current();int p=m.padding;long position=MediaState.position(track),second=position/1000;
-        if(musicTrack!=track||musicPadding!=p||musicVanilla!=m.vanillaFont){musicTrack=track;musicPadding=p;musicVanilla=m.vanillaFont;musicSecond=-1;musicTitle=text(m,HeraTheme.fit(track.available()?track.title():"Keine Wiedergabe",200-p*2));String subtitle=track.available()?track.source()+(track.artist().isBlank()?"":" · "+track.artist())+(track.playing()?"":" · Pause"):"Spotify oder Browser öffnen";musicArtist=text(m,HeraTheme.fit(subtitle,200-p*2));musicStatus=text(m,track.available()?"Zeit nicht verfügbar":"Keine Windows-Medieninformationen");}
+        if(musicTrack!=track||musicPadding!=p||musicVanilla!=m.vanillaFont){musicTrack=track;musicPadding=p;musicVanilla=m.vanillaFont;musicSecond=-1;musicTitle=text(m,HeraTheme.fit(track.available()?track.title():"Keine Wiedergabe",200-p*2,m.vanillaFont));String subtitle=track.available()?track.source()+(track.artist().isBlank()?"":" · "+track.artist())+(track.playing()?"":" · Pause"):"Spotify oder Browser öffnen";musicArtist=text(m,HeraTheme.fit(subtitle,200-p*2,m.vanillaFont));musicStatus=text(m,track.available()?"Zeit nicht verfügbar":"Keine Windows-Medieninformationen");}
         HeraTheme.hudText(ctx,musicTitle,p,p+1,alpha(m,m.color),m.vanillaFont,m.textShadow);HeraTheme.hudText(ctx,musicArtist,p,p+16,alpha(m,HeraTheme.MUTED),m.vanillaFont,false);
         if(track.available()&&track.duration()>0){if(musicSecond!=second){musicSecond=second;musicElapsed=text(m,duration(second));musicRemaining=text(m,"−"+duration(Math.max(0,track.duration()-position)/1000));}HeraTheme.hudText(ctx,musicElapsed,p,p+34,alpha(m,HeraTheme.MUTED),m.vanillaFont,false);HeraTheme.hudText(ctx,musicRemaining,200-p-HeraTheme.measure(musicRemaining,m.vanillaFont),p+34,alpha(m,HeraTheme.MUTED),m.vanillaFont,false);HeraTheme.round(ctx,p,p+49,200-p*2,2,1,alpha(m,0xFF343942));int progress=(int)Math.round((200-p*2)*position/(double)track.duration());if(progress>0)HeraTheme.round(ctx,p,p+49,progress,2,1,alpha(m,accent(m)));}
         else HeraTheme.hudText(ctx,musicStatus,p,p+38,alpha(m,HeraTheme.MUTED),m.vanillaFont,false);

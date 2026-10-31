@@ -42,10 +42,10 @@ public final class HeraTheme {
         c.getMatrices().pushMatrix();c.getMatrices().translate(x,y);c.getMatrices().scale(scale,scale);
         if(!SmoothFont.draw(c,value,0,0,color,true))c.drawText(MinecraftClient.getInstance().textRenderer,Text.literal(value).setStyle(BOLD),0,0,color,false);c.getMatrices().popMatrix();
     }
-    public static String fit(String value,int width) {
-        int measured=SmoothFont.width(value,false);if(measured<0)measured=MinecraftClient.getInstance().textRenderer.getWidth(text(value));if(measured<=width)return value;
-        while(!value.isEmpty()){value=value.substring(0,value.offsetByCodePoints(value.length(),-1));int w=SmoothFont.width(value+"…",false);if(w<0)w=MinecraftClient.getInstance().textRenderer.getWidth(text(value+"…"));if(w<=width)return value+"…";}return "";
-    }
+    private static final java.util.function.ToIntFunction<String> HERA_WIDTH=s->labelWidth(s,false),VANILLA_WIDTH=s->labelWidth(s,true);
+    private static int labelWidth(String value,boolean vanilla){int width=vanilla?-1:SmoothFont.width(value,false);return width>=0?width:MinecraftClient.getInstance().textRenderer.getWidth(vanilla?Text.literal(value):text(value));}
+    public static String fit(String value,int width){return fit(value,width,false);}
+    public static String fit(String value,int width,boolean vanilla){return TextFit.fit(value,width,vanilla?VANILLA_WIDTH:HERA_WIDTH);}
     public static void toggle(DrawContext c,int x,int y,boolean on) {
         round(c,x,y,25,13,6,on?ACCENT:0xFF424A5B);round(c,x+(on?14:2),y+2,9,9,4,0xFFF3F5FA);
     }

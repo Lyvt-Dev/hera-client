@@ -40,6 +40,7 @@ public final class ModuleSettingsScreen extends Screen {
 
             option(()->"Darstellung: "+(hud.advancedSettings.contains(id)?"Weniger":"Mehr"),()->{if(!hud.advancedSettings.remove(id))hud.advancedSettings.add(id);});
             if(hud.advancedSettings.contains(id)){
+            if(!List.of("Inventar","Armor HUD","Keystrokes","Spotify","Paperdoll").contains(id))slider(()->"Max. Textbreite: "+module.maxWidth+" px",()->module.maxWidth,80,640,10,v->module.maxWidth=(int)v);
             if(!id.equals("Inventar"))color("Textfarbe",()->module.color,v->module.color=v);
             if(List.of("FPS","Armor HUD","Keystrokes","Spotify").contains(id)){flag("Hera-Akzent übernehmen",()->module.useGlobalAccent,()->module.useGlobalAccent=!module.useGlobalAccent);color("Eigener Akzent",()->module.accent,v->{module.accent=v;module.useGlobalAccent=false;});}
             slider(()->"Deckkraft: "+Math.round(module.opacity*100)+"%",()->module.opacity,.1,1,.05,v->module.opacity=(float)v);
