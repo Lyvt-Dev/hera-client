@@ -11,6 +11,6 @@ public abstract class OwnNametagMixin {
     @Inject(method="hasLabel(Lnet/minecraft/entity/PlayerLikeEntity;D)Z",at=@At("RETURN"),cancellable=true)
     private void hera$ownLabel(PlayerLikeEntity entity,double distance,CallbackInfoReturnable<Boolean> cir){
         var c=MinecraftClient.getInstance();var o=Esp.options();
-        if(o.ownNametag&&entity==c.player&&!c.options.hudHidden&&!c.options.getPerspective().isFirstPerson()&&!entity.isInvisible()&&(o.nametagSneaking||!entity.isSneaking()))cir.setReturnValue(true);
+        if(o.ownNametag&&distance>=0&&distance<=(double)o.nametagRange*o.nametagRange&&entity==c.player&&!c.options.hudHidden&&c.gameRenderer.getCamera().isThirdPerson()&&!entity.isInvisible()&&(o.nametagSneaking||!entity.isSneaking()))cir.setReturnValue(true);
     }
 }

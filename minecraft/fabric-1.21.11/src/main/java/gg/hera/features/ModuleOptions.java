@@ -8,7 +8,7 @@ public final class ModuleOptions {
     public java.util.List<Waypoint> waypoints=new java.util.ArrayList<>();
     public int shieldReady=0xFF9CCDB3,shieldBlocking=0xFFF49B63,shieldCooldown=0xFFFF7777;
     public int trailColor=0xFFF49B63,blockColor=0xFFF49B63,hitColor=0xFFFF8866,blockWidth=2;
-    public int companionAnimation=0;public int companionMode=0; public boolean companionVoice; public float companionVolume=.5f;
+    public int companionBlend=4;public boolean companionGlow=true,companionHideWithHud;public int companionAnimation=0;public int companionMode=0; public boolean companionVoice; public float companionVolume=.5f;
     public boolean invisibleHitboxes=true,scoreNumbers=true;
     public float itemScale=1,itemX,itemY,itemZ,fireHeight=.45f,capeStrength=1;
     public static final class Waypoint {public String name="",world="";public double x,y,z;public int color=0xFFF49B63;}
@@ -17,6 +17,7 @@ public final class ModuleOptions {
     public boolean customCrosshair,ownNametag,nametagSneaking=true;
     public boolean crosshairDot=true,crosshairOutline=true,crosshairImage;
     public int crosshairColor=0xFFFFFFFF,crosshairLength=5,crosshairGap=3,crosshairThickness=1,crosshairSize=24,crosshairOpacity=100;
+    public int nametagRange=64;public boolean itemMirrorLeft,itemPhysicsFlat=true;public float legacyStrength=1,itemPhysicsSpeed=1;
     public boolean hideOwnArmor;
     public boolean hideHelmet=true,hideChest=true,hideLegs=true,hideBoots=true;
     public boolean hitboxes,tntTimer,itemHighlighter,noFog,timeChanger,weatherChanger,zoom,freeLook,fullBright,freecam;
@@ -31,7 +32,8 @@ public final class ModuleOptions {
     public float weatherRain=1,weatherThunder=1;
     public static final int[] COLORS={0xFFF0A46E,0xFF79D8FF,0xFFB7F58A,0xFFC4A3FF,0xFFFF7D9C,0xFFFFFFFF};
     public void normalize(){
-        companionAnimation=Math.clamp(companionAnimation,0,8);companionMode=Math.clamp(companionMode,0,2);companionVolume=finite(companionVolume,0,1,.5f);
+        nametagRange=Math.clamp(nametagRange,8,64);legacyStrength=finite(legacyStrength,0,2,1);itemPhysicsSpeed=finite(itemPhysicsSpeed,0,2,1);
+        companionBlend=Math.clamp(companionBlend,0,10);companionAnimation=Math.clamp(companionAnimation,0,8);companionMode=Math.clamp(companionMode,0,2);companionVolume=finite(companionVolume,0,1,.5f);
         if(presentation==null)presentation=new java.util.LinkedHashMap<>();presentation.keySet().retainAll(Presentation.IDS);
         countedItems=new java.util.LinkedHashSet<>(ItemSelection.clean(countedItems).stream().limit(8).toList());hiddenParticles=new java.util.LinkedHashSet<>(ItemSelection.clean(hiddenParticles).stream().limit(128).toList());
         if(waypoints==null)waypoints=new java.util.ArrayList<>();waypoints=new java.util.ArrayList<>(waypoints.stream().filter(w->w!=null&&w.name!=null&&w.name.length()<=32&&w.world!=null&&w.world.length()<=512&&Double.isFinite(w.x)&&Double.isFinite(w.y)&&Double.isFinite(w.z)&&Math.abs(w.x)<=30_000_000&&Math.abs(w.z)<=30_000_000&&Math.abs(w.y)<4096).limit(32).toList());

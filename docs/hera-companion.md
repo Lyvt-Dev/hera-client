@@ -11,3 +11,7 @@ Following is a local floating companion with a bounded catch-up teleport when fa
 Three opt-in synthesized English voice clips and German captions remain from 0.13.1. Audio is local Java Sound with master-volume scaling and a cooldown. No microphone or online speech service. The model and its embedded textures were supplied by the owner for this integration; no additional third-party character pack or code was fetched. No separate third-party asset license was included in the supplied file. Original creator attribution/public distribution rights have not been independently established; owner provenance should be retained before redistribution beyond the requested project.
 
 Implemented and automated-test evidence is recorded in status.md. Actual model appearance, UV orientation, animation poses, glow blending, shoulder placement and sound playback still require the owner's in-game test; a successful build does not prove those visual results.
+
+## 0.14.3 follow-up
+
+Actual-camera shoulder visibility now includes Free Look/Freecam. F1 hiding is optional for the world model; captions still hide. Pose preparation is shared for base/glow passes, quaternions are cached, model preparation is asynchronous and clip transitions/restart are configurable. Voice cancellation/volume handling was revised off the game thread. Details and untested runtime boundaries: render-quality-065.md.

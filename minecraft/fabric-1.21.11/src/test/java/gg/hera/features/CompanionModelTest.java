@@ -10,7 +10,7 @@ class CompanionModelTest {
  private int cubes;
  private final Set<String> bones=new HashSet<>();
  private void visit(CompanionModel.Bone bone){
-  assertTrue(bones.add(bone.id));cubes+=bone.cubes.length;
+  assertTrue(bones.add(bone.id));assertNotNull(bone.orientation);assertNotSame(bone.position,bone.fromPosition);assertNotSame(bone.angles,bone.fromAngles);cubes+=bone.cubes.length;
   for(var cube:bone.cubes)for(var quad:cube.quads){
    assertEquals(4,quad.vertices.length);
    for(var vertex:quad.vertices){assertEquals(5,vertex.length);for(float n:vertex)assertTrue(Float.isFinite(n));}

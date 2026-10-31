@@ -39,28 +39,28 @@ Initial code inspection checked the companion render and caption paths, ESP sele
 | HUD | Scoreboard | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
 | HUD | Action Bar | Implemented shared viewport fitting / editor bounds; immediate content/expiry invalidation and fade timing; module-specific and in-game acceptance still pending |
 | HUD | Titles | Implemented shared viewport fitting / editor bounds; immediate content/expiry invalidation and fade timing; module-specific and in-game acceptance still pending |
-| HUD | Shield Status | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
+| HUD | Shield Status | Implemented shared HUD layout plus cached patterned-shield dye matching; math/target checks passed; runtime appearance pending |
 | HUD | Jump Reset | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
-| Presentation | Hera Companion | Owner model and eight clips packaged; in-game acceptance pending. Source follow-up: shoulder visibility uses configured perspective rather than actual controlled-camera third-person state; review with Free Look/Freecam pending |
+| Presentation | Hera Companion | Implemented actual-camera shoulder visibility, F1 option, asynchronous mesh preparation, shared cached pose/quaternions, clip transitions and voice cancellation/volume handling; math/ASM checks passed; runtime/audio acceptance pending |
 | Presentation | Weavy Capes | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Chat Heads | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Clear Lava | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Presentation | Clear Lava | Fog policy and scoped fire-overlay/camera integration reviewed and improved; runtime under-lava acceptance pending |
 | Presentation | Arrow Trail | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Item Model | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Block Outlines | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Presentation | Item Model | Implemented scoped transforms and optional left-hand X mirroring; direct cancellation/exception matrix tests passed; runtime acceptance pending |
+| Presentation | Block Outlines | Improved detached-camera gating to avoid stale player selection; exact voxel-edge rendering and runtime acceptance still pending |
 | Presentation | Hit Color | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Toggle Sprint | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Old Animations | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | No Hurt Cam | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Low Fire | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Presentation | Old Animations | Implemented scoped, mirrored added swing and configurable strength; target/scope checks passed; full legacy-animation fidelity and runtime review remain pending |
+| Presentation | No Hurt Cam | Implemented detached-camera body-tilt/bob suppression alongside ordinary module toggle; mapped hooks checked; runtime acceptance pending |
+| Presentation | Low Fire | Implemented whole-call try/finally matrix scope and controlled-camera overlay gating; bytecode cleanup checks passed; runtime acceptance pending |
 | Presentation | No Advancement | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Particle Settings | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Presentation | Item Physics | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Presentation | Item Physics | Implemented scoped transform cleanup and ground/air controls; target/finally checks passed; still stylized, runtime and renderer interoperability pending |
 | Presentation | Clear GUI | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Way Points | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Shulker Preview | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Custom Crosshair | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Own Nametag | Review and improvement pending; existing implementation is not treated as completed quality work |
+| Other modules | Custom Crosshair | Implemented texture-only replacement preserving native attack/debug paths and actual-camera gating; mapped/remapped calls checked; image import/storage performance and runtime acceptance pending |
+| Other modules | Own Nametag | Implemented actual-camera visibility and bounded 8–64 block range within Vanilla gate; mapped hooks checked; runtime acceptance pending |
 | Other modules | D-Tap | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | Rüstung ausblenden | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | Kristall-Totem | Review and improvement pending; existing implementation is not treated as completed quality work |
@@ -81,3 +81,5 @@ Initial code inspection checked the companion render and caption paths, ESP sele
 | Other modules | Freecam | Implemented tick/render interpolation, stable menu view, entry-pose capture and world/player identity guards; math/lifecycle/API checks passed; runtime acceptance pending |
 
 Camera/world-visual pass implementation and verification boundaries: camera-quality-064.md. These implemented changes do not close the remaining per-module or runtime review.
+
+Visual/companion integration pass, license review and runtime limits: render-quality-065.md. All remaining module-specific checks stay in scope.
