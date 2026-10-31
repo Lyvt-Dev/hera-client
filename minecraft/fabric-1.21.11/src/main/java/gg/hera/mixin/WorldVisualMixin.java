@@ -8,10 +8,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(World.class)
 public abstract class WorldVisualMixin {
     private boolean hera$client(){return (Object)this instanceof ClientWorld;}
-    @Inject(method="getTimeOfDay",at=@At("HEAD"),cancellable=true)
-    private void hera$time(CallbackInfoReturnable<Long> cir){if(hera$client() && Esp.options().timeChanger)cir.setReturnValue((long)Esp.options().worldTime);}
+    @Inject(method="getTimeOfDay",at=@At("RETURN"),cancellable=true)
+    private void hera$time(CallbackInfoReturnable<Long> cir){if(hera$client() && Esp.options().timeChanger)cir.setReturnValue(gg.hera.features.WorldVisualPolicy.time(cir.getReturnValue(),Esp.options().worldTime));}
     @Inject(method="getRainGradient",at=@At("HEAD"),cancellable=true)
-    private void hera$rain(float delta,CallbackInfoReturnable<Float> cir){if(hera$client() && Esp.options().weatherChanger)cir.setReturnValue(Esp.options().weather==0?0f:1f);}
+    private void hera$rain(float delta,CallbackInfoReturnable<Float> cir){if(hera$client() && Esp.options().weatherChanger)cir.setReturnValue(gg.hera.features.WorldVisualPolicy.rain(Esp.options().weather,Esp.options().weatherRain));}
     @Inject(method="getThunderGradient",at=@At("HEAD"),cancellable=true)
-    private void hera$thunder(float delta,CallbackInfoReturnable<Float> cir){if(hera$client() && Esp.options().weatherChanger)cir.setReturnValue(Esp.options().weather==2?1f:0f);}
+    private void hera$thunder(float delta,CallbackInfoReturnable<Float> cir){if(hera$client() && Esp.options().weatherChanger)cir.setReturnValue(gg.hera.features.WorldVisualPolicy.thunder(Esp.options().weather,Esp.options().weatherRain,Esp.options().weatherThunder));}
 }

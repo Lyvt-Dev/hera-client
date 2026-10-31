@@ -27,7 +27,8 @@ public final class ModuleOptions {
     public int lineWidth=1,hitboxWidth=1,worldTime=6000,weather=0,totemDelay=10;
     public float zoomFactor=4,freecamSpeed=0.5f,crystalRange=8;
     public float lookDistance=4,brightness=1;
-    public boolean fogWater=true,fogLava=true;
+    public boolean fogAir=true,fogWater=true,fogLava=true,fogPowderSnow=true,zoomSmooth=true;
+    public float weatherRain=1,weatherThunder=1;
     public static final int[] COLORS={0xFFF0A46E,0xFF79D8FF,0xFFB7F58A,0xFFC4A3FF,0xFFFF7D9C,0xFFFFFFFF};
     public void normalize(){
         companionAnimation=Math.clamp(companionAnimation,0,8);companionMode=Math.clamp(companionMode,0,2);companionVolume=finite(companionVolume,0,1,.5f);
@@ -42,6 +43,7 @@ public final class ModuleOptions {
         lineWidth=Math.clamp(lineWidth,1,4);hitboxWidth=Math.clamp(hitboxWidth,1,4);
         worldTime=Math.floorMod(worldTime,24000);weather=Math.clamp(weather,0,2);totemDelay=Math.clamp(totemDelay,2,40);
         zoomFactor=finite(zoomFactor,2,12,4);freecamSpeed=finite(freecamSpeed,.1f,3,.5f);crystalRange=finite(crystalRange,2,16,8);
+        weatherRain=finite(weatherRain,0,1,1);weatherThunder=finite(weatherThunder,0,1,1);
         lookDistance=finite(lookDistance,1,8,4);brightness=finite(brightness,.2f,1,1);
         espColor|=0xFF000000;hitboxColor|=0xFF000000;tntColor|=0xFF000000;highlightColor|=0xFF000000;
     }

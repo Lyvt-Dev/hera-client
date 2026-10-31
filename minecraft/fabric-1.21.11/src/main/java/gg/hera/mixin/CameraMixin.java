@@ -11,14 +11,17 @@ public abstract class CameraMixin {
     @Shadow private boolean thirdPerson;
     @Shadow protected abstract void setRotation(float yaw,float pitch);
     @Shadow protected abstract void setPos(double x,double y,double z);
-    @Shadow protected abstract float clipToSpace(float distance);
+    @Shadow private float clipToSpace(float distance){throw new AssertionError();}
     @Shadow protected abstract void moveBy(float x,float y,float z);
+    // Preserve Vanilla's interpolated focal position, including crouch/vehicle offsets.
+    @ModifyVariable(method="update",at=@At("HEAD"),argsOnly=true,ordinal=0)
+    private boolean hera$baseCamera(boolean thirdPerson){return CameraController.controlsView()?false:thirdPerson;}
     @Inject(method="update",at=@At("TAIL"))
     private void hera$camera(World world,Entity entity,boolean thirdPerson,boolean inverse,float delta,CallbackInfo ci){
-        if(CameraController.looking()){
-            thirdPerson=true;setRotation(CameraController.yaw,CameraController.pitch);
-            if(CameraController.detached()){var p=CameraController.position;setPos(p.x,p.y,p.z);}
-            else {setPos(entity.getX(),entity.getEyeY(),entity.getZ());moveBy(-clipToSpace(gg.hera.features.Esp.options().lookDistance),0,0);}
+        if(CameraController.controlsView()){
+            this.thirdPerson=true;boolean front=inverse&&!CameraController.detached();setRotation(CameraController.yaw+(front?180:0),front?-CameraController.pitch:CameraController.pitch);
+            if(CameraController.detached()){var p=CameraController.renderPosition(delta);setPos(p.x,p.y,p.z);}
+            else {moveBy(-clipToSpace(gg.hera.features.Esp.options().lookDistance),0,0);}
         }
     }
 }

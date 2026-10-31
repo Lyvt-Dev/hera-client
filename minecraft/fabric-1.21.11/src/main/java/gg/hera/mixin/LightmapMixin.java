@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LightmapTextureManager.class)
 public abstract class LightmapMixin {
     @Redirect(method="update",at=@At(value="INVOKE",target="Lnet/minecraft/world/dimension/DimensionType;ambientLight()F"))
-    private float hera$bright(DimensionType dimension){return Esp.options().fullBright?Esp.options().brightness:dimension.ambientLight();}
+    private float hera$bright(DimensionType dimension){return Esp.options().fullBright?gg.hera.features.WorldVisualPolicy.brightness(dimension.ambientLight(),Esp.options().brightness):dimension.ambientLight();}
     @Inject(method="getDarkness",at=@At("HEAD"),cancellable=true)
     private void hera$dark(net.minecraft.entity.LivingEntity player,float factor,float delta,CallbackInfoReturnable<Float> cir){if(Esp.options().fullBright)cir.setReturnValue(0f);}
 }

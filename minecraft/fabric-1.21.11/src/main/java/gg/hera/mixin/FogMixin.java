@@ -6,5 +6,9 @@ import org.spongepowered.asm.mixin.injection.*;
 @Mixin(FogRenderer.class)
 public abstract class FogMixin {
     @ModifyVariable(method="getFogBuffer",at=@At("HEAD"),argsOnly=true)
-    private FogRenderer.FogType hera$fog(FogRenderer.FogType type){var o=Esp.options();if((!o.noFog&&!gg.hera.features.Presentation.enabled("Clear Lava")) || net.minecraft.client.MinecraftClient.getInstance().world==null)return type;var camera=net.minecraft.client.MinecraftClient.getInstance().gameRenderer.getCamera();var submerged=camera.getSubmersionType();if(gg.hera.features.Presentation.enabled("Clear Lava")&&submerged==net.minecraft.block.enums.CameraSubmersionType.LAVA)return FogRenderer.FogType.NONE;if(!o.noFog)return type;if(submerged==net.minecraft.block.enums.CameraSubmersionType.WATER && !o.fogWater || submerged==net.minecraft.block.enums.CameraSubmersionType.LAVA && !o.fogLava)return type;return FogRenderer.FogType.NONE;}
+    private FogRenderer.FogType hera$fog(FogRenderer.FogType type){
+        var c=net.minecraft.client.MinecraftClient.getInstance();if(c.world==null)return type;var o=Esp.options();boolean clear=gg.hera.features.Presentation.enabled("Clear Lava");if(!o.noFog&&!clear)return type;
+        var medium=switch(c.gameRenderer.getCamera().getSubmersionType()){case WATER->gg.hera.features.WorldVisualPolicy.Medium.WATER;case LAVA->gg.hera.features.WorldVisualPolicy.Medium.LAVA;case NONE->gg.hera.features.WorldVisualPolicy.Medium.AIR;default->gg.hera.features.WorldVisualPolicy.Medium.POWDER_SNOW;};
+        return gg.hera.features.WorldVisualPolicy.removeFog(o,clear,medium)?FogRenderer.FogType.NONE:type;
+    }
 }

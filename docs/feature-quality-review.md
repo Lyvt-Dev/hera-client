@@ -41,7 +41,7 @@ Initial code inspection checked the companion render and caption paths, ESP sele
 | HUD | Titles | Implemented shared viewport fitting / editor bounds; immediate content/expiry invalidation and fade timing; module-specific and in-game acceptance still pending |
 | HUD | Shield Status | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
 | HUD | Jump Reset | Implemented shared viewport fitting / editor bounds; module-specific and in-game acceptance still pending |
-| Presentation | Hera Companion | Owner-model implementation, 84-test mod build and importer tests; in-game acceptance pending |
+| Presentation | Hera Companion | Owner model and eight clips packaged; in-game acceptance pending. Source follow-up: shoulder visibility uses configured perspective rather than actual controlled-camera third-person state; review with Free Look/Freecam pending |
 | Presentation | Weavy Capes | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Chat Heads | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Presentation | Clear Lava | Review and improvement pending; existing implementation is not treated as completed quality work |
@@ -72,10 +72,12 @@ Initial code inspection checked the companion render and caption paths, ESP sele
 | Other modules | Hitboxes | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | TNT Timer | Review and improvement pending; existing implementation is not treated as completed quality work |
 | Other modules | Item Highlighter | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | No Fog | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Time Changer | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Weather Changer | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Zoom | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Free Look | Confirmed source issue: raw player tick position overrides interpolated camera position in CameraMixin; fix and validation pending |
-| Other modules | Full Bright | Review and improvement pending; existing implementation is not treated as completed quality work |
-| Other modules | Freecam | Confirmed source issue: tick-position assigned directly in CameraMixin, without render interpolation; fix and validation pending |
+| Other modules | No Fog | Implemented independent air/water/lava/powder-snow controls, legacy defaults and tested Clear Lava priority; runtime acceptance pending |
+| Other modules | Time Changer | Implemented preserved day/moon index, overflow guard and clock slider; policy/API tests passed; runtime acceptance pending |
+| Other modules | Weather Changer | Implemented rain/thunder intensity controls with rain coupling; policy/API tests passed; runtime weather acceptance pending |
+| Other modules | Zoom | Implemented optional frame-rate-independent easing with one shared FOV factor per render frame and finer control; easing/API tests passed; runtime alignment pending |
+| Other modules | Free Look | Implemented Vanilla focal-position preservation, actual third-person field write and front perspective handling; finer distance slider and API checks; runtime acceptance pending |
+| Other modules | Full Bright | Implemented brightness floor that never dims a naturally brighter dimension, finer slider; policy/API tests passed; runtime brightness acceptance pending |
+| Other modules | Freecam | Implemented tick/render interpolation, stable menu view, entry-pose capture and world/player identity guards; math/lifecycle/API checks passed; runtime acceptance pending |
+
+Camera/world-visual pass implementation and verification boundaries: camera-quality-064.md. These implemented changes do not close the remaining per-module or runtime review.
