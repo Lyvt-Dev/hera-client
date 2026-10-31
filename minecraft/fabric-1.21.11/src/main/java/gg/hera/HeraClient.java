@@ -17,6 +17,8 @@ import net.minecraft.client.gui.screen.TitleScreen;
 
 public final class HeraClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
+        gg.hera.cosmetics.CompanionModel.load();
+        net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents.BEFORE_ENTITIES.register(gg.hera.cosmetics.CompanionModel::render);
         HudConfig config = new HudConfig(FabricLoader.getInstance().getConfigDir().resolve("hera/hud.json"));
         config.load(); HudRenderer renderer = new HudRenderer(config);
         net.fabricmc.fabric.api.resource.ResourceManagerHelper.get(net.minecraft.resource.ResourceType.CLIENT_RESOURCES).registerReloadListener(new net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener(){
