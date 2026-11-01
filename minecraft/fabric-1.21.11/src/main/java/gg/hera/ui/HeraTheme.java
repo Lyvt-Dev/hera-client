@@ -7,8 +7,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.client.gl.RenderPipelines;
 
 public final class HeraTheme {
-    public static final int BG=0xFF101216, PANEL=0xFF171A20, RAISED=0xFF20242B, LINE=0xFF2C313A, SELECTED=0xFF30271F;
-    public static final int TEXT=0xFFF4F2EF, MUTED=0xFFA9ADB5, ACCENT=0xFFF49B63;
+    public static final int BG=0xFF0B0D11, PANEL=0xFF12151B, RAISED=0xFF1A1E26, LINE=0xFF22262F, SELECTED=0xFF2A2119;
+    public static final int TEXT=0xFFF4F2EF, MUTED=0xFFA1A8B3, ACCENT=0xFFF49B63, ACCENT_SOFT=0xFF30271F, CARD=0xFF151920, CARD_HOVER=0xFF1C2129;
     private static final Style FONT=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","medium")));
     private static final Style BOLD=Style.EMPTY.withFont(new StyleSpriteSource.Font(Identifier.of("hera","bold")));
     private static final Identifier LOGO=Identifier.of("hera","brand/hera");
@@ -47,6 +47,16 @@ public final class HeraTheme {
     public static String fit(String value,int width){return fit(value,width,false);}
     public static String fit(String value,int width,boolean vanilla){return TextFit.fit(value,width,vanilla?VANILLA_WIDTH:HERA_WIDTH);}
     public static void toggle(DrawContext c,int x,int y,boolean on) {
-        round(c,x,y,25,13,6,on?ACCENT:0xFF424A5B);round(c,x+(on?14:2),y+2,9,9,4,0xFFF3F5FA);
+        if(on)round(c,x-1,y-1,27,15,7,0x55F49B63);
+        round(c,x,y,25,13,6,on?ACCENT:0xFF343A46);round(c,x+(on?14:2),y+2,9,9,4,0xFFF3F5FA);
+    }
+    /** Rounded icon tile used by module cards and headers. */
+    public static void iconTile(DrawContext c,String name,int x,int y,int size,boolean active){
+        round(c,x,y,size,size,Math.max(3,size/4),active?ACCENT_SOFT:0xFF20252E);
+        int inner=Math.round(size*0.58f),pad=(size-inner)/2;icon(c,name,x+pad,y+pad,inner,active?ACCENT:MUTED);
+    }
+    /** Card surface with an optional accent outline. */
+    public static void card(DrawContext c,int x,int y,int w,int h,int r,int fill,boolean outlined){
+        if(outlined){round(c,x,y,w,h,r,ACCENT);round(c,x+1,y+1,w-2,h-2,Math.max(1,r-1),fill);}else round(c,x,y,w,h,r,fill);
     }
 }

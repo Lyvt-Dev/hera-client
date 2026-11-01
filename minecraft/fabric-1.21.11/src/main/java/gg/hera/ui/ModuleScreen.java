@@ -26,6 +26,7 @@ public final class ModuleScreen extends Screen {
     private String group(String id){if(hud(id)!=null)return "HUD";return switch(id){case "D-Tap","Kristall-Totem","Auto-Totem","Zoom","Free Look","Freecam","Toggle Sprint"->"Gameplay";default->"Darstellung";};}
     private String description(String id){String extra=switch(id){case "Hera Companion"->"Dein 3D-Modell · Folgen, Schulter & 8 Animationen";case "Weavy Capes"->"Segmentierte Cape-Bewegung · lokal dargestellt";case "Chat Heads"->"Skin-Köpfe bei Nachrichten bekannter Spieler";case "Clear Lava"->"Lavanebel und Feuer unter Lava ausblenden";case "Arrow Trail"->"Lichtspur für fliegende geladene Pfeile";case "Item Model"->"Größe und Position deiner Hand-Items";case "Potion Status"->"Aktive Trankeffekte mit verbleibender Zeit";case "Uptime"->"Dauer deiner aktuellen Verbindung";case "TPS"->"Schätzung aus empfangenen Weltzeit-Paketen";case "Combo Counter"->"Bestätigte Spielertreffer · Reset nach 3 Sekunden";case "Item Counter"->"Zähle selbst ausgewählte Inventar-Items";case "Item Changes"->"Erhaltene und verlorene Inventar-Items";case "Day Counter"->"Minecraft-Tage deiner aktuellen Welt";case "Resource Pack Display"->"Aktive Ressourcenpakete";case "Saturation HUD"->"Serverübermittelte Hunger- und Sättigungswerte";case "Paperdoll"->"Deine Spielfigur als bewegliches HUD";case "Helditem"->"Item-Name und Verzauberungen";case "Scoreboard"->"Server-Scoreboard frei positionieren";case "Action Bar"->"Server-Actionbar positionieren und skalieren";case "Titles"->"Server-Titel positionieren und skalieren";case "Block Outlines"->"Farbe und Stärke der anvisierten Blockumrandung";case "Hit Color"->"Farbe verletzter geladener Entities";case "Jump Reset"->"Visuelle Timing-Hilfe · springt nicht automatisch";case "Toggle Sprint"->"Sprintmodus umschalten · Taste in Minecraft belegen";case "Old Animations"->"Klassische Swing-Bewegung für Hand-Items";case "No Hurt Cam"->"Schadensbedingtes Kamerawackeln ausblenden";case "Low Fire"->"Feuer-Overlay absenken";case "Shield Status"->"Schildstatus mit zustandsabhängiger HUD-Farbe";case "No Advancement"->"Fortschritts-Toasts ausblenden";case "Particle Settings"->"Ausgewählte Partikel lokal deaktivieren";case "Item Physics"->"Liegende und rotierende Item-Drops";case "Clear GUI"->"Abdunklung hinter Ingame-Menüs entfernen";case "Way Points"->"Eigene Wegpunkte je Server und Dimension";case "Shulker Preview"->"Übermittelte Shulker-Inhalte im Tooltip ansehen";case "Hitboxes"->"Geladene Entities · echtes Server-Vanish ist nicht sichtbar";default->"";};if(!extra.isEmpty())return extra;String d=ModuleCatalog.description(id);if(!d.isEmpty())return d;return switch(id){case "Item-ESP"->"Markiere ausgewählte Items und Blöcke.";case "Spieler-ESP"->"Behalte geladene Spieler im Blick.";case "Mob-ESP"->"Markiere Mobs mit deinem eigenen Stil.";case "Fast Items"->"Passe die Darstellung von Item-Drops an.";case "Auto-Totem"->"Fülle deine Nebenhand mit einem Totem nach.";case "Kristall-Totem"->"Wähle ein Hotbar-Totem bei Kristall-Gefahr.";case "Keystrokes"->"Deine Tasten und Mausklicks im Spiel.";case "Armor HUD"->"Rüstung und Haltbarkeit auf einen Blick.";default->"Position, Größe und Farben für dein HUD.";};}
     private List<String> ids(){var all=new ArrayList<>(ModuleCatalog.IDS);hud.modules.forEach(m->all.add(m.id));String q=search.toLowerCase(Locale.ROOT);return all.stream().filter(id->category.equals("Alle Module")||category.equals("Aktiv")&&enabled(id)||category.equals(group(id))).filter(id->id.toLowerCase(Locale.ROOT).contains(q)||description(id).toLowerCase(Locale.ROOT).contains(q)).toList();}
+    private int countIn(String name){var all=new ArrayList<>(ModuleCatalog.IDS);hud.modules.forEach(m->all.add(m.id));return (int)all.stream().filter(id->name.equals("Alle Module")||name.equals("Aktiv")&&enabled(id)||name.equals(group(id))).count();}
     private void revealSelection(){int i=ids().indexOf(selected);if(i>=0){if(i<listScroll)listScroll=i;else if(i>=listScroll+l.visibleRows())listScroll=i-l.visibleRows()+1;}}
     public void select(String id){selected=id;detailScroll=0;revealSelection();rebuild();}
     @Override protected void init(){
@@ -44,7 +45,8 @@ public final class ModuleScreen extends Screen {
         clearChildren();addDrawableChild(field);if(searchFocused)setFocused(field);
         int nav=l.y()+96;for(String name:List.of("Alle Module","Aktiv","HUD","Gameplay","Darstellung")){
             addDrawableChild(new HeraButton(l.x()+12,nav,l.rail()-24,30,name,false,()->{category=name;listScroll=0;detailScroll=0;if(!ids().isEmpty()&&!ids().contains(selected))selected=ids().getFirst();rebuild();}){
-                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean current=category.equals(name);if(current||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,6,current?HeraTheme.SELECTED:HeraTheme.RAISED);HeraTheme.icon(c,name,getX()+10,getY()+9,12,current?HeraTheme.ACCENT:HeraTheme.MUTED);HeraTheme.label(c,name,getX()+29,getY()+11,current?HeraTheme.TEXT:HeraTheme.MUTED);if(current)HeraTheme.round(c,getX(),getY()+8,2,14,1,HeraTheme.ACCENT);}
+                @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean current=category.equals(name);if(current||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,8,current?HeraTheme.SELECTED:HeraTheme.RAISED);HeraTheme.icon(c,name,getX()+10,getY()+9,12,current?HeraTheme.ACCENT:HeraTheme.MUTED);HeraTheme.label(c,name,getX()+29,getY()+11,current?HeraTheme.TEXT:HeraTheme.MUTED);
+                    String count=String.valueOf(countIn(name));HeraTheme.label(c,count,getX()+width-8-HeraTheme.measure(HeraTheme.text(count),false),getY()+11,current?HeraTheme.ACCENT:0xFF6C7480);if(current)HeraTheme.round(c,getX(),getY()+8,3,14,1,HeraTheme.ACCENT);}
             });nav+=38;
         }
         addDrawableChild(new HeraButton(l.x()+12,l.bottom()-37,l.rail()-24,27,"HUD anordnen",false,()->client.setScreen(new HudEditorScreen(hud,renderer,features))));
@@ -55,10 +57,11 @@ public final class ModuleScreen extends Screen {
                 @Override public boolean keyPressed(KeyInput input){if(isFocused()&&input.key()==GLFW.GLFW_KEY_SPACE){toggle(id);rebuild();return true;}return super.keyPressed(input);}
                 @Override public void onClick(Click click,boolean doubled){if(click.x()>getX()+width-39){toggle(id);rebuild();}else select(id);}
                 @Override protected void renderWidget(DrawContext c,int mx,int my,float d){boolean on=enabled(id),chosen=selected.equals(id);
-                    if(chosen||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,7,chosen?HeraTheme.SELECTED:HeraTheme.RAISED);
-                    if(chosen)HeraTheme.round(c,getX(),getY()+10,2,height-20,1,HeraTheme.ACCENT);
-                    HeraTheme.icon(c,id,getX()+12,getY()+11,16,chosen?HeraTheme.ACCENT:HeraTheme.MUTED);
-                    HeraTheme.label(c,HeraTheme.fit(id,width-83),getX()+39,getY()+12,HeraTheme.TEXT);HeraTheme.label(c,HeraTheme.fit(description(id),width-56),getX()+12,getY()+36,HeraTheme.MUTED);HeraTheme.toggle(c,getX()+width-34,getY()+12,on);
+                    HeraTheme.card(c,getX(),getY(),width,height,9,chosen?HeraTheme.SELECTED:isHovered()||isFocused()?HeraTheme.CARD_HOVER:HeraTheme.CARD,chosen);
+                    HeraTheme.iconTile(c,id,getX()+10,getY()+9,24,on||chosen);
+                    HeraTheme.label(c,HeraTheme.fit(id,width-88),getX()+42,getY()+11,HeraTheme.TEXT);
+                    HeraTheme.label(c,on?"Aktiv":"Aus",getX()+42,getY()+24,on?HeraTheme.ACCENT:0xFF6C7480);
+                    HeraTheme.label(c,HeraTheme.fit(description(id),width-22),getX()+10,getY()+40,HeraTheme.MUTED);HeraTheme.toggle(c,getX()+width-34,getY()+12,on);
                 }
             }).setTooltip(Tooltip.of(HeraTheme.text(description(id)+" · Leertaste: An / Aus")));
         }
@@ -82,13 +85,15 @@ public final class ModuleScreen extends Screen {
     }
     @Override public void render(DrawContext c,int mx,int my,float delta){
         c.getMatrices().pushMatrix();c.getMatrices().scale(uiScale,uiScale);mx=Math.round(mx/uiScale);my=Math.round(my/uiScale);
-        c.fill(0,0,canvasWidth,canvasHeight,0x55080B10);HeraTheme.panel(c,l.x(),l.y(),l.width(),l.height());
+        c.fillGradient(0,0,canvasWidth,canvasHeight,0x8805070A,0xCC05070A);HeraTheme.panel(c,l.x(),l.y(),l.width(),l.height());
         HeraTheme.round(c,l.x()+1,l.y()+1,l.rail()-1,l.height()-2,10,HeraTheme.BG);
         c.fill(l.listX(),l.y()+1,l.detailX(),l.bottom(),HeraTheme.PANEL);c.fill(l.detailX(),l.y()+1,l.x()+l.width()-10,l.bottom(),HeraTheme.BG);
         c.fill(l.listX(),l.y()+1,l.listX()+1,l.bottom(),HeraTheme.LINE);c.fill(l.detailX(),l.y()+1,l.detailX()+1,l.bottom(),HeraTheme.LINE);
         HeraTheme.logo(c,l.x()+15,l.y()+17,29);HeraTheme.title(c,"hera",l.x()+46,l.y()+23,1.6f,HeraTheme.TEXT);HeraTheme.label(c,"DEIN SETUP",l.x()+17,l.y()+61,HeraTheme.MUTED);
         HeraTheme.title(c,category,l.listX()+18,l.y()+26,1.35f,HeraTheme.TEXT);HeraTheme.label(c,visibleIds.size()+" Module",l.listX()+19,l.y()+49,HeraTheme.MUTED);
-        HeraTheme.round(c,l.listX()+12,l.y()+75,l.list()-24,31,5,field.isFocused()?HeraTheme.LINE:HeraTheme.RAISED);
+        HeraTheme.card(c,l.listX()+12,l.y()+75,l.list()-24,31,8,HeraTheme.RAISED,field.isFocused());
+        c.fill(l.x()+16,l.y(),l.x()+96,l.y()+2,HeraTheme.ACCENT);
+        if(!visibleIds.isEmpty()){HeraTheme.round(c,l.detailX()+12,l.y()+12,l.detailWidth()-24,88,12,HeraTheme.CARD);c.fillGradient(l.detailX()+12,l.y()+12,l.detailX()+l.detailWidth()-12,l.y()+40,0x22F49B63,0x00F49B63);}
         if(!visibleIds.isEmpty()){HeraTheme.label(c,group(selected).toUpperCase(Locale.ROOT),l.detailX()+24,l.y()+25,HeraTheme.MUTED);HeraTheme.title(c,HeraTheme.fit(selected,(int)((l.detailWidth()-45)/1.55f)),l.detailX()+24,l.y()+49,1.55f,HeraTheme.TEXT);
         HeraTheme.label(c,HeraTheme.fit(description(selected),l.detailWidth()-48),l.detailX()+24,l.y()+80,HeraTheme.MUTED);
         HeraTheme.label(c,"EINSTELLUNGEN",l.detailX()+26,l.y()+112,HeraTheme.MUTED);}
