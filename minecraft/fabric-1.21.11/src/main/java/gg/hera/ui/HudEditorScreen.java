@@ -27,7 +27,7 @@ public final class HudEditorScreen extends Screen {
         int paletteRows=Math.max(1,(height-154)/24);paletteScroll=Math.clamp(paletteScroll,0,Math.max(0,config.modules.size()-paletteRows));
         for(int i=paletteScroll;i<Math.min(config.modules.size(),paletteScroll+paletteRows);i++){var m=config.modules.get(i);int row=i-paletteScroll;addDrawableChild(new HeraButton(width-152,82+row*24,140,22,m.id,false,()->{selected=m;rebuild();}){
                 @Override protected void renderWidget(DrawContext c,int mx,int my,float d){
-                    if(m==selected||isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,4,m==selected?HeraTheme.SELECTED:HeraTheme.RAISED);
+                    if(m==selected||isHovered()||isFocused())HeraTheme.card(c,getX(),getY(),width,height,7,m==selected?HeraTheme.SELECTED:HeraTheme.CARD_HOVER,m==selected);
                     HeraTheme.round(c,getX()+8,getY()+9,4,4,2,m.enabled?config.accent:HeraTheme.LINE);
                     HeraTheme.label(c,HeraTheme.fit(m.id,width-30),getX()+20,getY()+7,m==selected?HeraTheme.TEXT:HeraTheme.MUTED);
                 }
@@ -54,9 +54,9 @@ public final class HudEditorScreen extends Screen {
             c.fill(x-1,y-1,x+w+1,y,color);c.fill(x-1,y+h,x+w+1,y+h+1,color);c.fill(x-1,y,x,y+h,color);c.fill(x+w,y,x+w+1,y+h,color);HeraTheme.round(c,x+w-3,y+h-3,6,6,1,color);
             if(guideX>=0)c.fill(guideX,57,guideX+1,height-70,(config.accent&0xFFFFFF)|0x66000000);if(guideY>=0)c.fill(0,guideY,width,guideY+1,(config.accent&0xFFFFFF)|0x66000000);
         }
-        HeraTheme.round(c,width-156,60,148,Math.max(1,(height-154)/24)*24+26,5,0xF0101216);HeraTheme.label(c,"HUD-ELEMENTE",width-144,69,HeraTheme.MUTED);
-        int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx,6,tw,50,5,0xF0101216);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD Studio",tx+28,13,HeraTheme.TEXT);
-        int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix,iy,iw,59,5,0xF0101216);
+        HeraTheme.card(c,width-156,60,148,Math.max(1,(height-154)/24)*24+26,10,0xF012151B,false);HeraTheme.label(c,"HUD-ELEMENTE",width-144,69,HeraTheme.MUTED);
+        int tw=Math.min(460,width-16),tx=(width-tw)/2;HeraTheme.round(c,tx-1,5,tw+2,52,11,0x33FFFFFF);HeraTheme.round(c,tx,6,tw,50,10,0xF012151B);c.fill(tx+12,6,tx+60,8,HeraTheme.ACCENT);HeraTheme.logo(c,tx+9,11,13);HeraTheme.label(c,"HUD Studio",tx+28,13,HeraTheme.TEXT);
+        int iw=Math.min(440,width-16),ix=(width-iw)/2,iy=height-66;HeraTheme.round(c,ix-1,iy-1,iw+2,61,11,0x33FFFFFF);HeraTheme.round(c,ix,iy,iw,59,10,0xF012151B);
         if(selected==null){HeraTheme.label(c,"Element wählen · ziehen · Ecke zum Skalieren",ix+10,iy+12,HeraTheme.TEXT);HeraTheme.label(c,"Tab: Auswahl · Pfeile: Position · Strg+Z / Y",ix+10,iy+32,HeraTheme.MUTED);}
         else{String label=selected.id+" · "+Math.round(selected.scale*100)+"%"+(renderer.bounds(selected,width,height,client).scale()<selected.scale?" (angepasst)":"")+" · "+List.of("Oben links","Unten rechts","Zentriert").get(selected.anchorX);HeraTheme.label(c,HeraTheme.fit(label,iw-20),ix+10,iy+10,HeraTheme.TEXT);}
         if(!error.isEmpty()||overlap())HeraTheme.label(c,HeraTheme.fit(error.isEmpty()?"Mögliche Überlappung mit Chat / Hotbar":error,width-24),12,60,0xFFF1B66B);

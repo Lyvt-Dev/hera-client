@@ -18,11 +18,16 @@ public final class HeraSlider extends SliderWidget {
     @Override protected void updateMessage(){if(label!=null)setMessage(HeraTheme.text(label.get()));}
     @Override protected void applyValue(){changed.accept(quantize(min+value*(max-min),min,max,step));updateMessage();}
     @Override public void renderWidget(DrawContext c,int mx,int my,float delta){
-        if(isHovered()||isFocused())HeraTheme.round(c,getX(),getY(),width,height,5,HeraTheme.RAISED);
-        HeraTheme.label(c,HeraTheme.fit(label.get(),width-16),getX()+8,getY()+6,HeraTheme.TEXT);
-        int track=width-24,knob=(int)Math.round(track*value),yy=getY()+height-10;
-        HeraTheme.round(c,getX()+12,yy,track,3,1,HeraTheme.LINE);
-        HeraTheme.round(c,getX()+12,yy,knob,3,1,HeraTheme.ACCENT);
-        HeraTheme.round(c,getX()+8+knob,yy-3,9,9,4,isFocused()?HeraTheme.TEXT:HeraTheme.ACCENT);
+        HeraTheme.card(c,getX(),getY(),width,height,8,isHovered()||isFocused()?HeraTheme.CARD_HOVER:HeraTheme.CARD,isFocused());
+        String full=label.get();int split=full.lastIndexOf(": ");
+        if(split>0){String value=full.substring(split+2);int vw=HeraTheme.measure(HeraTheme.text(value),false);
+            HeraTheme.round(c,getX()+width-vw-18,getY()+4,vw+10,13,4,HeraTheme.ACCENT_SOFT);HeraTheme.label(c,value,getX()+width-vw-13,getY()+6,HeraTheme.ACCENT);
+            HeraTheme.label(c,HeraTheme.fit(full.substring(0,split),width-vw-36),getX()+10,getY()+6,HeraTheme.TEXT);}
+        else HeraTheme.label(c,HeraTheme.fit(full,width-20),getX()+10,getY()+6,HeraTheme.TEXT);
+        int track=width-28,knob=(int)Math.round(track*value),yy=getY()+height-11;
+        HeraTheme.round(c,getX()+14,yy,track,4,2,0xFF2A303A);
+        HeraTheme.round(c,getX()+14,yy,Math.max(4,knob),4,2,HeraTheme.ACCENT);
+        HeraTheme.round(c,getX()+8+knob,yy-4,12,12,6,0x66F49B63);
+        HeraTheme.round(c,getX()+9+knob,yy-3,10,10,5,0xFFF3F5FA);
     }
 }
